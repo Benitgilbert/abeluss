@@ -70,6 +70,25 @@ router.get("/generate", verifyAdmin, async (req, res) => {
       console.error("User table PDF export failed:", err.message);
       res.status(500).json({ message: "Failed to generate user table PDF" });
     }
+  } else if (type === "users" && format === "csv") {
+    try {
+      const users = await User.find().select("name email role createdAt");
+      const header = ["Name", "Email", "Role", "Created At"].join(",");
+      const rows = users.map(u => [
+        (u.name || "").replaceAll(",", " "),
+        (u.email || "").replaceAll(",", " "),
+        (u.role || "").replaceAll(",", " "),
+        new Date(u.createdAt).toISOString()
+      ].join(","));
+      const csv = [header, ...rows].join("\n");
+
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", "attachment; filename=users-report.csv");
+      return res.status(200).send(csv);
+    } catch (err) {
+      console.error("User CSV export failed:", err.message);
+      return res.status(500).json({ message: "Failed to generate user CSV" });
+    }
   } else {
     res.status(404).json({ message: "Unsupported report type or format" });
   }

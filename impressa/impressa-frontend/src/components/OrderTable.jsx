@@ -39,12 +39,23 @@ const handleStatusChange = async (orderId, newStatus) => {
     fetchOrders();
   }, []);
 
-  if (loading) return <div>Loading orders...</div>;
+  if (loading) return (
+    <div className="bg-white p-6 rounded shadow">
+      <div className="animate-pulse space-y-3">
+        <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+        <div className="h-40 bg-gray-100 rounded"></div>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="bg-white p-6 rounded shadow">
-      <h2 className="text-xl font-semibold mb-4">All Orders</h2>
-      <table className="w-full text-sm text-left border">
+    <div className="bg-white p-4 sm:p-6 rounded shadow w-full">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-xl font-semibold">All Orders</h2>
+        <div className="text-sm text-gray-500">{orders.length} items</div>
+      </div>
+      <div className="overflow-x-auto">
+      <table className="min-w-[720px] w-full text-sm text-left border">
         <thead className="bg-gray-100">
           <tr>
             <th className="p-2">Order ID</th>
@@ -96,6 +107,7 @@ const handleStatusChange = async (orderId, newStatus) => {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

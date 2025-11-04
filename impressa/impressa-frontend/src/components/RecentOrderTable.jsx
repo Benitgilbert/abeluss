@@ -4,6 +4,7 @@ import axios from "../utils/axiosInstance";
 function RecentOrderTable() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchRecentOrders = async () => {
@@ -11,7 +12,8 @@ function RecentOrderTable() {
         const res = await axios.get("/analytics/recent-orders");
         setOrders(res.data);
       } catch (err) {
-        console.error("Failed to fetch recent orders:", err);
+        console.error("Failed to fetch recent orders:", err?.response?.data || err.message);
+        setError(err?.response?.data?.message || "Failed to load recent orders.");
       } finally {
         setLoading(false);
       }
@@ -20,11 +22,24 @@ function RecentOrderTable() {
     fetchRecentOrders();
   }, []);
 
-  if (loading) return <div className="p-4">Loading recent orders...</div>;
+  if (loading) return (
+    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+      <div className="animate-pulse space-y-3">
+        <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+        <div className="h-32 bg-gray-100 rounded"></div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-full">
-      <h3 className="text-lg font-semibold text-gray-700 mb-4">Recent Orders</h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-700">Recent Orders</h3>
+        <div className="text-sm text-gray-500">{orders.length} items</div>
+      </div>
+      {error && (
+        <div className="mb-3 text-sm text-red-600">{error}</div>
+      )}
       <div className="overflow-x-auto">
       <table className="w-full text-sm text-left">
         <thead className="bg-gray-100">
@@ -38,6 +53,11 @@ function RecentOrderTable() {
           </tr>
         </thead>
         <tbody>
+          {orders.length === 0 && (
+            <tr>
+              <td colSpan={6} className="p-6 text-center text-gray-500">No recent orders found.</td>
+            </tr>
+          )}
           {orders.map((order) => (
             <tr key={order._id} className="border-t">
               <td className="p-2">{order._id.slice(-6)}</td>

@@ -595,14 +595,19 @@ export const getAnomalies = async (req, res) => {
 
 export const handleChatbotQueryLLM = async (req, res) => {
   try {
-    const { question } = req.body;
+    const { question, messages = [] } = req.body;
 
     // Step 1: Gather analytics data
     const analytics = await getDashboardAnalyticsData();
     const forecast = await getForecastData();
     const anomalies = await getAnomalyAlerts();
 
-    // Step 2: Build the prompt
+    // Step 2: Build the prompt with minimal chat history context
+    const lastTurns = Array.isArray(messages) ? messages.slice(-6) : [];
+    const historyText = lastTurns
+      .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.text}`)
+      .join("\n");
+
     const prompt = `
 impressa Admin Dashboard Analytics:
 
@@ -622,12 +627,15 @@ impressa Admin Dashboard Analytics:
 - Anomalies:
 ${anomalies.map(a => `• ${a.type}: ${a.spike} — ${a.message}`).join("\n")}
 
+Conversation (latest first):
+${historyText}
+
 Admin Question: ${question}
 
 Respond with a helpful, natural-language answer based on the data above.
 `;
 
-    // Step 3: Call Cohere API
+    // Step 3: Call Cohere API (or compatible provider)
     const response = await fetch("https://api.cohere.ai/v1/chat", {
       method: "POST",
       headers: {

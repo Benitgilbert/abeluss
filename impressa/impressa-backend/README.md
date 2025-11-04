@@ -79,6 +79,7 @@ REFRESH_SECRET=your_refresh_token_secret
 EMAIL_USER=your_email@gmail.com
 EMAIL_PASS=your_app_password
 MONGO_URI=mongodb+srv://your_cluster.mongodb.net/impressa
+COHERE_API_KEY=your_cohere_api_key_here
 
 
 

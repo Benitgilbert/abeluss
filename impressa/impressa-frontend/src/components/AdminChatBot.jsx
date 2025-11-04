@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import api from "../utils/axiosInstance";
 
 function AdminChatbot() {
@@ -6,26 +6,61 @@ function AdminChatbot() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const listRef = useRef(null);
+
+  // Load persisted chat
+  useEffect(() => {
+    const saved = localStorage.getItem("adminChatMessages");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) setMessages(parsed);
+      } catch {}
+    }
+  }, []);
+
+  // Persist chat and autoscroll to bottom
+  useEffect(() => {
+    localStorage.setItem("adminChatMessages", JSON.stringify(messages));
+    if (listRef.current) {
+      listRef.current.scrollTop = listRef.current.scrollHeight;
+    }
+  }, [messages, showChat]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!question.trim()) return;
 
     const userMessage = { role: "user", text: question };
-    setMessages((prev) => [userMessage, ...prev]);
+    setMessages((prev) => [...prev, userMessage]);
     setLoading(true);
 
     try {
-      const res = await api.post("/dashboard/chatbot", { question });
+      const res = await api.post("/dashboard/chatbot", {
+        question,
+        messages: [...messages, userMessage],
+      });
       const botMessage = { role: "assistant", text: res.data.answer };
-      setMessages((prev) => [botMessage, ...prev]);
+      setMessages((prev) => [...prev, botMessage]);
     } catch (err) {
-      const errorMessage = { role: "assistant", text: "Failed to get response. Please try again." };
-      setMessages((prev) => [errorMessage, ...prev]);
+      const errText = err?.response?.data?.message || "Failed to get response. Please try again.";
+      const errorMessage = { role: "assistant", text: errText };
+      setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setQuestion("");
       setLoading(false);
     }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      handleSubmit(e);
+    }
+  };
+
+  const clearChat = () => {
+    setMessages([]);
+    localStorage.removeItem("adminChatMessages");
   };
 
   return (
@@ -40,46 +75,61 @@ function AdminChatbot() {
 
       {/* Chat Panel */}
       {showChat && (
-  <div className="fixed bottom-0 left-1/2 translate-x-[-50%] w-[500px] h-[500px] bg-white rounded-t-lg shadow-lg flex flex-col z-40">
+  <div className="fixed bottom-0 left-1/2 translate-x-[-50%] w-[520px] h-[560px] bg-white rounded-t-lg shadow-lg flex flex-col z-40">
     {/* Header */}
     <div className="p-4 border-b font-semibold text-gray-700 flex justify-between items-center">
-      🧠 impressa Assistant
-      <button onClick={() => setShowChat(false)} className="text-gray-500 hover:text-red-500 text-sm">✖</button>
+      <div className="flex items-center gap-2">
+        <span>🧠</span>
+        <span>impressa Assistant</span>
+      </div>
+      <div className="flex items-center gap-3">
+        <button onClick={clearChat} className="text-gray-500 hover:text-gray-700 text-xs">Clear</button>
+        <button onClick={() => setShowChat(false)} className="text-gray-500 hover:text-red-500 text-sm">✖</button>
+      </div>
     </div>
 
     {/* Messages */}
-    <div className="flex-1 overflow-y-auto flex flex-col-reverse p-4 space-y-2 space-y-reverse">
+    <div ref={listRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
       {messages.map((msg, i) => (
         <div
           key={i}
           className={`p-2 rounded max-w-[85%] ${
             msg.role === "user"
-              ? "bg-blue-100 self-end text-right"
-              : "bg-gray-100 self-start text-left"
+              ? "bg-blue-100 ml-auto text-right"
+              : "bg-white border border-gray-200 shadow-sm text-left"
           }`}
         >
-          <div className="max-h-[200px] overflow-y-auto whitespace-pre-line text-sm text-gray-800">
+          <div className="whitespace-pre-wrap text-sm text-gray-800 leading-relaxed">
             {msg.text}
           </div>
         </div>
       ))}
+      {loading && (
+        <div className="p-2 rounded max-w-[70%] bg-white border border-gray-200 shadow-sm text-left">
+          <div className="text-sm text-gray-500 flex items-center gap-2">
+            <span className="inline-flex h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
+            Assistant is typing…
+          </div>
+        </div>
+      )}
     </div>
 
     {/* Input */}
-    <form onSubmit={handleSubmit} className="p-4 border-t flex gap-2">
-      <input
-        type="text"
+    <form onSubmit={handleSubmit} className="p-3 border-t flex gap-2 bg-white">
+      <textarea
+        rows={2}
         value={question}
         onChange={(e) => setQuestion(e.target.value)}
-        placeholder="Ask impressa anything..."
-        className="flex-1 border rounded px-3 py-2 text-sm"
+        onKeyDown={handleKeyDown}
+        placeholder="Ask the assistant… (Enter to send, Shift+Enter for newline)"
+        className="flex-1 border rounded px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-200"
       />
       <button
         type="submit"
         disabled={loading || !question.trim()}
-        className="bg-blue-600 text-white px-4 py-2 rounded text-sm"
+        className={`px-4 py-2 rounded text-sm text-white ${loading || !question.trim() ? "bg-blue-300" : "bg-blue-600 hover:bg-blue-700"}`}
       >
-        {loading ? "Thinking..." : "Ask"}
+        {loading ? "Thinking…" : "Send"}
       </button>
     </form>
   </div>
