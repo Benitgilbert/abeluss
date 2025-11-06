@@ -1,97 +1,72 @@
-Impressa Monorepo
-==================
+# Impressa (MERN) Monorepo
 
-A full-stack project organized as a monorepo with separate frontend and backend apps under the `impressa-frontend` and `impressa-backend` directories.
+Full‑stack MERN app for customizable product orders with admin analytics and reporting. This repo contains both apps:
+- impressa/impressa-frontend: React admin + dashboards
+- impressa/impressa-backend: Node/Express API + reporting
 
-Contents
---------
-- `impressa-frontend`: Web UI (Node.js based; contains a `package.json`).
-- `impressa-backend`: Server-side service/APIs (Node.js based; contains a `package.json`).
-
-Prerequisites
--------------
-- Node.js 18+ and npm (or yarn/pnpm)
+## Prerequisites
+- Node.js 18+
 - Git
+- MongoDB instance (local or Atlas)
 
-Getting Started
----------------
-1) Clone the repository:
-
+## Getting started
+1) Clone and enter the repo
 ```
 git clone https://github.com/Benitgilbert/impressa.git
 cd impressa
 ```
 
-2) Install dependencies:
-
+2) Install deps
 ```
-# Frontend
-cd impressa-frontend
-npm install
-
-# Backend (in a separate shell or after the frontend finishes)
-cd ../impressa-backend
-npm install
-```
-
-3) Run locally:
-
-```
-# Frontend
-cd impressa-frontend
-npm run dev
-
 # Backend
-cd ../impressa-backend
+cd impressa/impressa-backend
+npm install
+
+# Frontend (new shell or after backend)
+cd ../impressa-frontend
+npm install
+```
+
+3) Run locally
+```
+# Backend
+cd impressa/impressa-backend
 npm run dev
+
+# Frontend
+cd ../impressa-frontend
+npm start
 ```
 
-Project Scripts (Typical)
--------------------------
-These scripts may vary; check each `package.json`.
+## Reports (PDF/CSV)
+- Unified server-side PDF template in impressa/impressa-backend/utils/pdfLayout.js
+- Endpoints:
+  - GET /api/orders/report?type=monthly|daily|custom-range|customer|status|revenue&format=pdf|csv
+  - GET /api/reports/generate?type=users&format=pdf|csv
+- Frontend Reports page (Admin > Reports) calls /api/orders/report and opens PDFs in a new tab
+- Monthly scheduled PDF written to reports/ and emailed to admin
+- Optional logo: assets/logo.png
 
-- Frontend
-  - `npm run dev`: Start development server
-  - `npm run build`: Create production build
-  - `npm start`: Serve production build
+See PDF_TEMPLATES_README.md for design and REPORT_TROUBLESHOOTING.md for common issues.
 
-- Backend
-  - `npm run dev`: Start backend in watch mode
-  - `npm run build`: Compile/build backend
-  - `npm start`: Run backend in production
-
-Environment Variables
----------------------
-Create `.env` files in each app as needed (not committed). Examples:
-
-```
-impressa-frontend/.env
-impressa-backend/.env
-```
-
-Monorepo Structure
-------------------
+## Structure
 ```
 impressa/
   ├─ impressa-frontend/
-  │   ├─ package.json
-  │   └─ ...
+  │   └─ src/... (AdminReports.jsx, axios baseURL, components)
   ├─ impressa-backend/
-  │   ├─ package.json
-  │   └─ ...
-  ├─ .gitignore
+  │   ├─ controllers/, routes/, models/, services/
+  │   ├─ utils/ (pdfLayout.js, csvExporter.js, logCsvExporter.js, aiSummary.js, sendReportEmail.js)
+  │   ├─ jobs/scheduledReports.js
+  │   └─ assets/logo.png
+  ├─ PDF_TEMPLATES_README.md
+  ├─ REPORT_TROUBLESHOOTING.md
   └─ README.md
 ```
 
-Contributing
-------------
-1) Create a feature branch from `main`.
-2) Make your changes.
-3) Commit with clear messages and open a PR.
+## Contributing
+- Branch from main, commit with clear messages, open PR.
 
-License
--------
-This project is proprietary to its owner. All rights reserved.
-
-
+## License
+Proprietary to Impressa Custom Solutions. All rights reserved.
 
