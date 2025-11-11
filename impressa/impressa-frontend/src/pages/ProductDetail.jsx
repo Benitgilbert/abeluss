@@ -4,6 +4,7 @@ import api from "../utils/axiosInstance";
 import StoreHeader from "../components/StoreHeader";
 import { useCart } from "../context/CartContext";
 import { formatRwf } from "../utils/currency";
+import assetUrl from "../utils/assetUrl";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -47,7 +48,7 @@ export default function ProductDetail() {
           <div className="grid md:grid-cols-2 gap-6 bg-white p-4 rounded border">
             <div>
               {product.image ? (
-                <img src={product.image} alt={product.name} className="w-full rounded object-cover" />
+                <img src={assetUrl(product.image)} alt={product.name} className="w-full rounded object-cover" />
               ) : (
                 <div className="aspect-[4/3] bg-gray-100 rounded flex items-center justify-center text-gray-400">No image</div>
               )}

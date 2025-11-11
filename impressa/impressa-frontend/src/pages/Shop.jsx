@@ -4,6 +4,7 @@ import api from "../utils/axiosInstance";
 import StoreHeader from "../components/StoreHeader";
 import { useCart } from "../context/CartContext";
 import { formatRwf } from "../utils/currency";
+import assetUrl from "../utils/assetUrl";
 
 export default function Shop() {
   const [products, setProducts] = useState([]);
@@ -42,7 +43,7 @@ export default function Shop() {
             {filtered.map((p) => (
               <div key={p._id} className="bg-white rounded-lg shadow-sm border overflow-hidden flex flex-col">
                 {p.image ? (
-                  <img src={p.image} alt={p.name} className="aspect-[4/3] object-cover" />
+                  <img src={assetUrl(p.image)} alt={p.name} className="aspect-[4/3] object-cover" />
                 ) : (
                   <div className="aspect-[4/3] bg-gray-100 flex items-center justify-center text-gray-400">No image</div>
                 )}
