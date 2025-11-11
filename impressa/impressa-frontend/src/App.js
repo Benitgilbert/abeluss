@@ -13,32 +13,38 @@ import ProductDetail from "./pages/ProductDetail";
 import CartPage from "./pages/Cart";
 import CheckoutPage from "./pages/Checkout";
 import TrackOrder from "./pages/TrackOrder";
+import Home from "./pages/Home";
+import Wishlist from "./pages/Wishlist";
 import { CartProvider } from "./context/CartContext";
+import { WishlistProvider } from "./context/WishlistContext";
 
 function App() {
   return (
     <Router>
-      <CartProvider>
-        <Routes>
-          <Route path="/" element={<Shop />} />
-          <Route path="/shop" element={<Shop />} />
-          <Route path="/product/:id" element={<ProductDetail />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
-          <Route path="/track" element={<TrackOrder />} />
+      <WishlistProvider>
+        <CartProvider>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/shop" element={<Shop />} />
+            <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/track" element={<TrackOrder />} />
+            <Route path="/wishlist" element={<Wishlist />} />
 
-          <Route path="/login" element={<Login />} /> 
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/users" element={<AdminUsers />} />
-          <Route path="/dashboard" element={<UserDashboard />} />
-          <Route path="/guest" element={<div>Guest Page</div>} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/logout" element={<Logout />} />
-          <Route path="/admin/orders" element={<AdminOrders />} />
-          <Route path="/admin/products" element={<AdminProducts />} />
-          <Route path="/admin/reports" element={<AdminReports />} />
-        </Routes>
-      </CartProvider>
+            <Route path="/login" element={<Login />} /> 
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/dashboard" element={<UserDashboard />} />
+            <Route path="/guest" element={<div>Guest Page</div>} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/logout" element={<Logout />} />
+            <Route path="/admin/orders" element={<AdminOrders />} />
+            <Route path="/admin/products" element={<AdminProducts />} />
+            <Route path="/admin/reports" element={<AdminReports />} />
+          </Routes>
+        </CartProvider>
+      </WishlistProvider>
     </Router>
   );
 }

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import api from "../utils/axiosInstance";
 import StoreHeader from "../components/StoreHeader";
 import { useCart } from "../context/CartContext";
+import { useWishlist } from "../context/WishlistContext";
 import { formatRwf } from "../utils/currency";
 import assetUrl from "../utils/assetUrl";
 
@@ -11,6 +12,7 @@ export default function Shop() {
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const { addItem } = useCart();
+  const { toggle, has } = useWishlist();
 
   useEffect(() => {
     (async () => {
@@ -56,6 +58,9 @@ export default function Shop() {
                       <Link to={`/product/${p._id}`} className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50">View</Link>
                       <button className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700" onClick={()=>addItem(p,{quantity:1})} disabled={p.customizable} title={p.customizable?"Open product to customize":"Add to cart"}>
                         Add
+                      </button>
+                      <button className={`px-3 py-1.5 text-sm border rounded ${has(p._id) ? 'bg-pink-50 border-pink-200 text-pink-700' : 'hover:bg-gray-50'}`} onClick={()=>toggle(p._id)}>
+                        {has(p._id) ? 'Wishlisted' : 'Wishlist'}
                       </button>
                     </div>
                   </div>

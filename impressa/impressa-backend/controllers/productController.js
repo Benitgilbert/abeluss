@@ -9,6 +9,10 @@ export const createProduct = async (req, res) => {
     if (typeof body.customizationOptions === "string") {
       try { body.customizationOptions = JSON.parse(body.customizationOptions); } catch { body.customizationOptions = []; }
     }
+    if (typeof body.featured === "string") body.featured = body.featured === "true";
+    if (typeof body.tags === "string") {
+      try { body.tags = JSON.parse(body.tags); } catch { body.tags = []; }
+    }
     if (req.file) {
       body.image = `/uploads/${req.file.filename}`;
     }
@@ -25,8 +29,60 @@ export const createProduct = async (req, res) => {
 // Get all products (public)
 export const getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find();
+    const q = {};
+    if (typeof req.query.featured !== 'undefined') q.featured = req.query.featured === 'true';
+    if (req.query.tags) q.tags = { $in: req.query.tags.split(',') };
+    const limit = Math.min(parseInt(req.query.limit)||0, 100) || undefined;
+    const sort = req.query.sort || undefined;
+    let cursor = Product.find(q);
+    if (sort) cursor = cursor.sort(sort);
+    if (limit) cursor = cursor.limit(limit);
+    const products = await cursor;
     res.json(products);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const getFeaturedProducts = async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit)||8, 50);
+    const products = await Product.find({ featured: true }).sort({ createdAt: -1 }).limit(limit);
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const getProductsByIds = async (req, res) => {
+  try {
+    const ids = (req.query.ids || '').split(',').filter(Boolean);
+    if (!ids.length) return res.json([]);
+    const products = await Product.find({ _id: { $in: ids } });
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const getTrendingProducts = async (req, res) => {
+  try {
+    const days = Math.min(parseInt(req.query.days)||30, 180);
+    const since = new Date(Date.now() - days*24*60*60*1000);
+    // aggregate orders to find top products
+    const Order = (await import('../models/Order.js')).default;
+    const top = await Order.aggregate([
+      { $match: { createdAt: { $gte: since } } },
+      { $group: { _id: "$product", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: Math.min(parseInt(req.query.limit)||8, 50) },
+    ]);
+    const ids = top.map(t => t._id).filter(Boolean);
+    const products = await Product.find({ _id: { $in: ids } });
+    // maintain ranking order
+    const map = new Map(products.map(p => [String(p._id), p]));
+    const ordered = ids.map(id => map.get(String(id))).filter(Boolean);
+    res.json(ordered);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -50,6 +106,10 @@ export const updateProduct = async (req, res) => {
     if (typeof body.customizable === "string") body.customizable = body.customizable === "true";
     if (typeof body.customizationOptions === "string") {
       try { body.customizationOptions = JSON.parse(body.customizationOptions); } catch { body.customizationOptions = []; }
+    }
+    if (typeof body.featured === "string") body.featured = body.featured === "true";
+    if (typeof body.tags === "string") {
+      try { body.tags = JSON.parse(body.tags); } catch { body.tags = []; }
     }
     if (req.file) {
       body.image = `/uploads/${req.file.filename}`;

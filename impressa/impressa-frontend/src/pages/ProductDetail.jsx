@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import api from "../utils/axiosInstance";
 import StoreHeader from "../components/StoreHeader";
 import { useCart } from "../context/CartContext";
+import { useWishlist } from "../context/WishlistContext";
 import { formatRwf } from "../utils/currency";
 import assetUrl from "../utils/assetUrl";
 
@@ -16,6 +17,7 @@ export default function ProductDetail() {
   const [cloudPassword, setCloudPassword] = useState("");
   const [loading, setLoading] = useState(true);
   const { addItem } = useCart();
+  const { toggle, has } = useWishlist();
 
   useEffect(() => {
     (async () => {
@@ -83,6 +85,7 @@ export default function ProductDetail() {
 
               <div className="mt-4 flex gap-3">
                 <button onClick={handleAdd} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Add to Cart</button>
+                <button onClick={()=>toggle(product._id)} className={`px-4 py-2 border rounded ${has(product._id) ? 'bg-pink-50 border-pink-200 text-pink-700' : 'hover:bg-gray-50'}`}>{has(product._id) ? 'Wishlisted' : 'Add to Wishlist'}</button>
                 <button onClick={()=>nav("/cart")} className="px-4 py-2 border rounded hover:bg-gray-50">Go to Cart</button>
               </div>
             </div>

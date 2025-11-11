@@ -9,6 +9,7 @@ export default function StoreHeader() {
         <Link to="/shop" className="text-xl font-bold text-blue-700">impressa</Link>
         <nav className="flex items-center gap-4 text-sm">
           <Link to="/shop" className="hover:text-blue-700">Shop</Link>
+          <Link to="/wishlist" className="hover:text-blue-700">Wishlist</Link>
           <Link to="/track" className="hover:text-blue-700">Track Order</Link>
           <Link to="/cart" className="relative hover:text-blue-700">
             Cart

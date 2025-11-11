@@ -19,6 +19,20 @@ const productSchema = new mongoose.Schema({
     type: String, // filename or URL
     default: null,
   },
+  images: {
+    type: [String], // optional gallery
+    default: [],
+  },
+  featured: {
+    type: Boolean,
+    default: false,
+    index: true,
+  },
+  tags: {
+    type: [String],
+    default: [],
+    index: true,
+  },
   customizable: {
     type: Boolean,
     default: false,
