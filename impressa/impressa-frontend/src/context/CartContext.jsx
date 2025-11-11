@@ -50,7 +50,14 @@ export function CartProvider({ children }) {
     return { subtotal, itemCount: items.reduce((c, it) => c + it.quantity, 0) };
   }, [items]);
 
-  const value = { items, addItem, removeItem, updateQty, clear, totals, setFile, getFile, files };
+  const removeMany = (indices = []) => {
+    const toRemove = new Set(indices);
+    setItems((prev) => prev.filter((_, i) => !toRemove.has(i)));
+    // Clear transient files to avoid index drift issues
+    setFiles({});
+  };
+
+  const value = { items, addItem, removeItem, updateQty, clear, removeMany, totals, setFile, getFile, files };
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import api from "../utils/axiosInstance";
 import StoreHeader from "../components/StoreHeader";
 import { useCart } from "../context/CartContext";
+import { formatRwf } from "../utils/currency";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -54,7 +55,7 @@ export default function ProductDetail() {
             <div className="flex flex-col gap-3">
               <h1 className="text-2xl font-semibold">{product.name}</h1>
               <div className="text-gray-600">{product.description || "No description."}</div>
-              <div className="text-xl font-semibold">${product.price?.toLocaleString?.() || product.price}</div>
+              <div className="text-xl font-semibold">{formatRwf(product.price)}</div>
 
               <div className="flex items-center gap-3 mt-2">
                 <label className="text-sm text-gray-600">Quantity</label>

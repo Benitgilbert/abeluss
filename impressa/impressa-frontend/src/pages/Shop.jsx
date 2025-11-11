@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import api from "../utils/axiosInstance";
 import StoreHeader from "../components/StoreHeader";
 import { useCart } from "../context/CartContext";
+import { formatRwf } from "../utils/currency";
 
 export default function Shop() {
   const [products, setProducts] = useState([]);
@@ -49,7 +50,7 @@ export default function Shop() {
                   <Link to={`/product/${p._id}`} className="font-medium hover:text-blue-700">{p.name}</Link>
                   <div className="text-sm text-gray-600 line-clamp-2">{p.description || "No description"}</div>
                   <div className="mt-auto flex items-center justify-between pt-2">
-                    <div className="text-lg font-semibold">${p.price?.toLocaleString?.() || p.price}</div>
+                    <div className="text-lg font-semibold">{formatRwf(p.price)}</div>
                     <div className="flex gap-2">
                       <Link to={`/product/${p._id}`} className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50">View</Link>
                       <button className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700" onClick={()=>addItem(p,{quantity:1})} disabled={p.customizable} title={p.customizable?"Open product to customize":"Add to cart"}>

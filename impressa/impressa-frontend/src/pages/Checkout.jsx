@@ -3,11 +3,13 @@ import { useCart } from "../context/CartContext";
 import api from "../utils/axiosInstance";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { formatRwf } from "../utils/currency";
 
 export default function CheckoutPage() {
-  const { items, totals, clear, getFile } = useCart();
+  const { items, totals, clear, removeMany, getFile } = useCart();
   const [placing, setPlacing] = useState(false);
   const [message, setMessage] = useState("");
+  const [placedIds, setPlacedIds] = useState([]);
   const [guest, setGuest] = useState(false);
   const [guestInfo, setGuestInfo] = useState({ name: "", email: "", phone: "" });
   const nav = useNavigate();
@@ -31,6 +33,7 @@ export default function CheckoutPage() {
     try {
       setPlacing(true);
       const placed = [];
+      const placedIdx = [];
       for (let idx = 0; idx < items.length; idx++) {
         const it = items[idx];
         const file = getFile(idx);
@@ -58,9 +61,12 @@ export default function CheckoutPage() {
         }
         const data = await resp.json();
         placed.push(data);
+        placedIdx.push(idx);
       }
-      clear();
-      setMessage(`✅ Orders placed. Your tracking IDs: ${placed.map(p=>p.publicId).join(", ")}`);
+      setPlacedIds(placed.map(p=>p.publicId));
+      // Remove only the items that were checked out
+      removeMany(placedIdx);
+      setMessage("✅ Orders placed. Save your tracking IDs below.");
     } catch (e) {
       console.error("Checkout failed", e?.response?.data || e.message);
       const backend = e?.response?.data?.message;
@@ -77,6 +83,22 @@ export default function CheckoutPage() {
         <h1 className="text-2xl font-semibold mb-4">Checkout</h1>
         {message && <div className={`mb-3 text-sm ${message.startsWith('✅') ? 'text-green-600' : 'text-red-600'}`}>{message}</div>}
         <div className="bg-white rounded border p-4">
+          {placedIds.length > 0 && (
+            <div className="mb-4 p-3 rounded border border-green-200 bg-green-50">
+              <div className="font-medium text-green-800 mb-1">Order placed successfully</div>
+              <div className="text-sm text-gray-700 mb-2">Tracking IDs:</div>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {placedIds.map((id) => (
+                  <code key={id} className="px-2 py-1 bg-white border rounded text-sm">{id}</code>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <button onClick={()=>navigator.clipboard.writeText(placedIds.join(", "))} className="px-3 py-1.5 text-sm border rounded hover:bg-white">Copy</button>
+                <button onClick={()=>nav(`/track`)} className="px-3 py-1.5 text-sm border rounded hover:bg-white">Track</button>
+                <button onClick={()=>clear()} className="ml-auto px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">Clear cart</button>
+              </div>
+            </div>
+          )}
           <div className="mb-3 flex items-center gap-2">
             <input id="guest" type="checkbox" checked={guest} onChange={(e)=>setGuest(e.target.checked)} />
             <label htmlFor="guest" className="text-sm text-gray-700">Checkout as guest</label>
@@ -94,7 +116,7 @@ export default function CheckoutPage() {
           </div>
           <div className="flex items-center justify-between mt-2">
             <div className="text-gray-600">Subtotal</div>
-            <div className="font-semibold">${totals.subtotal.toLocaleString()}</div>
+            <div className="font-semibold">{formatRwf(totals.subtotal)}</div>
           </div>
           <button disabled={placing || items.length===0} onClick={placeOrders} className={`mt-4 w-full rounded py-2 text-white ${placing? 'bg-blue-300' : 'bg-blue-600 hover:bg-blue-700'}`}>
             {placing ? "Placing order…" : "Place Order"}

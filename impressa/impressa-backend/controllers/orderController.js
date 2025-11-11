@@ -446,9 +446,9 @@ export const generateReport = async (req, res) => {
           doc.font("Helvetica").moveDown(0.3);
 
           const metrics = type === 'monthly' ? [
-            ["Total Revenue", `$${(extraMetrics.totalRevenue||0).toLocaleString()}`],
+            ["Total Revenue", `${(extraMetrics.totalRevenue||0).toLocaleString()} Rwf`],
             ["Total Orders", (extraMetrics.totalOrders||0).toLocaleString()],
-            ["Average Order Value", `$${(extraMetrics.avgOrderValue||0).toLocaleString()}`],
+            ["Average Order Value", `${(extraMetrics.avgOrderValue||0).toLocaleString()} Rwf`],
             ["New Customers", (extraMetrics.newCustomers||0).toLocaleString()],
             ["Top Product", extraMetrics.topProduct || 'N/A']
           ] : Object.entries(summary).map(([k,v]) => [k, String(v)]);
@@ -492,7 +492,7 @@ export const generateReport = async (req, res) => {
             const prodData = Object.keys({ ...productUnits, ...productRevenue }).map(name => ({
               name,
               units: (productUnits[name]||0),
-              revenue: `$${Math.round(productRevenue[name]||0).toLocaleString()}`,
+              revenue: `${Math.round(productRevenue[name]||0).toLocaleString()} Rwf`,
               returns: 0
             }));
             prodData.sort((a,b) => (parseInt(String(b.units)) - parseInt(String(a.units))));

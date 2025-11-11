@@ -1,6 +1,7 @@
 import StoreHeader from "../components/StoreHeader";
 import { useCart } from "../context/CartContext";
 import { Link, useNavigate } from "react-router-dom";
+import { formatRwf } from "../utils/currency";
 
 export default function CartPage() {
   const { items, updateQty, removeItem, totals, setFile } = useCart();
@@ -44,8 +45,8 @@ export default function CartPage() {
                       <td className="p-2 text-center">
                         <input type="number" min={1} value={it.quantity} onChange={(e)=>updateQty(idx, parseInt(e.target.value||"1"))} className="w-16 border rounded px-2 py-1" />
                       </td>
-                      <td className="p-2 text-center">${it.product.price?.toLocaleString?.() || it.product.price}</td>
-                      <td className="p-2 text-center">${((it.product.price||0)*it.quantity).toLocaleString()}</td>
+                      <td className="p-2 text-center">{formatRwf(it.product.price)}</td>
+                      <td className="p-2 text-center">{formatRwf((it.product.price||0)*it.quantity)}</td>
                       <td className="p-2 text-right">
                         <button onClick={()=>removeItem(it.product._id, idx)} className="text-red-600 hover:underline">Remove</button>
                       </td>

@@ -35,7 +35,7 @@ export const buildRevenueTimeConfig = (labels, data) => ({
   },
   options: {
     plugins: { legend: { display: true } },
-    scales: { y: { ticks: { callback: (v) => `$${v}` } } }
+    scales: { y: { ticks: { callback: (v) => `${v} Rwf` } } }
   }
 });
 
@@ -66,6 +66,6 @@ export const buildTopProductsConfig = (labels, data) => ({
   options: {
     indexAxis: "y",
     plugins: { legend: { display: true } },
-    scales: { x: { ticks: { callback: (v) => `$${v}` } } }
+    scales: { x: { ticks: { callback: (v) => `${v} Rwf` } } }
   }
 });
