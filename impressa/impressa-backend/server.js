@@ -98,6 +98,7 @@ const startServer = async () => {
     const cartRoutes = (await import("./routes/cartRoutes.js")).default;
     const couponRoutes = (await import("./routes/couponRoutes.js")).default;
     const checkoutRoutes = (await import("./routes/checkoutRoutes.js")).default;
+    const paymentRoutes = (await import("./routes/paymentRoutes.js")).default;
 
     // ✅ Register health checks first (no auth required)
     app.use("/", healthRoutes);
@@ -109,6 +110,7 @@ const startServer = async () => {
     app.use("/api/cart", cartRoutes);
     app.use("/api/coupons", couponRoutes);
     app.use("/api/checkout", checkoutRoutes);
+    app.use("/api/payments", paymentRoutes);
     app.use("/api/customizations", customizationRoutes);
     app.use("/api/orders", orderRoutes);
     app.use("/api/reports", reportRoutes);
