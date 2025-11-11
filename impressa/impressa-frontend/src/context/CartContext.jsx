@@ -1,63 +1,115 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import * as api from "../services/api";
 
 const CartContext = createContext(null);
 
-const STORAGE_KEY = "impressa_cart";
-
 export function CartProvider({ children }) {
-  const [items, setItems] = useState(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [cart, setCart] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  // Fetch cart on mount
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  }, [items]);
+    fetchCart();
+  }, []);
 
-  // transient file attachments per cart line (not persisted)
-  const [files, setFiles] = useState({});
-  const setFile = (index, file) => setFiles((prev) => ({ ...prev, [index]: file }));
-  const getFile = (index) => files[index] || null;
-
-  const addItem = (product, { quantity = 1, customText = "", cloudLink = "", cloudPassword = "" } = {}) => {
-    setItems((prev) => {
-      const idx = prev.findIndex((it) => it.product._id === product._id && it.cloudLink === cloudLink && it.customText === customText);
-      if (idx >= 0) {
-        const next = [...prev];
-        next[idx] = { ...next[idx], quantity: next[idx].quantity + quantity };
-        return next;
-      }
-      return [...prev, { product, quantity, customText, cloudLink, cloudPassword }];
-    });
+  const fetchCart = async () => {
+    try {
+      setLoading(true);
+      const response = await api.getCart();
+      setCart(response.data);
+      setError(null);
+    } catch (err) {
+      console.error("Failed to fetch cart:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const removeItem = (productId, key = null) => {
-    setItems((prev) => prev.filter((it, i) => it.product._id !== productId || (key !== null && i !== key)));
+  const addItem = async (productId, quantity = 1, variationId = null) => {
+    try {
+      const response = await api.addToCart(productId, quantity, variationId);
+      setCart(response.data);
+      return response;
+    } catch (err) {
+      console.error("Failed to add item:", err);
+      throw err;
+    }
   };
 
-  const updateQty = (index, quantity) => {
-    setItems((prev) => prev.map((it, i) => (i === index ? { ...it, quantity: Math.max(1, quantity) } : it)));
+  const updateItem = async (productId, quantity, variationId = null) => {
+    try {
+      const response = await api.updateCartItem(productId, quantity, variationId);
+      setCart(response.data);
+      return response;
+    } catch (err) {
+      console.error("Failed to update item:", err);
+      throw err;
+    }
   };
 
-  const clear = () => setItems([]);
-
-  const totals = useMemo(() => {
-    const subtotal = items.reduce((s, it) => s + (it.product.price || 0) * it.quantity, 0);
-    return { subtotal, itemCount: items.reduce((c, it) => c + it.quantity, 0) };
-  }, [items]);
-
-  const removeMany = (indices = []) => {
-    const toRemove = new Set(indices);
-    setItems((prev) => prev.filter((_, i) => !toRemove.has(i)));
-    // Clear transient files to avoid index drift issues
-    setFiles({});
+  const removeItem = async (productId) => {
+    try {
+      const response = await api.removeFromCart(productId);
+      setCart(response.data);
+      return response;
+    } catch (err) {
+      console.error("Failed to remove item:", err);
+      throw err;
+    }
   };
 
-  const value = { items, addItem, removeItem, updateQty, clear, removeMany, totals, setFile, getFile, files };
+  const clearCart = async () => {
+    try {
+      const response = await api.clearCart();
+      setCart(response.data);
+      return response;
+    } catch (err) {
+      console.error("Failed to clear cart:", err);
+      throw err;
+    }
+  };
+
+  const applyCoupon = async (couponCode) => {
+    try {
+      const response = await api.applyCoupon(couponCode);
+      setCart(response.data);
+      return response;
+    } catch (err) {
+      console.error("Failed to apply coupon:", err);
+      throw err;
+    }
+  };
+
+  const removeCoupon = async () => {
+    try {
+      const response = await api.removeCoupon();
+      setCart(response.data);
+      return response;
+    } catch (err) {
+      console.error("Failed to remove coupon:", err);
+      throw err;
+    }
+  };
+
+  const value = {
+    cart,
+    loading,
+    error,
+    items: cart?.items || [],
+    itemCount: cart?.items?.reduce((count, item) => count + item.quantity, 0) || 0,
+    totals: cart?.totals || { subtotal: 0, discount: 0, shipping: 0, tax: 0, grandTotal: 0 },
+    coupon: cart?.coupon || null,
+    fetchCart,
+    addItem,
+    updateItem,
+    removeItem,
+    clearCart,
+    applyCoupon,
+    removeCoupon,
+  };
+
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
