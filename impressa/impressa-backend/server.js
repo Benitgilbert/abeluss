@@ -21,12 +21,28 @@ app.use(helmet({
 }));
 
 // ✅ CORS Configuration
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "http://localhost:5000",
+  "http://localhost:3000",
+].filter(Boolean);
+
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    // Allow all origins in development
-    callback(null, origin);
+    
+    // In development, allow localhost
+    if (origin && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+      return callback(null, true);
+    }
+    
+    // Check if origin is in allowed list
+    if (allowedOrigins.some(allowed => origin === allowed || origin.endsWith('.replit.dev'))) {
+      return callback(null, true);
+    }
+    
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
