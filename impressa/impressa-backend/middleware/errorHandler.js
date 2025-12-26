@@ -85,4 +85,9 @@ const notFound = (req, res, next) => {
   next(error);
 };
 
-export { errorHandler, notFound };
+// Async error wrapper
+const catchAsync = (fn) => (req, res, next) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};
+
+export { errorHandler, notFound, catchAsync };

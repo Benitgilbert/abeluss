@@ -14,6 +14,9 @@ function ProductTable() {
   const [message, setMessage] = useState("");
   const [editing, setEditing] = useState(null);
   const [creating, setCreating] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [bulkAction, setBulkAction] = useState("");
+  const [bulkValue, setBulkValue] = useState("");
 
   useEffect(() => {
     fetchProducts();
@@ -71,6 +74,46 @@ function ProductTable() {
     }
   };
 
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === pageItems.length) setSelectedIds([]);
+    else setSelectedIds(pageItems.map(p => p._id));
+  };
+
+  const handleBulkAction = async () => {
+    if (!bulkAction || selectedIds.length === 0) return;
+    if (!window.confirm(`Apply ${bulkAction} to ${selectedIds.length} products?`)) return;
+
+    try {
+      if (bulkAction === "delete") {
+        await Promise.all(selectedIds.map(id => api.delete(`/products/${id}`)));
+        setProducts(prev => prev.filter(p => !selectedIds.includes(p._id)));
+        setMessage(`✅ Deleted ${selectedIds.length} products`);
+      } else if (bulkAction === "stock") {
+        const val = parseInt(bulkValue);
+        if (isNaN(val)) return alert("Invalid stock value");
+        await Promise.all(selectedIds.map(id => api.put(`/products/${id}`, { stock: val })));
+        setProducts(prev => prev.map(p => selectedIds.includes(p._id) ? { ...p, stock: val } : p));
+        setMessage(`✅ Updated stock for ${selectedIds.length} products`);
+      } else if (bulkAction === "price") {
+        const val = parseFloat(bulkValue);
+        if (isNaN(val)) return alert("Invalid price value");
+        await Promise.all(selectedIds.map(id => api.put(`/products/${id}`, { price: val })));
+        setProducts(prev => prev.map(p => selectedIds.includes(p._id) ? { ...p, price: val } : p));
+        setMessage(`✅ Updated price for ${selectedIds.length} products`);
+      }
+      setSelectedIds([]);
+      setBulkAction("");
+      setBulkValue("");
+    } catch (err) {
+      console.error("Bulk action failed:", err);
+      setMessage("❌ Bulk action failed");
+    }
+  };
+
   const sorted = useMemo(() => {
     const s = [...filtered].sort((a, b) => {
       const av = (a[sortKey] ?? "").toString().toLowerCase();
@@ -96,7 +139,7 @@ function ProductTable() {
 
   if (loading) {
     return (
-      <div className="bg-white p-6 rounded shadow w-full">
+      <div className="product-table-container">
         <div className="animate-pulse space-y-3">
           <div className="h-6 bg-gray-200 rounded w-1/3"></div>
           <div className="h-40 bg-gray-100 rounded"></div>
@@ -108,15 +151,15 @@ function ProductTable() {
   const formatPrice = (v) => (typeof v === 'number' ? v.toLocaleString() : v);
 
   return (
-    <div className="bg-white p-4 sm:p-6 rounded shadow w-full">
-      <div className="flex flex-col gap-3 mb-3">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <h2 className="text-xl font-semibold">Product Catalog</h2>
-          <div className="flex items-center gap-2">
+    <div className="product-table-container">
+      <div className="product-table-header">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 w-full">
+          <h2 className="product-table-title">Product Catalog</h2>
+          <div className="product-actions">
             <div className="hidden sm:block text-sm text-gray-500">{total} items</div>
             <button
               onClick={() => setCreating(true)}
-              className="inline-flex items-center justify-center px-3 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700 shadow"
+              className="btn-primary"
             >
               + Add Product
             </button>
@@ -128,91 +171,125 @@ function ProductTable() {
         <div className={`mb-3 text-sm ${message.startsWith("✅") ? "text-green-600" : "text-red-600"}`}>{message}</div>
       )}
 
-      <div className="flex flex-wrap gap-3 mb-3 items-center">
+      <div className="toolbar">
         <input
           type="text"
           placeholder="Search name or description..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="px-3 py-2 border rounded w-full sm:w-1/2 focus:outline-none focus:ring-2 focus:ring-blue-200"
+          className="search-input"
         />
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-[880px] w-full text-sm text-left border">
-          <thead className="bg-gray-100">
+      {selectedIds.length > 0 && (
+        <div className="bulk-actions">
+          <span className="bulk-count">{selectedIds.length} selected</span>
+          <select value={bulkAction} onChange={(e) => setBulkAction(e.target.value)} className="bulk-select">
+            <option value="">-- Bulk Action --</option>
+            <option value="delete">Delete</option>
+            <option value="stock">Set Stock</option>
+            <option value="price">Set Price</option>
+          </select>
+          {(bulkAction === "stock" || bulkAction === "price") && (
+            <input
+              type="number"
+              placeholder="Value"
+              value={bulkValue}
+              onChange={(e) => setBulkValue(e.target.value)}
+              className="bulk-input w-24"
+            />
+          )}
+          <button onClick={handleBulkAction} className="btn-secondary">Apply</button>
+        </div>
+      )}
+
+      <div className="table-wrapper">
+        <table className="product-table">
+          <thead>
             <tr>
-              <th onClick={() => setSort("name")} className="p-2 cursor-pointer select-none">Name {sortKey === "name" && (sortDir === "asc" ? "▲" : "▼")}</th>
-              <th onClick={() => setSort("price")} className="p-2 cursor-pointer select-none">Price {sortKey === "price" && (sortDir === "asc" ? "▲" : "▼")}</th>
-              <th onClick={() => setSort("stock")} className="p-2 cursor-pointer select-none">Stock {sortKey === "stock" && (sortDir === "asc" ? "▲" : "▼")}</th>
-              <th className="p-2">Image</th>
-              <th className="p-2">Customization</th>
-              <th className="p-2">Actions</th>
+              <th className="w-8"><input type="checkbox" checked={selectedIds.length === pageItems.length && pageItems.length > 0} onChange={toggleSelectAll} /></th>
+              <th onClick={() => setSort("name")} className="cursor-pointer select-none">Name {sortKey === "name" && (sortDir === "asc" ? "▲" : "▼")}</th>
+              <th onClick={() => setSort("price")} className="cursor-pointer select-none">Price {sortKey === "price" && (sortDir === "asc" ? "▲" : "▼")}</th>
+              <th onClick={() => setSort("stock")} className="cursor-pointer select-none">Stock {sortKey === "stock" && (sortDir === "asc" ? "▲" : "▼")}</th>
+              <th>Image</th>
+              <th>Customization</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {pageItems.length === 0 && (
               <tr>
-                <td colSpan={6} className="p-6 text-center text-gray-500">No products match your filters.</td>
+                <td colSpan={6} className="text-center text-gray-500 py-6">No products match your filters.</td>
               </tr>
             )}
-            {pageItems.map((p, idx) => (
-              <tr key={p._id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                <td className="p-2">
-                  <div className="font-medium text-gray-800">{p.name}</div>
-                  <div className="text-xs text-gray-500 line-clamp-1 sm:line-clamp-2">{p.description}</div>
-                </td>
-                <td className="p-2">{formatPrice(p.price)}</td>
-                <td className="p-2">{p.stock ?? '-'}</td>
-                <td className="p-2">
-                  {p.image ? (
-                    <img src={p.image} alt="" className="h-10 w-10 object-cover rounded" />
-                  ) : (
-                    <div className="h-10 w-10 bg-gray-100 border rounded"></div>
-                  )}
-                </td>
-                <td className="p-2">
-                  {p.customizable ? (
-                    <div className="flex flex-wrap gap-1">
-                      {Array.isArray(p.customizationOptions) && p.customizationOptions.length > 0 ? (
-                        p.customizationOptions.map((opt) => (
-                          <span key={opt} className="inline-flex px-2 py-0.5 rounded text-xs bg-gray-100 border text-gray-700">
-                            {opt}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="text-xs text-gray-500">enabled</span>
-                      )}
+            {pageItems.map((p, idx) => {
+              const isLowStock = p.stock !== null && p.stock < 5;
+              return (
+                <tr key={p._id} className={isLowStock ? "low-stock" : ""}>
+                  <td><input type="checkbox" checked={selectedIds.includes(p._id)} onChange={() => toggleSelect(p._id)} /></td>
+                  <td>
+                    <div className="product-name">{p.name}</div>
+                    <div className="product-desc">{p.description}</div>
+                  </td>
+                  <td>{formatPrice(p.price)}</td>
+                  <td>
+                    {p.stock !== null && (
+                      <span className={`badge ${p.stock < 5 ? 'bg-red-100 text-red-800' : 'badge-gray'}`}>
+                        {p.stock}
+                      </span>
+                    )}
+                    {p.stock === null && <span className="text-gray-400">-</span>}
+                  </td>
+                  <td>
+                    {p.image ? (
+                      <img src={p.image} alt="" className="product-table-img" />
+                    ) : (
+                      <div className="product-table-img bg-gray-100 border"></div>
+                    )}
+                  </td>
+                  <td>
+                    {p.customizable ? (
+                      <div className="flex flex-wrap gap-1">
+                        {Array.isArray(p.customizationOptions) && p.customizationOptions.length > 0 ? (
+                          p.customizationOptions.map((opt) => (
+                            <span key={opt} className="badge badge-gray">
+                              {opt}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="badge badge-gray">enabled</span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-xs text-gray-400">—</span>
+                    )}
+                  </td>
+                  <td>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setEditing(p)}
+                        className="action-btn btn-edit"
+                      >
+                        ✏️ Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(p._id)}
+                        className="action-btn btn-delete"
+                      >
+                        🗑️ Delete
+                      </button>
                     </div>
-                  ) : (
-                    <span className="text-xs text-gray-400">—</span>
-                  )}
-                </td>
-                <td className="p-2">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setEditing(p)}
-                      className="inline-flex items-center px-2.5 py-1.5 rounded border border-blue-200 text-blue-700 hover:bg-blue-50 text-xs"
-                    >
-                      ✏️ Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(p._id)}
-                      className="inline-flex items-center px-2.5 py-1.5 rounded border border-red-200 text-red-700 hover:bg-red-50 text-xs"
-                    >
-                      🗑️ Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
-      <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="text-sm text-gray-500">Page {page} of {totalPages}</div>
-        <div className="flex items-center gap-2">
+      <div className="pagination">
+        <div className="pagination-info">Page {page} of {totalPages}</div>
+        <div className="pagination-controls">
           <label className="text-sm text-gray-600">Rows per page</label>
           <select value={pageSize} onChange={(e) => { setPageSize(parseInt(e.target.value, 10)); setPage(1); }} className="px-2 py-1 border rounded text-sm">
             <option value={5}>5</option>
@@ -220,8 +297,8 @@ function ProductTable() {
             <option value={20}>20</option>
           </select>
           <div className="flex items-center gap-2 ml-2">
-            <button disabled={page === 1} onClick={() => setPage((p) => Math.max(1, p - 1))} className={`px-3 py-1 rounded border text-sm ${page === 1 ? "text-gray-400 border-gray-200" : "hover:bg-gray-50"}`}>Prev</button>
-            <button disabled={page === totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))} className={`px-3 py-1 rounded border text-sm ${page === totalPages ? "text-gray-400 border-gray-200" : "hover:bg-gray-50"}`}>Next</button>
+            <button disabled={page === 1} onClick={() => setPage((p) => Math.max(1, p - 1))} className="pagination-btn">Prev</button>
+            <button disabled={page === totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))} className="pagination-btn">Next</button>
           </div>
         </div>
       </div>

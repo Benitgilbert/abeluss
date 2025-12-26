@@ -58,8 +58,8 @@ function UserTable({ onCreate }) {
   const handleDelete = async (userId) => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
     try {
-        // route is mounted under /api/auth on the backend
-        await axios.delete(`/auth/users/${userId}`);
+      // route is mounted under /api/auth on the backend
+      await axios.delete(`/auth/users/${userId}`);
       setUsers(users.filter((u) => u._id !== userId));
       setMessage("✅ User deleted");
     } catch (err) {
@@ -84,24 +84,24 @@ function UserTable({ onCreate }) {
     }
   };
 
-const handleExportPDF = async () => {
-  try {
-    const res = await axios.get("/reports/generate?type=users&format=pdf", {
-      responseType: "blob",
-    });
+  const handleExportPDF = async () => {
+    try {
+      const res = await axios.get("/reports/generate?type=users&format=pdf", {
+        responseType: "blob",
+      });
 
-    const url = window.URL.createObjectURL(new Blob([res.data]));
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "users.pdf");
-    document.body.appendChild(link);
-    link.click();
-  } catch (err) {
-    console.error("PDF export failed:", err);
-  }
-};
-const handleExportUserTablePDF = async () => {
-  try {
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "users.pdf");
+      document.body.appendChild(link);
+      link.click();
+    } catch (err) {
+      console.error("PDF export failed:", err);
+    }
+  };
+  const handleExportUserTablePDF = async () => {
+    try {
       const res = await axios.get("/reports/generate?type=users&format=pdf", {
         responseType: "blob",
       });
@@ -146,51 +146,80 @@ const handleExportUserTablePDF = async () => {
 
   if (loading) {
     return (
-      <div className="bg-white p-6 rounded shadow-md max-w-6xl">
-        <div className="animate-pulse space-y-3">
-          <div className="h-6 bg-gray-200 rounded w-1/3"></div>
-          <div className="h-10 bg-gray-100 rounded"></div>
-          <div className="h-40 bg-gray-100 rounded"></div>
+      <div className="card">
+        <div style={{ padding: "2rem", textAlign: "center", color: "var(--color-text-gray)" }}>
+          Loading users...
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white p-4 sm:p-6 rounded shadow-md w-full">
-      <div className="flex flex-col gap-3 mb-3">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <h2 className="text-xl font-semibold">User List</h2>
-          <div className="flex items-center gap-2">
-            <div className="hidden sm:block text-sm text-gray-500">{total} users</div>
-            <button
-              onClick={onCreate}
-              className="inline-flex items-center justify-center px-3 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700 shadow"
-            >
-              + Create User
-            </button>
-          </div>
+    <div className="card">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
+        <h2 className="card-title" style={{ marginBottom: 0 }}>User List</h2>
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <span style={{ fontSize: "0.875rem", color: "var(--text-muted)" }}>{total} users</span>
+          <button
+            onClick={onCreate}
+            style={{
+              padding: "0.5rem 1rem",
+              backgroundColor: "var(--color-primary)",
+              color: "white",
+              borderRadius: "0.5rem",
+              border: "none",
+              fontSize: "0.875rem",
+              cursor: "pointer",
+              fontWeight: 500
+            }}
+          >
+            + Create User
+          </button>
         </div>
       </div>
 
       {message && (
-        <div className={`mb-4 text-sm ${message.startsWith("✅") ? "text-green-600" : "text-red-600"}`}>
+        <div style={{
+          marginBottom: "1rem",
+          padding: "0.75rem",
+          borderRadius: "0.5rem",
+          fontSize: "0.875rem",
+          backgroundColor: message.startsWith("✅") ? "#dcfce7" : "#fee2e2",
+          color: message.startsWith("✅") ? "#166534" : "#991b1b"
+        }}>
           {message}
         </div>
       )}
 
-      <div className="flex flex-wrap gap-3 mb-3 items-center">
+      <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
         <input
           type="text"
           placeholder="Search by name or email..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="px-3 py-2 border rounded w-full sm:w-1/2 focus:outline-none focus:ring-2 focus:ring-blue-200"
+          style={{
+            padding: "0.625rem 1rem",
+            borderRadius: "0.5rem",
+            border: "1px solid var(--border-color)",
+            backgroundColor: "var(--bg-secondary)",
+            color: "var(--text-primary)",
+            fontSize: "0.875rem",
+            flex: 1,
+            minWidth: "200px"
+          }}
         />
         <select
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
-          className="px-3 py-2 border rounded w-full sm:w-1/3 focus:outline-none focus:ring-2 focus:ring-blue-200"
+          style={{
+            padding: "0.625rem 1rem",
+            borderRadius: "0.5rem",
+            border: "1px solid var(--border-color)",
+            backgroundColor: "var(--bg-secondary)",
+            color: "var(--text-primary)",
+            fontSize: "0.875rem",
+            minWidth: "150px"
+          }}
         >
           <option value="">All Roles</option>
           <option value="admin">Admin</option>
@@ -200,116 +229,152 @@ const handleExportUserTablePDF = async () => {
           <option value="customer">Customer</option>
           <option value="guest">Guest</option>
         </select>
-        <div className="ml-auto flex gap-2 w-full sm:w-auto">
-       <button
-  onClick={handleExportCSV}
-  className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
->
-  Export CSV
-</button>
 
-<button
-  onClick={handleExportPDF}
-  className="px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm"
->
-  Export User Table PDF
-</button>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <button
+            onClick={handleExportCSV}
+            style={{
+              padding: "0.625rem 1rem",
+              backgroundColor: "#22c55e",
+              color: "white",
+              borderRadius: "0.5rem",
+              border: "none",
+              fontSize: "0.875rem",
+              cursor: "pointer"
+            }}
+          >
+            Export CSV
+          </button>
+          <button
+            onClick={handleExportPDF}
+            style={{
+              padding: "0.625rem 1rem",
+              backgroundColor: "#6366f1",
+              color: "white",
+              borderRadius: "0.5rem",
+              border: "none",
+              fontSize: "0.875rem",
+              cursor: "pointer"
+            }}
+          >
+            Export PDF
+          </button>
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full table-auto border-collapse">
-          <thead className="bg-gray-50 sticky top-0">
+      <div style={{ overflowX: "auto" }}>
+        <table className="data-table">
+          <thead>
             <tr>
-              <th onClick={() => setSort("name")} className="border px-4 py-2 text-left cursor-pointer select-none">
+              <th onClick={() => setSort("name")} style={{ cursor: "pointer" }}>
                 Name {sortKey === "name" && (sortDir === "asc" ? "▲" : "▼")}
               </th>
-              <th onClick={() => setSort("email")} className="border px-4 py-2 text-left cursor-pointer select-none">
+              <th onClick={() => setSort("email")} style={{ cursor: "pointer" }}>
                 Email {sortKey === "email" && (sortDir === "asc" ? "▲" : "▼")}
               </th>
-              <th onClick={() => setSort("role")} className="border px-4 py-2 text-left cursor-pointer select-none">
+              <th onClick={() => setSort("role")} style={{ cursor: "pointer" }}>
                 Role {sortKey === "role" && (sortDir === "asc" ? "▲" : "▼")}
               </th>
-              <th className="border px-4 py-2">Actions</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {pageItems.length === 0 && (
               <tr>
-                <td colSpan={4} className="border px-4 py-10 text-center text-gray-500">
+                <td colSpan={4} style={{ textAlign: "center", padding: "2rem", color: "var(--color-text-gray)" }}>
                   No users match your filters.
                 </td>
               </tr>
             )}
-            {pageItems.map((user, idx) => (
-              <tr key={user._id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                <td className="border px-4 py-2">
-                  <div className="font-medium text-gray-800">{user.name}</div>
-                  <div className="sm:hidden text-xs text-gray-500">{user.email}</div>
-                </td>
-                <td className="border px-4 py-2 hidden sm:table-cell">{user.email}</td>
-                <td className="border px-4 py-2 capitalize">
-                  <span className="inline-flex px-2 py-0.5 rounded text-xs bg-gray-100 border text-gray-700">
-                    {user.role}
-                  </span>
-                </td>
-                <td className="border px-4 py-2">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setEditingUser(user)}
-                      className="inline-flex items-center px-2.5 py-1.5 rounded border border-blue-200 text-blue-700 hover:bg-blue-50 text-xs"
-                    >
-                      ✏️ Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(user._id)}
-                      className="inline-flex items-center px-2.5 py-1.5 rounded border border-red-200 text-red-700 hover:bg-red-50 text-xs"
-                    >
-                      🗑️ Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {pageItems.map((user) => {
+              // Map role to badge color (using standard badge classes if available, otherwise inline)
+              const badgeClass = `stat-badge badge-${user.role === "admin" ? "purple" :
+                user.role === "seller" ? "blue" :
+                  user.role === "customer" ? "green" : "gray"
+                }`;
+
+              return (
+                <tr key={user._id}>
+                  <td>
+                    <div style={{ fontWeight: 500, color: "var(--text-primary)" }}>{user.name}</div>
+                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "none" }} className="mobile-only">{user.email}</div>
+                  </td>
+                  <td className="desktop-only" style={{ color: "var(--text-primary)" }}>{user.email}</td>
+                  <td>
+                    <span className={badgeClass} style={{ textTransform: "capitalize" }}>
+                      {user.role}
+                    </span>
+                  </td>
+                  <td>
+                    <div style={{ display: "flex", gap: "0.5rem" }}>
+                      <button
+                        onClick={() => setEditingUser(user)}
+                        style={{
+                          border: "none",
+                          background: "none",
+                          fontSize: "1.2rem",
+                          cursor: "pointer",
+                          padding: "0.25rem"
+                        }}
+                        title="Edit"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => handleDelete(user._id)}
+                        style={{
+                          border: "none",
+                          background: "none",
+                          fontSize: "1.2rem",
+                          cursor: "pointer",
+                          padding: "0.25rem"
+                        }}
+                        title="Delete"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
-      <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="text-sm text-gray-500">
+      <div style={{ marginTop: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border-color)", paddingTop: "1rem" }}>
+        <div style={{ fontSize: "0.875rem", color: "var(--text-muted)" }}>
           Page {page} of {totalPages}
         </div>
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-600">Rows per page</label>
-          <select
-            value={pageSize}
-            onChange={(e) => {
-              setPageSize(parseInt(e.target.value, 10));
-              setPage(1);
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <button
+            disabled={page === 1}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            style={{
+              padding: "0.5rem 1rem",
+              borderRadius: "0.5rem",
+              border: "1px solid var(--border-color)",
+              backgroundColor: page === 1 ? "var(--bg-tertiary)" : "var(--bg-secondary)",
+              color: page === 1 ? "var(--text-muted)" : "var(--text-primary)",
+              cursor: page === 1 ? "not-allowed" : "pointer"
             }}
-            className="px-2 py-1 border rounded text-sm"
           >
-            <option value={5}>5</option>
-            <option value={10}>10</option>
-            <option value={20}>20</option>
-            <option value={50}>50</option>
-          </select>
-          <div className="flex items-center gap-2 ml-2">
-            <button
-              disabled={page === 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className={`px-3 py-1 rounded border text-sm ${page === 1 ? "text-gray-400 border-gray-200" : "hover:bg-gray-50"}`}
-            >
-              Prev
-            </button>
-            <button
-              disabled={page === totalPages}
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              className={`px-3 py-1 rounded border text-sm ${page === totalPages ? "text-gray-400 border-gray-200" : "hover:bg-gray-50"}`}
-            >
-              Next
-            </button>
-          </div>
+            Prev
+          </button>
+          <button
+            disabled={page === totalPages}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            style={{
+              padding: "0.5rem 1rem",
+              borderRadius: "0.5rem",
+              border: "1px solid var(--border-color)",
+              backgroundColor: page === totalPages ? "var(--bg-tertiary)" : "var(--bg-secondary)",
+              color: page === totalPages ? "var(--text-muted)" : "var(--text-primary)",
+              cursor: page === totalPages ? "not-allowed" : "pointer"
+            }}
+          >
+            Next
+          </button>
         </div>
       </div>
 

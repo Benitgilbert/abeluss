@@ -8,12 +8,13 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const sendReportEmail = async ({ to, subject, text, attachmentPath }) => {
+export const sendReportEmail = async ({ to, subject, text, html, attachmentPath }) => {
   const mailOptions = {
     from: '"impressa Reports" <reports@impressa.com>',
     to,
     subject,
     text,
+    html,
     attachments: attachmentPath
       ? [{ filename: "report.pdf", path: attachmentPath }]
       : [],

@@ -62,7 +62,6 @@ const cartSchema = new mongoose.Schema(
     expiresAt: {
       type: Date,
       required: true,
-      index: true,
       default: () => new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
     },
     lastActivity: {
@@ -105,12 +104,13 @@ cartSchema.pre("save", function (next) {
 
 // Method to add item to cart
 cartSchema.methods.addItem = function (itemData) {
-  const { product, quantity = 1, price, customizations } = itemData;
+  const { product, quantity = 1, price, variationId, productName, productImage, customizations } = itemData;
 
-  // Check if item already exists (same product, same customizations)
+  // Check if item already exists (same product, same variation, same customizations)
   const existingItemIndex = this.items.findIndex(
     (item) =>
       item.product.equals(product) &&
+      item.variationId === variationId &&
       JSON.stringify(item.customizations) === JSON.stringify(customizations || {})
   );
 
@@ -123,6 +123,9 @@ cartSchema.methods.addItem = function (itemData) {
       product,
       quantity,
       price,
+      variationId,
+      productName,
+      productImage,
       subtotal: price * quantity, // Calculate subtotal on item add
       customizations: customizations || {},
     });

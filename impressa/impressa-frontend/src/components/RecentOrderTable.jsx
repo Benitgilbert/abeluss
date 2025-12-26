@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "../utils/axiosInstance";
 
-function RecentOrderTable() {
+function RecentOrderTable({ endpoint = "/analytics/recent-orders" }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -9,7 +9,7 @@ function RecentOrderTable() {
   useEffect(() => {
     const fetchRecentOrders = async () => {
       try {
-        const res = await axios.get("/analytics/recent-orders");
+        const res = await axios.get(endpoint);
         setOrders(res.data);
       } catch (err) {
         console.error("Failed to fetch recent orders:", err?.response?.data || err.message);
@@ -23,62 +23,65 @@ function RecentOrderTable() {
   }, []);
 
   if (loading) return (
-    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-      <div className="animate-pulse space-y-3">
-        <div className="h-6 bg-gray-200 rounded w-1/3"></div>
-        <div className="h-32 bg-gray-100 rounded"></div>
-      </div>
+    <div className="card">
+      <div style={{ animate: "pulse", padding: "1rem" }}>Loading recent orders...</div>
     </div>
   );
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-full">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-700">Recent Orders</h3>
-        <div className="text-sm text-gray-500">{orders.length} items</div>
+    <div className="card h-full">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+        <h3 className="card-title" style={{ marginBottom: 0 }}>Recent Orders</h3>
+        <span style={{ color: "var(--color-text-gray)", fontSize: "0.875rem" }}>{orders.length} items</span>
       </div>
+
       {error && (
-        <div className="mb-3 text-sm text-red-600">{error}</div>
+        <div style={{ marginBottom: "1rem", color: "#dc2626", fontSize: "0.875rem" }}>{error}</div>
       )}
-      <div className="overflow-x-auto">
-      <table className="w-full text-sm text-left">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="p-2">Order ID</th>
-            <th className="p-2">Customer</th>
-            <th className="p-2">Product</th>
-            <th className="p-2">Quantity</th>
-            <th className="p-2">Status</th>
-            <th className="p-2">Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          {orders.length === 0 && (
+
+      <div className="table-container" style={{ boxShadow: "none", borderRadius: 0 }}>
+        <table className="data-table">
+          <thead>
             <tr>
-              <td colSpan={6} className="p-6 text-center text-gray-500">No recent orders found.</td>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Product</th>
+              <th>Quantity</th>
+              <th>Status</th>
+              <th>Date</th>
             </tr>
-          )}
-          {orders.map((order) => (
-            <tr key={order._id} className="border-t">
-              <td className="p-2">{order._id.slice(-6)}</td>
-              <td className="p-2">{order.customer?.name || "N/A"}</td>
-              <td className="p-2">{order.product?.name || "N/A"}</td>
-              <td className="p-2">{order.quantity}</td>
-              <td className="p-2">
-                <span className={`px-2 py-1 rounded text-xs capitalize ${
-                  order.status === "delivered" ? "bg-green-100 text-green-800" :
-                  order.status === "cancelled" ? "bg-red-100 text-red-800" :
-                  order.status === "in-production" ? "bg-blue-100 text-blue-800" :
-                  "bg-yellow-100 text-yellow-800"
-                }`}>
-                  {order.status}
-                </span>
-              </td>
-              <td className="p-2">{new Date(order.createdAt).toLocaleDateString()}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {orders.length === 0 && (
+              <tr>
+                <td colSpan={6} style={{ textAlign: "center", color: "#9ca3af", padding: "2rem" }}>No recent orders found.</td>
+              </tr>
+            )}
+            {orders.map((order) => (
+              <tr key={order._id}>
+                <td style={{ fontFamily: "monospace" }}>#{order.publicId || order._id.slice(-6).toUpperCase()}</td>
+                <td>{order.customer?.name || order.guestInfo?.name || "Guest"}</td>
+                <td>
+                  <div style={{ maxWidth: "200px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {order.items?.map(i => i.productName).join(", ") || "N/A"}
+                  </div>
+                </td>
+                <td>{order.items?.reduce((sum, i) => sum + i.quantity, 0) || order.quantity}</td>
+                <td>
+                  <span className={`stat-badge ${order.status === "delivered" ? "badge-green" :
+                      order.status === "cancelled" ? "badge-red" :
+                        order.status === "in-production" ? "badge-blue" :
+                          order.status === "processing" ? "badge-teal" :
+                            "badge-blue" // Default/Pending
+                    }`}>
+                    {order.status}
+                  </span>
+                </td>
+                <td>{new Date(order.createdAt).toLocaleDateString()}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

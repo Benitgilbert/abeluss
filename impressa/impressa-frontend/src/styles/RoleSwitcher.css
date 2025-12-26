@@ -1,0 +1,163 @@
+/* Role Switcher Component Styles */
+
+.role-switcher {
+    position: relative;
+    display: inline-block;
+}
+
+.role-switcher-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    /* Assuming --radius-lg is around 8px */
+    border: 1px solid #e2e8f0;
+    /* var(--border-color) equivalent */
+    background: white;
+    color: #1e293b;
+    /* var(--text-primary) */
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.role-switcher-btn:hover {
+    background: #f8fafc;
+    /* var(--bg-tertiary) */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.role-icon {
+    font-size: 1.1em;
+    color: #64748b;
+    /* var(--text-muted) */
+}
+
+.chevron {
+    font-size: 0.75em;
+    color: #94a3b8;
+    transition: transform 0.2s;
+    margin-left: 4px;
+}
+
+.chevron.open {
+    transform: rotate(180deg);
+}
+
+/* Dropdown */
+.role-switcher-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 260px;
+    background: white;
+    /* var(--bg-secondary) */
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    /* var(--radius-xl) */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    z-index: 50;
+    padding: 8px;
+    overflow: hidden;
+    animation: slideDown 0.2s ease-out;
+}
+
+.role-option-header {
+    padding: 8px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #94a3b8;
+    /* var(--text-muted) */
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.role-option {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+}
+
+.role-option:hover {
+    background: #f1f5f9;
+    /* var(--bg-tertiary) */
+}
+
+.role-option.active {
+    background: #eff6ff;
+    /* var(--primary-light) */
+}
+
+.role-option-icon {
+    font-size: 1.25rem;
+}
+
+.role-option-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.role-option-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #0f172a;
+    /* var(--text-primary) */
+}
+
+.role-option-desc {
+    font-size: 0.75rem;
+    color: #64748b;
+    /* var(--text-muted) */
+}
+
+.role-check {
+    color: #3b82f6;
+    /* var(--primary) */
+    font-size: 0.875rem;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==========================================================================
+   Dark Theme Variant (for Header.jsx usage)
+   ========================================================================== */
+.role-switcher.dark .role-switcher-btn {
+    background: rgba(30, 41, 59, 0.5);
+    /* Semi-transparent dark bg */
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    color: #e2e8f0;
+}
+
+.role-switcher.dark .role-switcher-btn:hover {
+    background: rgba(30, 41, 59, 0.9);
+    border-color: rgba(148, 163, 184, 0.4);
+}
+
+.role-switcher.dark .role-icon,
+.role-switcher.dark .chevron {
+    color: #94a3b8;
+}
+
+/* Keep dropdown light even in dark mode for contrast, or match system theme?
+   For now, keep it light as it pops out over content. */

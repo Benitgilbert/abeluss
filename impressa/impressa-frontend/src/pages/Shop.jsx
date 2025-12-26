@@ -1,142 +1,330 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
-  FaSearch, FaHeart, FaShoppingCart, FaStar, FaPlayCircle, FaArrowRight,
-  FaShippingFast, FaShieldAlt, FaHeadset, FaChevronDown, FaCheck,
-  FaRegHeart, FaStarHalfAlt, FaGem, FaRocket, FaPalette, FaPrint,
-  FaTruck, FaUndo, FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn,
-  FaPaperPlane, FaEnvelope, FaPhone, FaMapMarkerAlt, FaTshirt, FaThumbsUp
+  FaSearch, FaHeart, FaShoppingCart, FaStar, FaStarHalfAlt, FaTshirt, FaRegHeart
 } from "react-icons/fa";
 
 import api from "../utils/axiosInstance";
 import { formatRwf } from "../utils/currency";
+import assetUrl from "../utils/assetUrl";
+import Header from "../components/Header";
 import LandingFooter from "../components/LandingFooter";
 import { useCart } from "../context/CartContext";
-import "./Home.css";
+
+import { useWishlist } from "../context/WishlistContext";
+import { useToast } from "../context/ToastContext";
+import Breadcrumbs from "../components/Breadcrumbs";
+import "./Shop.css";
+
+const WishlistButton = ({ product }) => {
+  const { ids, toggle } = useWishlist();
+  const isWishlisted = ids.includes(product._id);
+
+  const toggleWishlist = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggle(product._id);
+  };
+
+  return (
+    <button
+      onClick={toggleWishlist}
+      className="shop-wishlist-btn"
+      title={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+    >
+      {isWishlisted ? (
+        <FaHeart className="text-red-500 text-lg" />
+      ) : (
+        <FaRegHeart className="text-gray-600 hover:text-red-500 text-lg" />
+      )}
+    </button>
+  );
+};
 
 export default function Shop() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [q, setQ] = useState("");
-  const { addItem } = useCart();
+  const [searchParams, setSearchParams] = useSearchParams();
 
+  // Get initial values from URL params
+  const [q, setQ] = useState(searchParams.get("q") || searchParams.get("search") || "");
+  const [sortBy, setSortBy] = useState(searchParams.get("sort") || "newest");
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "");
+  const [minPrice, setMinPrice] = useState(searchParams.get("minPrice") || "");
+  const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") || "");
+
+  const { addItem } = useCart();
+  const { showError, showSuccess } = useToast();
+  const [categories, setCategories] = useState([]);
+  const [debouncedQ, setDebouncedQ] = useState(q);
+
+  const handleAddToCart = async (product) => {
+    if (product.customizable) {
+      window.location.href = `/product/${product._id}`;
+      return;
+    }
+    try {
+      await addItem(product, { quantity: 1 });
+      showSuccess("Added to cart!");
+    } catch (err) {
+      showError("Failed to add to cart");
+    }
+  };
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQ(q), 500);
+    return () => clearTimeout(timer);
+  }, [q]);
+
+  // Fetch categories on mount
   useEffect(() => {
     (async () => {
       try {
-        const { data } = await api.get("/products");
-        setProducts(data || []);
+        const catRes = await api.get("/categories");
+        setCategories(catRes.data.data || []);
       } catch (e) {
-        console.error("Failed to load products", e);
-      } finally {
-        setLoading(false);
+        console.error("Failed to load categories", e);
+        showError("Failed to load product categories.");
       }
     })();
   }, []);
 
-  const getImageUrl = (path) => {
-    if (!path) return '';
-    if (path.startsWith('http')) return path;
-    if (path.startsWith('/uploads/')) return `http://localhost:5000${path}`;
-    return process.env.PUBLIC_URL + path;
+  // Fetch products when filters change
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoading(true);
+
+        // Check for special sort types (featured, trending)
+        if (sortBy === "featured") {
+          const { data } = await api.get("/products/featured/list");
+          const productList = Array.isArray(data) ? data : (data.products || []);
+          setProducts(productList);
+          setLoading(false);
+          return;
+        }
+
+        if (sortBy === "trending") {
+          const { data } = await api.get("/products/trending");
+          const productList = Array.isArray(data) ? data : [];
+          setProducts(productList);
+          setLoading(false);
+          return;
+        }
+
+        // Build query params for regular product fetch
+        const params = new URLSearchParams();
+        if (debouncedQ) params.append("search", debouncedQ);
+
+        // Handle category - could be ID or name from Home page
+        if (selectedCategory) {
+          // Check if it's a category ID (24-char hex) or a name
+          const isObjectId = /^[a-f\d]{24}$/i.test(selectedCategory);
+          if (isObjectId) {
+            params.append("category", selectedCategory);
+          } else {
+            // Find category by name and use its ID
+            const cat = categories.find(c =>
+              c.name.toLowerCase() === selectedCategory.toLowerCase() ||
+              c.slug?.toLowerCase() === selectedCategory.toLowerCase()
+            );
+            if (cat) {
+              params.append("category", cat._id);
+            } else {
+              // Still append as-is, backend might support name search
+              params.append("category", selectedCategory);
+            }
+          }
+        }
+
+        if (minPrice) params.append("minPrice", minPrice);
+        if (maxPrice) params.append("maxPrice", maxPrice);
+
+        // Add sort parameter
+        if (sortBy && sortBy !== "newest") {
+          params.append("sort", sortBy);
+        }
+
+        const { data } = await api.get(`/products?${params.toString()}`);
+        let productList = Array.isArray(data) ? data : (data.products || []);
+
+        // Client-side sorting if backend doesn't support it
+        if (sortBy === "price-asc") {
+          productList = [...productList].sort((a, b) => a.price - b.price);
+        } else if (sortBy === "price-desc") {
+          productList = [...productList].sort((a, b) => b.price - a.price);
+        } else if (sortBy === "newest") {
+          productList = [...productList].sort((a, b) =>
+            new Date(b.createdAt) - new Date(a.createdAt)
+          );
+        }
+
+        setProducts(productList);
+      } catch (e) {
+        console.error("Failed to load products", e);
+        if (e.name !== "CanceledError") showError("Failed to load products.");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [debouncedQ, selectedCategory, minPrice, maxPrice, sortBy, categories]);
+
+  // Handle sort change
+  const handleSortChange = (e) => {
+    const newSort = e.target.value;
+    setSortBy(newSort);
+    // Update URL
+    const newParams = new URLSearchParams(searchParams);
+    if (newSort && newSort !== "newest") {
+      newParams.set("sort", newSort);
+    } else {
+      newParams.delete("sort");
+    }
+    setSearchParams(newParams);
   };
 
-  const filtered = products.filter(p => p.name.toLowerCase().includes(q.toLowerCase()));
+  // Handle category selection
+  const handleCategoryChange = (categoryId) => {
+    setSelectedCategory(categoryId);
+    // Update URL
+    const newParams = new URLSearchParams(searchParams);
+    if (categoryId) {
+      newParams.set("category", categoryId);
+    } else {
+      newParams.delete("category");
+    }
+    setSearchParams(newParams);
+  };
+
+  // Get display title based on current filter
+  const getPageTitle = () => {
+    if (sortBy === "featured") return "Featured Products";
+    if (sortBy === "trending") return "Trending Now";
+    if (selectedCategory) {
+      const cat = categories.find(c => c._id === selectedCategory || c.name === selectedCategory);
+      return cat ? cat.name : "Shop";
+    }
+    return "All Products";
+  };
 
   return (
-    <div style={{fontFamily: "'Roboto', sans-serif"}}>
-      <header id="global-header" className="code-section sticky top-0 z-50 bg-white/95 backdrop-blur-md shadow-sm transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-28">
-            <Link to="/" className="flex-shrink-0 transition-transform hover:scale-105 duration-300">
-              <img src={process.env.PUBLIC_URL + '/images/logo.png'} alt="Impressa Logo" className="h-28 py-2 w-auto" />
-            </Link>
-            <nav className="hidden lg:flex items-center space-x-8">
-              <Link to="/shop" className="text-gray-900 hover:text-blue-800 font-medium transition-colors duration-200">Product Listing</Link>
-              <Link to="/about" className="text-blue-800 font-bold">About Us</Link>
-              <Link to="/contact" className="text-gray-900 hover:text-blue-800 font-medium transition-colors duration-200">Contact</Link>
-              <Link to="/blog" className="text-gray-900 hover:text-blue-800 font-medium transition-colors duration-200">Blog</Link>
-            </nav>
-            <div className="hidden lg:flex items-center space-x-6">
-              <button className="text-gray-500 hover:text-blue-800 transition-colors">
-                <FaSearch className="text-xl" />
-              </button>
-              <Link to="/wishlist" className="text-gray-500 hover:text-blue-800 transition-colors relative">
-                <FaHeart className="text-xl" />
-              </Link>
-              <Link to="/cart" className="text-gray-500 hover:text-blue-800 transition-colors relative">
-                <FaShoppingCart className="text-xl" />
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
-              </Link>
-              <Link to="/checkout" className="bg-blue-800 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                Get Custom Printing Now
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div style={{ fontFamily: "'Roboto', sans-serif" }}>
+      <Header />
 
       <main>
-        <section className="code-section relative min-h-[60vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-light-background-color to-white">
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute top-20 left-10 w-72 h-72 bg-green-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-            <div className="absolute top-40 right-20 w-72 h-72 bg-yellow-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-            <div className="absolute -bottom-8 left-1/2 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000"></div>
-          </div>
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32 text-center">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight" style={{fontFamily: "'Poppins', sans-serif"}}>
-              <span className="text-gray-900">Explore Our Collection of</span>
-              <span className="block mt-2 bg-gradient-to-r from-blue-800 via-green-500 to-yellow-500 bg-clip-text text-transparent">Customizable Products</span>
-            </h1>
-            <p className="mt-6 text-lg sm:text-xl text-gray-500 max-w-3xl mx-auto">
-              Find the perfect canvas for your creativity. From professional business essentials to unique personal gifts, we have it all.
-            </p>
-          </div>
-        </section>
+        <section className="shop-main-section">
+          <div className="shop-layout">
+            <div style={{ width: '100%' }}>
+              <Breadcrumbs items={[{ label: 'Shop' }]} />
+            </div>
+            <aside className="shop-sidebar">
+              <div className="shop-sidebar-title"><FaSearch /> Filters</div>
 
-        <section className="py-20 lg:py-32 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4" style={{fontFamily: "'Poppins', sans-serif"}}>All Products</h2>
-              <p className="text-lg text-gray-500 max-w-2xl mx-auto">Browse our wide selection of customizable products. High-quality materials, fast turnaround, and stunning results.</p>
-              <div className="mt-8 relative max-w-md mx-auto">
-                <input 
-                  value={q} 
-                  onChange={(e) => setQ(e.target.value)} 
-                  placeholder="Search for products like 'banners', 'ID cards'..." 
-                  className="w-full px-6 py-4 rounded-full border-2 border-gray-200 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm hover:shadow-md" 
+              <div className="shop-filter-group">
+                <label className="shop-filter-label">Search</label>
+                <input
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="Product name..."
+                  className="shop-filter-input"
                 />
-                <FaSearch className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400" />
               </div>
-            </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-              {loading ? <div className="text-gray-500 col-span-full text-center">Loading…</div> : filtered.map((p) => (
-                <div key={p._id} className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden transform hover:-translate-y-2">
-                  <Link to={`/product/${p._id}`} className="relative overflow-hidden bg-gray-200 aspect-square block">
-                    {p.image ? <img src={getImageUrl(p.image)} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" /> : <div className="w-full h-full flex items-center justify-center"><FaTshirt className="text-8xl text-gray-400 opacity-50" /></div>}
-                  </Link>
-                  <div className="p-6">
-                    <h3 className="font-bold text-xl text-gray-900 mb-2 truncate">{p.name}</h3>
-                    <p className="text-gray-500 text-sm mb-4 h-10 overflow-hidden">{p.description}</p>
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-2xl font-bold text-blue-800">{formatRwf(p.price)}</span>
-                      <div className="flex items-center space-x-1 text-yellow-500"><FaStar className="text-sm" /><FaStar className="text-sm" /><FaStar className="text-sm" /><FaStar className="text-sm" /><FaStarHalfAlt className="text-sm" /></div>
-                    </div>
-                    <button 
-                        onClick={() => p.customizable ? window.location.href=`/product/${p._id}` : addItem(p, { quantity: 1 })} 
-                        className="w-full block text-center bg-blue-800 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-all duration-300 transform group-hover:scale-105"
-                    >
-                      <FaShoppingCart className="mr-2 inline" />{p.customizable ? 'Customize' : 'Add to Cart'}
-                    </button>
+
+              <div className="shop-filter-group">
+                <label className="shop-filter-label">Category</label>
+                <div className="category-list">
+                  <div
+                    className={`category-item ${selectedCategory === "" ? "active" : ""}`}
+                    onClick={() => handleCategoryChange("")}
+                  >
+                    <span>All Categories</span>
                   </div>
+                  {categories.map(c => (
+                    <div
+                      key={c._id}
+                      className={`category-item ${selectedCategory === c._id || selectedCategory === c.name ? "active" : ""}`}
+                      onClick={() => handleCategoryChange(c._id)}
+                    >
+                      <span>{c.name}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            {filtered.length === 0 && !loading && (
-              <div className="text-center text-gray-500 py-12">
-                <h3 className="text-2xl font-bold mb-2">No Products Found</h3>
-                <p>Try adjusting your search or check back later for new arrivals.</p>
               </div>
-            )}
+
+              <div className="shop-filter-group">
+                <label className="shop-filter-label">Price Range</label>
+                <div className="shop-price-inputs">
+                  <input
+                    type="number"
+                    value={minPrice}
+                    onChange={(e) => setMinPrice(e.target.value)}
+                    placeholder="Min"
+                    className="shop-price-input"
+                  />
+                  <div className="shop-price-separator">-</div>
+                  <input
+                    type="number"
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(e.target.value)}
+                    placeholder="Max"
+                    className="shop-price-input"
+                  />
+                </div>
+              </div>
+            </aside>
+
+            <div className="shop-content">
+              <div className="shop-top-bar">
+                <div>
+                  <h2 className="shop-page-title">{getPageTitle()}</h2>
+                  <span className="shop-results-count">{products.length} Products Found</span>
+                </div>
+                <select
+                  className="shop-sort-select"
+                  value={sortBy}
+                  onChange={handleSortChange}
+                >
+                  <option value="newest">Newest First</option>
+                  <option value="price-asc">Price: Low to High</option>
+                  <option value="price-desc">Price: High to Low</option>
+                  <option value="featured">Featured</option>
+                  <option value="trending">Trending</option>
+                </select>
+              </div>
+
+              <div className="shop-grid">
+                {loading ? <div className="text-gray-500 col-span-full text-center">Loading products...</div> : products.map((p) => (
+                  <div key={p._id} className="shop-card group">
+                    <Link to={`/product/${p._id}`} className="shop-card-image-wrapper">
+                      {p.image ? <img src={assetUrl(p.image)} alt={p.name} className="shop-card-img" /> : <div className="product-fallback-container"><FaTshirt className="product-fallback-icon" /></div>}
+                      <WishlistButton product={p} />
+                    </Link>
+                    <div className="shop-card-body">
+                      <h3 className="shop-card-title">{p.name}</h3>
+                      <p className="shop-card-desc">{p.description}</p>
+                      <div className="shop-card-footer">
+                        <span className="shop-card-price">{formatRwf(p.price)}</span>
+                        <div className="shop-rating"><FaStar className="text-sm" /><FaStar className="text-sm" /><FaStar className="text-sm" /><FaStar className="text-sm" /><FaStarHalfAlt className="text-sm" /></div>
+                      </div>
+                      <button
+                        onClick={() => handleAddToCart(p)}
+                        className="shop-add-btn"
+                      >
+                        <FaShoppingCart className="mr-2 inline" />{p.customizable ? 'Customize' : 'Add to Cart'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {products.length === 0 && !loading && (
+                <div className="shop-empty-state">
+                  <h3 className="text-2xl font-bold mb-2">No Products Found</h3>
+                  <p>Try adjusting your search or check back later for new arrivals.</p>
+                </div>
+              )}
+            </div>
           </div>
         </section>
 

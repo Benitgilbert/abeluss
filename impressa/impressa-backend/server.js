@@ -1,5 +1,7 @@
 import express from "express";
 import mongoose from "mongoose";
+import path from "path";
+import passport from "./config/passport.js";
 import cors from "cors";
 import helmet from "helmet";
 import pinoHttp from "pino-http";
@@ -31,17 +33,17 @@ app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
+
     // In development, allow localhost
     if (origin && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
       return callback(null, true);
     }
-    
+
     // Check if origin is in allowed list
     if (allowedOrigins.some(allowed => origin === allowed || origin.endsWith('.replit.dev'))) {
       return callback(null, true);
     }
-    
+
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
@@ -51,6 +53,7 @@ app.use(cors({
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use(passport.initialize());
 app.use(cookieParser()); // For cart session management
 
 // ✅ Request Logging Middleware
@@ -63,10 +66,10 @@ app.use(
       return "info";
     },
     customSuccessMessage: (req, res) => {
-      return `${req.method} ${req.url} ${res.statusCode}`;
+      return `${req.method} ${req.url} ${res.statusCode} `;
     },
     customErrorMessage: (req, res, err) => {
-      return `${req.method} ${req.url} ${res.statusCode} - ${err.message}`;
+      return `${req.method} ${req.url} ${res.statusCode} - ${err.message} `;
     },
     // Skip logging for health checks
     autoLogging: {
@@ -107,6 +110,19 @@ const startServer = async () => {
     const couponRoutes = (await import("./routes/couponRoutes.js")).default;
     const checkoutRoutes = (await import("./routes/checkoutRoutes.js")).default;
     const paymentRoutes = (await import("./routes/paymentRoutes.js")).default;
+    const attributeRoutes = (await import("./routes/attributeRoutes.js")).default;
+    const shippingRoutes = (await import("./routes/shippingRoutes.js")).default;
+    const shippingClassRoutes = (await import("./routes/shippingClassRoutes.js")).default;
+    const taxRoutes = (await import("./routes/taxRoutes.js")).default;
+    const blogRoutes = (await import("./routes/blogRoutes.js")).default;
+    const financeRoutes = (await import("./routes/financeRoutes.js")).default;
+    const reviewRoutes = (await import("./routes/reviewRoutes.js")).default;
+    const flashSaleRoutes = (await import("./routes/flashSaleRoutes.js")).default;
+    const bannerRoutes = (await import("./routes/bannerRoutes.js")).default;
+    const testimonialRoutes = (await import("./routes/testimonialRoutes.js")).default;
+    const brandPartnerRoutes = (await import("./routes/brandPartnerRoutes.js")).default;
+    const siteSettingsRoutes = (await import("./routes/siteSettingsRoutes.js")).default;
+    const newsletterRoutes = (await import("./routes/newsletterRoutes.js")).default;
 
     // ✅ Register health checks first (no auth required)
     app.use("/", healthRoutes);
@@ -119,17 +135,46 @@ const startServer = async () => {
     app.use("/api/coupons", couponRoutes);
     app.use("/api/checkout", checkoutRoutes);
     app.use("/api/payments", paymentRoutes);
+    app.use("/api/attributes", attributeRoutes);
+    app.use("/api/shipping", shippingRoutes);
+    app.use("/api/shipping-classes", shippingClassRoutes);
+    app.use("/api/taxes", taxRoutes);
     app.use("/api/customizations", customizationRoutes);
     app.use("/api/orders", orderRoutes);
     app.use("/api/reports", reportRoutes);
     app.use("/api", authRoutes);
     app.use("/api/dashboard", dashboardRoutes);
     app.use("/api/analytics", analyticsRoutes);
+    app.use("/api/blogs", blogRoutes);
+    app.use("/api/finance", financeRoutes);
+    app.use("/api/reviews", reviewRoutes);
+    app.use("/api/flash-sales", flashSaleRoutes);
+    app.use("/api/banners", bannerRoutes);
+    app.use("/api/testimonials", testimonialRoutes);
+    app.use("/api/brand-partners", brandPartnerRoutes);
+    app.use("/api/site-settings", siteSettingsRoutes);
+    app.use("/api/newsletter", newsletterRoutes);
+    const sellerRoutes = (await import("./routes/sellerRoutes.js")).default;
+    app.use("/api/sellers", sellerRoutes);
+    const commissionRoutes = (await import("./routes/commissionRoutes.js")).default;
+    app.use("/api/commissions", commissionRoutes);
+    const productApprovalRoutes = (await import("./routes/productApprovalRoutes.js")).default;
+    app.use("/api/product-approval", productApprovalRoutes);
+    const reviewsAdminRoutes = (await import("./routes/reviewsAdminRoutes.js")).default;
+    app.use("/api/reviews-admin", reviewsAdminRoutes);
+    const ticketRoutes = (await import("./routes/ticketRoutes.js")).default;
+    app.use("/api/tickets", ticketRoutes);
+    const notificationRoutes = (await import("./routes/notificationRoutes.js")).default;
+    app.use("/api/notifications", notificationRoutes);
+    const sellerVerificationRoutes = (await import("./routes/sellerVerificationRoutes.js")).default;
+    app.use("/api/seller-verification", sellerVerificationRoutes);
+    const uploadRoutes = (await import("./routes/uploadRoutes.js")).default;
+    app.use("/api/upload", uploadRoutes);
 
 
     app.get("/api", (req, res) => {
-      res.json({ 
-        success: true, 
+      res.json({
+        success: true,
         message: "Impressa Backend API is running!",
         version: "1.0.0",
         environment: process.env.NODE_ENV || "development",
@@ -146,8 +191,8 @@ const startServer = async () => {
     // ✅ Start listening
     const PORT = process.env.PORT || 5000;
     const server = app.listen(PORT, () => {
-      logger.info(`🚀 Server running on port ${PORT}`);
-      logger.info(`📝 Environment: ${process.env.NODE_ENV || "development"}`);
+      logger.info(`🚀 Server running on port ${PORT} `);
+      logger.info(`📝 Environment: ${process.env.NODE_ENV || "development"} `);
       logger.info(`🏥 Health check: http://localhost:${PORT}/health`);
       logger.info(`📊 Readiness check: http://localhost:${PORT}/ready`);
     });
@@ -155,16 +200,16 @@ const startServer = async () => {
     // ✅ Graceful Shutdown
     const gracefulShutdown = async (signal) => {
       logger.info(`${signal} received, starting graceful shutdown...`);
-      
+
       // Stop accepting new connections
       server.close(async () => {
         logger.info("HTTP server closed");
-        
+
         try {
           // Close database connections
           await mongoose.connection.close(false);
           logger.info("MongoDB connection closed");
-          
+
           logger.info("Graceful shutdown completed");
           process.exit(0);
         } catch (error) {
@@ -172,7 +217,7 @@ const startServer = async () => {
           process.exit(1);
         }
       });
-      
+
       // Force shutdown after 30 seconds
       setTimeout(() => {
         logger.error("Forced shutdown after timeout");

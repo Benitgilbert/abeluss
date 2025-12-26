@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import api from "../utils/axiosInstance";
+import { FaRobot, FaPaperPlane, FaTimes, FaTrashAlt, FaCommentDots } from "react-icons/fa";
+import "../styles/Chatbot.css";
 
 function AdminChatbot() {
   const [question, setQuestion] = useState("");
@@ -15,7 +17,7 @@ function AdminChatbot() {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) setMessages(parsed);
-      } catch {}
+      } catch { }
     }
   }, []);
 
@@ -64,77 +66,89 @@ function AdminChatbot() {
   };
 
   return (
-    <>
+    <div className="chatbot-wrapper">
       {/* Floating Chat Button */}
       <button
-        onClick={() => setShowChat(true)}
-        className="fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 z-50"
+        onClick={() => setShowChat(!showChat)}
+        className={`chatbot-trigger ${showChat ? 'open' : 'closed'}`}
+        title="Toggle AI Assistant"
       >
-        💬
+        {showChat ? <FaTimes className="trigger-icon" /> : <FaCommentDots className="trigger-icon" />}
       </button>
 
       {/* Chat Panel */}
-      {showChat && (
-  <div className="fixed bottom-0 left-1/2 translate-x-[-50%] w-[520px] h-[560px] bg-white rounded-t-lg shadow-lg flex flex-col z-40">
-    {/* Header */}
-    <div className="p-4 border-b font-semibold text-gray-700 flex justify-between items-center">
-      <div className="flex items-center gap-2">
-        <span>🧠</span>
-        <span>impressa Assistant</span>
-      </div>
-      <div className="flex items-center gap-3">
-        <button onClick={clearChat} className="text-gray-500 hover:text-gray-700 text-xs">Clear</button>
-        <button onClick={() => setShowChat(false)} className="text-gray-500 hover:text-red-500 text-sm">✖</button>
+      <div className={`chatbot-panel ${showChat ? 'visible' : 'hidden'}`}>
+        {/* Header */}
+        <div className="chat-header">
+          <div className="chat-header-info">
+            <div className="robot-icon-wrapper">
+              <FaRobot size={20} />
+            </div>
+            <div className="chat-title">
+              <p>AI Assistant</p>
+              <div className="chat-status">
+                <span className="status-dot"></span> Online
+              </div>
+            </div>
+          </div>
+          <button onClick={clearChat} className="clear-btn" title="Clear Chat">
+            <FaTrashAlt size={14} />
+          </button>
+        </div>
+
+        {/* Messages */}
+        <div ref={listRef} className="chat-messages">
+          {messages.length === 0 && (
+            <div className="empty-state">
+              <div className="empty-icon">
+                <FaRobot />
+              </div>
+              <p>How can I help you today?</p>
+            </div>
+          )}
+
+          {messages.map((msg, i) => (
+            <div key={i} className={`message-row ${msg.role === "user" ? "user" : "bot"}`}>
+              <div className={`message-bubble ${msg.role === "user" ? "user" : "bot"}`}>
+                {msg.text}
+              </div>
+            </div>
+          ))}
+
+          {loading && (
+            <div className="message-row bot">
+              <div className="typing-indicator">
+                <div className="typing-dot"></div>
+                <div className="typing-dot"></div>
+                <div className="typing-dot"></div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Input */}
+        <form onSubmit={handleSubmit} className="chat-input-area">
+          <div className="input-wrapper">
+            <textarea
+              rows={1}
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Type your message..."
+              className="chat-textarea"
+            />
+            <button
+              type="submit"
+              disabled={loading || !question.trim()}
+              className="send-btn"
+            >
+              <FaPaperPlane size={14} />
+            </button>
+          </div>
+          <p className="input-hint">Press Enter to send</p>
+        </form>
       </div>
     </div>
-
-    {/* Messages */}
-    <div ref={listRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
-      {messages.map((msg, i) => (
-        <div
-          key={i}
-          className={`p-2 rounded max-w-[85%] ${
-            msg.role === "user"
-              ? "bg-blue-100 ml-auto text-right"
-              : "bg-white border border-gray-200 shadow-sm text-left"
-          }`}
-        >
-          <div className="whitespace-pre-wrap text-sm text-gray-800 leading-relaxed">
-            {msg.text}
-          </div>
-        </div>
-      ))}
-      {loading && (
-        <div className="p-2 rounded max-w-[70%] bg-white border border-gray-200 shadow-sm text-left">
-          <div className="text-sm text-gray-500 flex items-center gap-2">
-            <span className="inline-flex h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
-            Assistant is typing…
-          </div>
-        </div>
-      )}
-    </div>
-
-    {/* Input */}
-    <form onSubmit={handleSubmit} className="p-3 border-t flex gap-2 bg-white">
-      <textarea
-        rows={2}
-        value={question}
-        onChange={(e) => setQuestion(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder="Ask the assistant… (Enter to send, Shift+Enter for newline)"
-        className="flex-1 border rounded px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-200"
-      />
-      <button
-        type="submit"
-        disabled={loading || !question.trim()}
-        className={`px-4 py-2 rounded text-sm text-white ${loading || !question.trim() ? "bg-blue-300" : "bg-blue-600 hover:bg-blue-700"}`}
-      >
-        {loading ? "Thinking…" : "Send"}
-      </button>
-    </form>
-  </div>
-)}
-    </>
   );
 }
 

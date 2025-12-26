@@ -1,422 +1,675 @@
+// Impressa Home Page - Premium Marketplace Design
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  FaSearch, FaHeart, FaShoppingCart, FaStar, FaPlayCircle, FaArrowRight,
-  FaShippingFast, FaShieldAlt, FaHeadset, FaChevronDown, FaCheck,
-  FaRegHeart, FaStarHalfAlt, FaGem, FaRocket, FaPalette, FaPrint,
-  FaTruck, FaUndo, FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn,
-  FaPaperPlane, FaEnvelope, FaPhone, FaMapMarkerAlt, FaTshirt, FaThumbsUp
+  FaArrowRight, FaHeart, FaRegHeart, FaStar, FaShieldAlt, FaTruck, FaUndo, FaHeadset
 } from "react-icons/fa";
-
-import api from "../utils/axiosInstance";
 import { formatRwf } from "../utils/currency";
 import LandingFooter from "../components/LandingFooter";
+import Header from "../components/Header";
+import { useWishlist } from "../context/WishlistContext";
 import "./Home.css";
 
-const placeholderProducts = [
-  { _id: '1', name: 'Custom ID Cards', description: 'Professional identification cards for businesses and events.', price: 1299, image: '/images/popular-product-1.jpg' },
-  { _id: '2', name: 'Photo Frames', description: 'Beautiful custom frames for your cherished memories.', price: 2499, image: '/images/popular-product-2.jpg' },
-  { _id: '3', name: 'Custom Banners', description: 'Eye-catching banners for events and promotions.', price: 3999, image: '/images/popular-product-3.jpg' },
-  { _id: '4', name: 'Custom Tote Bags', description: 'Personalized bags perfect for any occasion.', price: 1899, image: '/images/popular-product-4.jpg' },
+const getImageUrl = (path) => {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  if (path.startsWith('/uploads/')) return `http://localhost:5000${path}`;
+  return process.env.PUBLIC_URL + path;
+};
+
+// Product Card Component
+const ProductCard = ({ product }) => {
+  const { ids, toggle } = useWishlist();
+  const isWishlisted = ids.includes(product._id);
+
+  const toggleWishlist = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggle(product._id);
+  };
+
+  return (
+    <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100">
+      <div className="relative aspect-square bg-gray-50 overflow-hidden">
+        <Link to={`/product/${product._id}`}>
+          {product.image ? (
+            <img
+              src={getImageUrl(product.image)}
+              alt={product.name}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-gray-300">No Image</div>
+          )}
+        </Link>
+        <button
+          onClick={toggleWishlist}
+          className="absolute top-3 right-3 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md hover:bg-white transition text-gray-400 hover:text-red-500"
+        >
+          {isWishlisted ? <FaHeart className="text-red-500" /> : <FaRegHeart />}
+        </button>
+      </div>
+      <div className="p-4">
+        <Link to={`/product/${product._id}`}>
+          <h3 className="font-semibold text-gray-800 line-clamp-2 mb-2 group-hover:text-violet-600 transition">{product.name}</h3>
+        </Link>
+        <div className="flex items-center gap-1 mb-2">
+          {[...Array(5)].map((_, i) => (
+            <FaStar key={i} className="text-amber-400 text-xs" />
+          ))}
+          <span className="text-xs text-gray-400 ml-1">(24)</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-xl font-bold text-gray-900">{formatRwf(product.price)}</span>
+          <Link
+            to={`/product/${product._id}`}
+            className="text-violet-600 hover:text-violet-700 text-sm font-medium"
+          >
+            View →
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Default category images and colors for fallback
+const categoryDefaults = {
+  'Electronics': { img: 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=300&h=300&fit=crop', color: 'from-blue-500 to-cyan-500' },
+  'Fashion': { img: 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=300&h=300&fit=crop', color: 'from-pink-500 to-rose-500' },
+  'Home & Living': { img: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=300&h=300&fit=crop', color: 'from-amber-500 to-orange-500' },
+  'Sports': { img: 'https://images.unsplash.com/photo-1461896836934-480c9e5d4c98?w=300&h=300&fit=crop', color: 'from-green-500 to-emerald-500' },
+  'Beauty': { img: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=300&h=300&fit=crop', color: 'from-purple-500 to-violet-500' },
+  'Accessories': { img: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&h=300&fit=crop', color: 'from-slate-500 to-gray-600' }
+};
+
+const defaultColors = [
+  'from-violet-500 to-purple-500',
+  'from-blue-500 to-cyan-500',
+  'from-pink-500 to-rose-500',
+  'from-amber-500 to-orange-500',
+  'from-green-500 to-emerald-500',
+  'from-slate-500 to-gray-600'
 ];
 
 export default function Home() {
   const [featured, setFeatured] = useState([]);
+  const [trending, setTrending] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [activeFlashSale, setActiveFlashSale] = useState(null);
+  const [promoBanner, setPromoBanner] = useState(null);
+  const [testimonials, setTestimonials] = useState([]);
+  const [brandPartners, setBrandPartners] = useState([]);
+  const [trustBadges, setTrustBadges] = useState([]);
+
+  // Newsletter subscription state
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterStatus, setNewsletterStatus] = useState({ loading: false, message: '', type: '' });
+
+  // Countdown timer for Flash Sale
+  useEffect(() => {
+    if (!activeFlashSale) {
+      // Default to midnight if no active sale
+      const endTime = new Date();
+      endTime.setHours(23, 59, 59, 999);
+
+      const timer = setInterval(() => {
+        const now = new Date().getTime();
+        const distance = endTime.getTime() - now;
+
+        if (distance < 0) {
+          clearInterval(timer);
+          return;
+        }
+
+        setTimeLeft({
+          days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+          seconds: Math.floor((distance % (1000 * 60)) / 1000)
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+
+    // Use actual flash sale end time
+    const endTime = new Date(activeFlashSale.endDate);
+
+    const timer = setInterval(() => {
+      const now = new Date().getTime();
+      const distance = endTime.getTime() - now;
+
+      if (distance < 0) {
+        clearInterval(timer);
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        return;
+      }
+
+      setTimeLeft({
+        days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((distance % (1000 * 60)) / 1000)
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [activeFlashSale]);
 
   useEffect(() => {
-    (async () => {
+    const fetchData = async () => {
       try {
-        const { data } = await api.get("/products/featured/list", { params: { limit: 4 } });
-        if (data && data.length > 0) {
-          setFeatured(data);
-        } else {
-          setFeatured(placeholderProducts);
+        const [featuredRes, trendingRes, categoriesRes, flashSaleRes, bannersRes, testimonialsRes, brandPartnersRes, siteSettingsRes] = await Promise.all([
+          fetch('http://localhost:5000/api/products/featured/list'),
+          fetch('http://localhost:5000/api/products/trending'),
+          fetch('http://localhost:5000/api/categories'),
+          fetch('http://localhost:5000/api/flash-sales/active'),
+          fetch('http://localhost:5000/api/banners/active?position=hero'),
+          fetch('http://localhost:5000/api/testimonials/active?limit=6'),
+          fetch('http://localhost:5000/api/brand-partners/active'),
+          fetch('http://localhost:5000/api/site-settings/public')
+        ]);
+
+        const featuredData = await featuredRes.json();
+        const trendingData = await trendingRes.json();
+        const categoriesData = await categoriesRes.json();
+        const flashSaleData = await flashSaleRes.json();
+        const bannersData = await bannersRes.json();
+        const testimonialsData = await testimonialsRes.json();
+        const brandPartnersData = await brandPartnersRes.json();
+        const siteSettingsData = await siteSettingsRes.json();
+
+        if (Array.isArray(featuredData)) {
+          setFeatured(featuredData.filter(item => item && item._id));
+        } else if (featuredData.success && Array.isArray(featuredData.products)) {
+          setFeatured(featuredData.products.filter(item => item && item._id));
         }
-      } catch (e) {
-        console.error("Failed to load homepage products, using placeholders.", e);
-        setFeatured(placeholderProducts);
+
+        if (Array.isArray(trendingData)) {
+          setTrending(trendingData.filter(item => item && item._id));
+        }
+
+        // Process categories with fallback images/colors
+        if (categoriesData.success && Array.isArray(categoriesData.data)) {
+          const processedCategories = categoriesData.data.map((cat, idx) => {
+            const defaults = categoryDefaults[cat.name] || {};
+            return {
+              ...cat,
+              img: cat.image || defaults.img || `https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=300&h=300&fit=crop`,
+              color: cat.color || defaults.color || defaultColors[idx % defaultColors.length]
+            };
+          });
+          setCategories(processedCategories);
+        }
+
+        // Set active flash sale
+        if (flashSaleData.success && flashSaleData.data && flashSaleData.data.length > 0) {
+          setActiveFlashSale(flashSaleData.data[0]);
+        }
+
+        // Set promotional banner
+        if (bannersData.success && bannersData.data && bannersData.data.length > 0) {
+          setPromoBanner(bannersData.data[0]);
+        }
+
+        // Set testimonials
+        if (testimonialsData.success && testimonialsData.data) {
+          setTestimonials(testimonialsData.data);
+        }
+
+        // Set brand partners
+        if (brandPartnersData.success && brandPartnersData.data) {
+          setBrandPartners(brandPartnersData.data);
+        }
+
+        // Set trust badges
+        if (siteSettingsData.success && siteSettingsData.data?.trustBadges) {
+          setTrustBadges(siteSettingsData.data.trustBadges);
+        }
+      } catch (error) {
+        console.error('Error fetching home data:', error);
       } finally {
         setLoading(false);
       }
-    })();
+    };
+    fetchData();
   }, []);
 
-  const getImageUrl = (path) => {
-    if (!path) return '';
-    // For absolute URLs (like placeholders from cloudinary)
-    if (path.startsWith('http')) return path;
-    // For backend-provided paths
-    if (path.startsWith('/uploads/')) return `http://localhost:5000${path}`;
-    // For local public paths
-    return process.env.PUBLIC_URL + path;
-  };
-
   return (
-    <div className="font-roboto">
-      <header id="global-header" className="code-section sticky top-0 z-50 bg-white/95 backdrop-blur-md shadow-sm transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-28">
-            <Link to="/" className="flex-shrink-0 transition-transform hover:scale-105 duration-300">
-              <img src={process.env.PUBLIC_URL + '/images/logo.png'} alt="Impressa Logo" className="h-28 py-2 w-auto" />
-            </Link>
-            <nav className="hidden lg:flex items-center space-x-8">
-              <Link to="/shop" className="text-gray-900 hover:text-blue-800 font-medium transition-colors duration-200">Product Listing</Link>
-              <Link to="/about" className="text-blue-800 font-bold">About Us</Link>
-              <Link to="/contact" className="text-gray-900 hover:text-blue-800 font-medium transition-colors duration-200">Contact</Link>
-              <Link to="/blog" className="text-gray-900 hover:text-blue-800 font-medium transition-colors duration-200">Blog</Link>
-            </nav>
-            <div className="hidden lg:flex items-center space-x-6">
-              <button className="text-gray-500 hover:text-blue-800 transition-colors">
-                <FaSearch className="text-xl" />
-              </button>
-              <Link to="/wishlist" className="text-gray-500 hover:text-blue-800 transition-colors relative">
-                <FaHeart className="text-xl" />
-              </Link>
-              <Link to="/cart" className="text-gray-500 hover:text-blue-800 transition-colors relative">
-                <FaShoppingCart className="text-xl" />
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
-              </Link>
-              <Link to="/checkout" className="bg-blue-800 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                Get Custom Printing Now
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gray-50">
+      <Header />
 
       <main>
-        <section className="code-section relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-light-background-color to-white">
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute top-20 left-10 w-72 h-72 bg-green-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-            <div className="absolute top-40 right-20 w-72 h-72 bg-yellow-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-            <div className="absolute -bottom-8 left-1/2 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000"></div>
-          </div>
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <div className="text-center lg:text-left space-y-8">
-                <div className="inline-flex items-center space-x-2 bg-white rounded-full px-4 py-2 shadow-md">
-                  <FaStar className="text-yellow-500" />
-                  <span className="text-sm font-medium text-gray-900">Trusted by 10,000+ Customers</span>
-                </div>
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight font-poppins">
-                  <span className="text-gray-900">Transform Your Ideas Into</span>
-                  <span className="block mt-2 bg-gradient-to-r from-blue-800 via-green-500 to-yellow-500 bg-clip-text text-transparent">Premium Custom Prints</span>
-                </h1>
-                <p className="text-lg sm:text-xl text-gray-500 max-w-2xl mx-auto lg:mx-0">
-                  Professional printing for ID cards, photo frames, banners, and more. Design online, delivered fast with guaranteed quality.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                  <Link to="/shop" className="group bg-blue-800 text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-blue-700 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 flex items-center justify-center">
-                    Start Creating Now
-                    <FaArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                  <Link to="/about" className="bg-white text-blue-800 px-8 py-4 rounded-lg font-bold text-lg border-2 border-blue-800 hover:bg-blue-800 hover:text-white transition-all duration-300 shadow-lg flex items-center justify-center">
-                    See How It Works
-                    <FaPlayCircle className="ml-2" />
-                  </Link>
-                </div>
-                <div className="grid grid-cols-3 gap-6 pt-8 border-t border-gray-200">
-                  <div className="text-center lg:text-left"><div className="flex items-center justify-center lg:justify-start space-x-2"><FaShippingFast className="text-2xl text-green-500" /><span className="text-sm font-semibold text-gray-900">Fast Delivery</span></div></div>
-                  <div className="text-center lg:text-left"><div className="flex items-center justify-center lg:justify-start space-x-2"><FaShieldAlt className="text-2xl text-green-500" /><span className="text-sm font-semibold text-gray-900">Quality Guaranteed</span></div></div>
-                  <div className="text-center lg:text-left"><div className="flex items-center justify-center lg:justify-start space-x-2"><FaHeadset className="text-2xl text-green-500" /><span className="text-sm font-semibold text-gray-900">24/7 Support</span></div></div>
-                </div>
-              </div>
-              <div className="relative">
-                <div className="relative rounded-2xl overflow-hidden shadow-2xl transform hover:scale-105 transition-transform duration-500">
-                  <img src={process.env.PUBLIC_URL + '/images/hero-image.jpg'} alt="Custom printing products" className="w-full h-full object-cover" />
-                  <div className="absolute bottom-6 left-6 bg-white/95 backdrop-blur-sm rounded-xl p-4 shadow-xl">
-                    <div className="flex items-center space-x-3"><div className="bg-green-500 rounded-full p-3"><FaCheck className="text-white text-xl" /></div><div><p className="font-bold text-gray-900">Easy Customization</p><p className="text-sm text-gray-500">Design in minutes</p></div></div>
-                  </div>
-                </div>
-                <div className="hidden lg:block absolute -top-6 -right-6 bg-white rounded-2xl p-4 shadow-xl animate-float"><div className="text-center"><p className="text-3xl font-bold text-blue-800">10K+</p><p className="text-sm text-gray-500">Happy Customers</p></div></div>
+        {/* Hero Section - Gradient Split Design */}
+        <section className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-violet-900 to-slate-900"></div>
+          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1557821552-17105176677c?w=1920')] bg-cover bg-center opacity-10"></div>
+
+          <div className="relative container mx-auto px-4 py-20 md:py-32">
+            <div className="max-w-3xl">
+              <span className="inline-block bg-violet-500/20 text-violet-300 px-4 py-2 rounded-full text-sm font-medium mb-6 backdrop-blur-sm border border-violet-500/30">
+                ✨ Welcome to the future of shopping
+              </span>
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
+                Discover <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400">Premium</span> Products
+              </h1>
+              <p className="text-xl text-gray-300 mb-10 max-w-xl">
+                Curated collections, exclusive deals, and a seamless shopping experience. Find everything you need in one place.
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Link to="/shop" className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white px-8 py-4 rounded-full font-semibold text-lg transition-all shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 flex items-center gap-2">
+                  Explore Now <FaArrowRight />
+                </Link>
+                <Link to="/daily-deals" className="bg-white/10 hover:bg-white/20 text-white px-8 py-4 rounded-full font-semibold text-lg transition backdrop-blur-sm border border-white/20">
+                  View Deals
+                </Link>
               </div>
             </div>
-            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce"><FaChevronDown className="text-gray-500 text-2xl" /></div>
+          </div>
+
+          {/* Decorative Elements */}
+          <div className="absolute top-20 right-10 w-72 h-72 bg-violet-500 rounded-full blur-[128px] opacity-30"></div>
+          <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-fuchsia-500 rounded-full blur-[128px] opacity-20"></div>
+        </section>
+
+        {/* Categories Section */}
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            <div className="flex items-end justify-between mb-10">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">Shop by Category</h2>
+                <p className="text-gray-500">Browse our curated collections</p>
+              </div>
+              <Link to="/shop" className="text-violet-600 hover:text-violet-700 font-semibold flex items-center gap-1">
+                View All <FaArrowRight className="text-sm" />
+              </Link>
+            </div>
+
+            {categories.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {categories.slice(0, 6).map((cat, idx) => (
+                  <Link
+                    to={`/shop?category=${encodeURIComponent(cat.name || cat.slug)}`}
+                    key={cat._id || idx}
+                    className="group relative aspect-square rounded-2xl overflow-hidden shadow-md"
+                  >
+                    <img src={cat.img} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                    <div className={`absolute inset-0 bg-gradient-to-t ${cat.color} opacity-60 group-hover:opacity-70 transition`}></div>
+                    <div className="absolute inset-0 flex items-end p-4">
+                      <span className="text-white font-bold text-lg drop-shadow-lg">{cat.name}</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-gray-400">
+                <p>No categories available yet. Check back soon!</p>
+              </div>
+            )}
           </div>
         </section>
 
-        <section className="py-20 lg:py-32 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 font-poppins">Popular Custom Products</h2>
-              <p className="text-lg text-gray-500 max-w-2xl mx-auto">Browse our most-loved custom printing products. High-quality materials, fast turnaround, and stunning results.</p>
-            </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-              {loading ? <div className="text-gray-500 col-span-full">Loading…</div> : featured.map((p) => (
-                <div key={p._id} className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden transform hover:-translate-y-2">
-                  <Link to={`/product/${p._id}`} className="relative overflow-hidden bg-gray-200 aspect-square block">
-                    {p.image ? <img src={getImageUrl(p.image)} alt={p.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><FaTshirt className="text-8xl text-gray-400 opacity-50" /></div>}
+        {/* Promotional Banner - Dynamic from Admin */}
+        {promoBanner && (
+          <section className="py-8">
+            <div className="container mx-auto px-4">
+              <div
+                className="relative rounded-2xl overflow-hidden min-h-[200px] flex items-center"
+                style={{
+                  background: promoBanner.backgroundImage
+                    ? `url(${promoBanner.backgroundImage}) center/cover`
+                    : `linear-gradient(135deg, ${promoBanner.gradientFrom}, ${promoBanner.gradientTo})`
+                }}
+              >
+                {/* Overlay pattern */}
+                <div className="absolute inset-0 opacity-10 bg-black"></div>
+                {/* Large decorative text */}
+                <div className="absolute right-0 top-0 bottom-0 flex items-center opacity-20 pointer-events-none overflow-hidden">
+                  <span className="text-[200px] font-black text-white whitespace-nowrap -mr-20">SALE</span>
+                </div>
+                {/* Content */}
+                <div className="relative z-10 p-8 md:p-12">
+                  {promoBanner.badge && (
+                    <span className="inline-block bg-white/20 text-white px-4 py-1.5 rounded-full text-sm font-semibold mb-4 backdrop-blur-sm">
+                      {promoBanner.badge}
+                    </span>
+                  )}
+                  <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-3">
+                    {promoBanner.title}
+                  </h2>
+                  {promoBanner.subtitle && (
+                    <p className="text-white/90 text-lg mb-6 max-w-lg">
+                      {promoBanner.subtitle}
+                    </p>
+                  )}
+                  <Link
+                    to={promoBanner.buttonLink || '/shop'}
+                    className="inline-block bg-white text-gray-900 px-8 py-3 rounded-full font-bold hover:bg-gray-100 transition shadow-lg"
+                  >
+                    {promoBanner.buttonText || 'Shop Now'}
                   </Link>
-                  <div className="p-6">
-                    <h3 className="font-bold text-xl text-gray-900 mb-2 truncate">{p.name}</h3>
-                    <p className="text-gray-500 text-sm mb-4 h-10 overflow-hidden">{p.description}</p>
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-2xl font-bold text-blue-800">{formatRwf(p.price)}</span>
-                      <div className="flex items-center space-x-1 text-yellow-500"><FaStar className="text-sm" /><FaStar className="text-sm" /><FaStar className="text-sm" /><FaStar className="text-sm" /><FaStarHalfAlt className="text-sm" /></div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Flash Sale with Countdown */}
+        <section className="py-8">
+          <div className="container mx-auto px-4">
+            <div className={`bg-gradient-to-r ${activeFlashSale?.bannerColor || 'from-red-500 to-orange-500'} rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6`}>
+              <div className="text-center md:text-left">
+                <span className="inline-block bg-white/20 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2">
+                  ⚡ Flash Sale
+                </span>
+                <h3 className="text-2xl md:text-3xl font-bold text-white">
+                  {activeFlashSale ? activeFlashSale.name : 'Ends in:'}
+                </h3>
+              </div>
+              <div className="flex gap-3">
+                {[
+                  { value: String(timeLeft.days).padStart(2, '0'), label: 'Days' },
+                  { value: String(timeLeft.hours).padStart(2, '0'), label: 'Hours' },
+                  { value: String(timeLeft.minutes).padStart(2, '0'), label: 'Mins' },
+                  { value: String(timeLeft.seconds).padStart(2, '0'), label: 'Secs' }
+                ].map((unit, idx) => (
+                  <div key={idx} className="bg-white/20 backdrop-blur-sm rounded-xl p-3 text-center min-w-[60px]">
+                    <div className="text-2xl md:text-3xl font-bold text-white">{unit.value}</div>
+                    <div className="text-xs text-white/80 uppercase">{unit.label}</div>
+                  </div>
+                ))}
+              </div>
+              <Link to="/daily-deals" className="bg-white text-red-500 px-6 py-3 rounded-full font-bold hover:bg-gray-100 transition whitespace-nowrap">
+                Shop Flash Sale →
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* Featured Products */}
+        <section className="py-16 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="flex items-end justify-between mb-10">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">Featured Products</h2>
+                <p className="text-gray-500">Handpicked just for you</p>
+              </div>
+              <Link to="/shop?sort=featured" className="text-violet-600 hover:text-violet-700 font-semibold flex items-center gap-1">
+                See All <FaArrowRight className="text-sm" />
+              </Link>
+            </div>
+
+            {loading ? (
+              <div className="flex justify-center py-12">
+                <div className="w-8 h-8 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin"></div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {featured.slice(0, 8).map((product) => (
+                  <ProductCard key={product._id} product={product} />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Banner Section */}
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-violet-600 to-fuchsia-600">
+              <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1607082349566-187342175e2f?w=1920')] bg-cover bg-center opacity-20"></div>
+              <div className="relative px-8 md:px-16 py-16 md:py-24 flex flex-col md:flex-row items-center justify-between gap-8">
+                <div className="text-center md:text-left">
+                  <span className="inline-block bg-white/20 text-white px-4 py-1 rounded-full text-sm font-medium mb-4">
+                    Limited Time Offer
+                  </span>
+                  <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
+                    Up to 50% Off
+                  </h2>
+                  <p className="text-white/80 text-lg mb-6 max-w-md">
+                    Don't miss out on our biggest sale of the season. Shop now and save big on premium products.
+                  </p>
+                  <Link to="/daily-deals" className="inline-block bg-white text-violet-600 px-8 py-3 rounded-full font-bold hover:bg-gray-100 transition">
+                    Shop the Sale
+                  </Link>
+                </div>
+                <div className="hidden md:block">
+                  <img
+                    src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400"
+                    alt="Sale"
+                    className="w-80 h-80 object-cover rounded-2xl shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-500"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Trending Products */}
+        <section className="py-16 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="flex items-end justify-between mb-10">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">Trending Now</h2>
+                <p className="text-gray-500">What everyone's buying</p>
+              </div>
+              <Link to="/shop?sort=trending" className="text-violet-600 hover:text-violet-700 font-semibold flex items-center gap-1">
+                See All <FaArrowRight className="text-sm" />
+              </Link>
+            </div>
+
+            {loading ? (
+              <div className="flex justify-center py-12">
+                <div className="w-8 h-8 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin"></div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {trending.slice(0, 8).map((product) => (
+                  <ProductCard key={product._id} product={product} />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Testimonials */}
+        <section className="py-20 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">What Our Customers Say</h2>
+              <p className="text-gray-500">Real reviews from real shoppers</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {(testimonials.length > 0 ? testimonials : [
+                {
+                  name: 'Sarah M.',
+                  role: 'Verified Buyer',
+                  avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
+                  rating: 5,
+                  content: "Absolutely love this store! The quality of products exceeded my expectations. Fast shipping and excellent customer service."
+                },
+                {
+                  name: 'James K.',
+                  role: 'Verified Buyer',
+                  avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
+                  rating: 5,
+                  content: "Best online shopping experience I've had in years. The website is easy to navigate and prices are competitive."
+                },
+                {
+                  name: 'Emily R.',
+                  role: 'Verified Buyer',
+                  avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop',
+                  rating: 5,
+                  content: "I was hesitant to order online, but Impressa made it so easy. The product was exactly as described."
+                }
+              ]).slice(0, 6).map((testimonial, idx) => (
+                <div key={testimonial._id || idx} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                  <div className="flex items-center gap-1 mb-4">
+                    {[...Array(testimonial.rating || 5)].map((_, i) => (
+                      <FaStar key={i} className="text-amber-400" />
+                    ))}
+                  </div>
+                  <p className="text-gray-600 mb-6 leading-relaxed">"{testimonial.content || testimonial.text}"</p>
+                  <div className="flex items-center gap-3">
+                    {testimonial.avatar ? (
+                      <img src={testimonial.avatar} alt={testimonial.name} className="w-12 h-12 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-bold text-lg">
+                        {testimonial.name?.charAt(0) || '?'}
+                      </div>
+                    )}
+                    <div>
+                      <h4 className="font-semibold text-gray-800">{testimonial.name}</h4>
+                      <p className="text-sm text-gray-500">{testimonial.role}</p>
                     </div>
-                    <Link to={`/product/${p._id}`} className="w-full block text-center bg-blue-800 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-all duration-300 transform group-hover:scale-105">
-                      <FaShoppingCart className="mr-2 inline" />View Product
-                    </Link>
                   </div>
                 </div>
               ))}
             </div>
-            <div className="text-center">
-              <Link to="/shop" className="inline-flex items-center bg-white border-2 border-blue-800 text-blue-800 px-8 py-4 rounded-lg font-bold text-lg hover:bg-blue-800 hover:text-white transition-all duration-300 shadow-lg hover:shadow-xl">
-                View All Products<FaArrowRight className="ml-2" />
-              </Link>
+          </div>
+        </section>
+
+        {/* Brand Logos / Trusted By */}
+        <section className="py-12 bg-white border-y border-gray-100">
+          <div className="container mx-auto px-4">
+            <p className="text-center text-gray-400 text-sm uppercase tracking-wider mb-8">Trusted by leading brands</p>
+            <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
+              {(brandPartners.length > 0 ? brandPartners : [
+                { name: 'TechCorp' },
+                { name: 'StyleHub' },
+                { name: 'HomeMax' },
+                { name: 'SportZone' },
+                { name: 'BeautyPro' }
+              ]).map((partner, idx) => (
+                partner.logo ? (
+                  <a
+                    key={partner._id || idx}
+                    href={partner.websiteUrl || '#'}
+                    target={partner.websiteUrl ? '_blank' : '_self'}
+                    rel="noopener noreferrer"
+                    className="hover:opacity-100 transition-opacity"
+                  >
+                    <img
+                      src={partner.logo}
+                      alt={partner.name}
+                      className="h-10 md:h-12 w-auto object-contain"
+                    />
+                  </a>
+                ) : (
+                  <div
+                    key={partner._id || idx}
+                    className="text-2xl font-bold text-gray-400 hover:text-violet-600 transition-colors cursor-pointer"
+                  >
+                    {partner.name}
+                  </div>
+                )
+              ))}
             </div>
           </div>
         </section>
 
-        <section className="py-20 lg:py-32 bg-gradient-to-br from-light-background-color via-white to-medium-background-color relative overflow-hidden">
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-0 left-0 w-96 h-96 bg-blue-800 rounded-full filter blur-3xl"></div>
-            <div className="absolute bottom-0 right-0 w-96 h-96 bg-green-500 rounded-full filter blur-3xl"></div>
-          </div>
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 font-poppins">
-                Why Choose Impressa?
-              </h2>
-              <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-                We combine cutting-edge technology with expert craftsmanship to deliver exceptional custom printing solutions
-              </p>
-            </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-              <div className="group text-center">
-                <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 h-full">
-                  <div className="bg-gradient-to-br from-blue-800 to-green-500 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <FaGem className="text-3xl text-white" />
+        {/* Trust Badges */}
+        <section className="bg-white border-b border-gray-100">
+          <div className="container mx-auto px-4 py-10">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              {(trustBadges.length > 0 ? trustBadges : [
+                { icon: 'truck', title: 'Free Shipping', description: 'On orders over 50,000 Rwf' },
+                { icon: 'shield', title: 'Secure Payment', description: '100% protected' },
+                { icon: 'undo', title: 'Easy Returns', description: '30-day policy' },
+                { icon: 'headset', title: '24/7 Support', description: 'Always here to help' }
+              ]).map((badge, idx) => {
+                const iconMap = {
+                  truck: <FaTruck className="text-2xl" />,
+                  shield: <FaShieldAlt className="text-2xl" />,
+                  undo: <FaUndo className="text-2xl" />,
+                  headset: <FaHeadset className="text-2xl" />,
+                  clock: <FaHeadset className="text-2xl" />,
+                  star: <FaStar className="text-2xl" />,
+                  check: <FaShieldAlt className="text-2xl" />,
+                  heart: <FaHeart className="text-2xl" />
+                };
+                return (
+                  <div key={badge._id || idx} className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-violet-50 rounded-xl flex items-center justify-center text-violet-600">
+                      {iconMap[badge.icon] || <FaShieldAlt className="text-2xl" />}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-800">{badge.title}</h4>
+                      <p className="text-sm text-gray-500">{badge.description}</p>
+                    </div>
                   </div>
-                  <h3 className="font-bold text-xl text-gray-900 mb-3">
-                    Premium Quality
-                  </h3>
-                  <p className="text-gray-500">
-                    Professional-grade materials and printing technology for stunning results every time
-                  </p>
-                </div>
-              </div>
-              <div className="group text-center">
-                <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 h-full">
-                  <div className="bg-gradient-to-br from-yellow-500 to-yellow-300 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <FaRocket className="text-3xl text-white" />
-                  </div>
-                  <h3 className="font-bold text-xl text-gray-900 mb-3">
-                    Lightning Fast
-                  </h3>
-                  <p className="text-gray-500">
-                    Quick turnaround times with same-day processing and express shipping options
-                  </p>
-                </div>
-              </div>
-              <div className="group text-center">
-                <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 h-full">
-                  <div className="bg-gradient-to-br from-green-500 to-green-300 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <FaPalette className="text-3xl text-white" />
-                  </div>
-                  <h3 className="font-bold text-xl text-gray-900 mb-3">
-                    Easy Customization
-                  </h3>
-                  <p className="text-gray-500">
-                    Intuitive design tools that make creating your perfect product simple and fun
-                  </p>
-                </div>
-              </div>
-              <div className="group text-center">
-                <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 h-full">
-                  <div className="bg-gradient-to-br from-red-500 to-red-400 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <FaHeadset className="text-3xl text-white" />
-                  </div>
-                  <h3 className="font-bold text-xl text-gray-900 mb-3">
-                    Expert Support
-                  </h3>
-                  <p className="text-gray-500">
-                    Dedicated customer service team ready to help you 24/7 with any questions
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-3xl shadow-2xl p-8 lg:p-12">
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                <div className="text-center border-r-0 sm:border-r border-gray-200 last:border-r-0">
-                  <div className="text-4xl lg:text-5xl font-bold text-blue-800 mb-2">
-                    10,000+
-                  </div>
-                  <p className="text-gray-500 font-medium">
-                    Happy Customers
-                  </p>
-                </div>
-                <div className="text-center border-r-0 lg:border-r border-gray-200 last:border-r-0">
-                  <div className="text-4xl lg:text-5xl font-bold text-blue-800 mb-2">
-                    50,000+
-                  </div>
-                  <p className="text-gray-500 font-medium">
-                    Products Printed
-                  </p>
-                </div>
-                <div className="text-center border-r-0 sm:border-r border-gray-200 last:border-r-0">
-                  <div className="text-4xl lg:text-5xl font-bold text-blue-800 mb-2">
-                    24/7
-                  </div>
-                  <p className="text-gray-500 font-medium">
-                    Customer Support
-                  </p>
-                </div>
-                <div className="text-center">
-                  <div className="text-4xl lg:text-5xl font-bold text-blue-800 mb-2">
-                    99.9%
-                  </div>
-                  <p className="text-gray-500 font-medium">
-                    Satisfaction Rate
-                  </p>
-                </div>
-              </div>
+                );
+              })}
             </div>
           </div>
         </section>
 
-        <section className="py-20 lg:py-32 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid lg:grid-cols-2 gap-16 items-center">
-              <div className="order-2 lg:order-1">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-800 to-green-500 rounded-3xl transform rotate-3"></div>
-                  <img src={process.env.PUBLIC_URL + '/images/feature-image.jpg'} alt="Custom printing process" className="relative rounded-3xl shadow-2xl w-full h-full object-cover" />
-                  <div className="absolute -bottom-6 -right-6 bg-white rounded-2xl p-6 shadow-2xl">
-                    <div className="flex items-center space-x-4">
-                      <div className="bg-green-500 rounded-full p-4">
-                        <FaThumbsUp className="text-white text-2xl" />
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold text-gray-900">
-                          100%
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          Satisfaction
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="order-1 lg:order-2">
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 font-poppins">
-                  Simple 3-Step Process
-                </h2>
-                <p className="text-lg text-gray-500 mb-12">
-                  From design to delivery, we make custom printing effortless
-                </p>
-                <div className="flex gap-6 mb-8 group">
-                  <div className="flex-shrink-0">
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-800 to-green-500 flex items-center justify-center text-white text-2xl font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">
-                      1
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
-                      Choose Your Product
-                    </h3>
-                    <p className="text-gray-500">
-                      Browse our catalog and select from ID cards, banners, frames, and more. Find exactly what you need for your project.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-6 mb-8 group">
-                  <div className="flex-shrink-0">
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-yellow-500 to-yellow-300 flex items-center justify-center text-white text-2xl font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">
-                      2
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
-                      Customize Your Design
-                    </h3>
-                    <p className="text-gray-500">
-                      Use our easy online design tool to upload your artwork, add text, and personalize every detail to perfection.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-6 mb-8 group">
-                  <div className="flex-shrink-0">
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-green-300 flex items-center justify-center text-white text-2xl font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">
-                      3
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
-                      Receive Fast Delivery
-                    </h3>
-                    <p className="text-gray-500">
-                      We print with precision and ship quickly. Track your order and receive your premium custom prints at your door.
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-12">
-                  <Link to="/shop" className="inline-flex items-center bg-blue-800 text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-blue-700 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1">
-                    Get Started Now
-                    <FaArrowRight className="ml-2" />
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="py-20 lg:py-32 bg-gradient-to-br from-blue-800 via-blue-700 to-green-500 relative overflow-hidden">
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-0 left-0 w-72 h-72 bg-white rounded-full filter blur-3xl"></div>
-            <div className="absolute bottom-0 right-0 w-72 h-72 bg-white rounded-full filter blur-3xl"></div>
-          </div>
-          <div className="absolute inset-0 opacity-5">
-            <svg width="100%" height="100%">
-              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                <circle cx="20" cy="20" r="1" fill="white"></circle>
-              </pattern>
-              <rect width="100%" height="100%" fill="url(#grid)"></rect>
-            </svg>
-          </div>
-          <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-full mb-8 shadow-2xl">
-              <FaPrint className="text-3xl text-blue-800" />
-            </div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6 font-poppins">
-              Ready to Bring Your Ideas to Life?
+        {/* Newsletter */}
+        <section className="py-20 bg-slate-900">
+          <div className="container mx-auto px-4 text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Join Our Community
             </h2>
-            <p className="text-xl text-white/90 mb-10 max-w-3xl mx-auto">
-              Join thousands of satisfied customers who trust Impressa for their custom printing needs. Start creating your perfect product today!
+            <p className="text-gray-400 mb-8 max-w-md mx-auto">
+              Subscribe to get exclusive deals, new arrivals, and special offers delivered to your inbox.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-              <Link to="/shop" className="bg-white text-blue-800 px-10 py-5 rounded-lg font-bold text-lg hover:bg-gray-200 transition-all duration-300 shadow-2xl hover:shadow-xl transform hover:-translate-y-1 flex items-center">
-                Start Creating Now
-                <FaArrowRight className="ml-2" />
-              </Link>
-              <Link to="/contact" className="border-2 border-white text-white px-10 py-5 rounded-lg font-bold text-lg hover:bg-white hover:text-blue-800 transition-all duration-300 flex items-center">
-                <FaPhone className="mr-2" />
-                Contact Us
-              </Link>
-            </div>
-            <div className="flex flex-wrap justify-center items-center gap-8 pt-8 border-t border-white/20">
-              <div className="flex items-center space-x-2 text-white">
-                <FaShieldAlt className="text-2xl" />
-                <span className="font-medium">Secure Checkout</span>
-              </div>
-              <div className="flex items-center space-x-2 text-white">
-                <FaTruck className="text-2xl" />
-                <span className="font-medium">Free Shipping Over $50</span>
-              </div>
-              <div className="flex items-center space-x-2 text-white">
-                <FaUndo className="text-2xl" />
-                <span className="font-medium">30-Day Money Back</span>
-              </div>
-            </div>
+            <form
+              className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!newsletterEmail || !newsletterEmail.includes('@')) {
+                  setNewsletterStatus({ loading: false, message: 'Please enter a valid email', type: 'error' });
+                  return;
+                }
+                setNewsletterStatus({ loading: true, message: '', type: '' });
+                try {
+                  const res = await fetch('http://localhost:5000/api/newsletter/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: newsletterEmail, source: 'homepage' })
+                  });
+                  const data = await res.json();
+                  if (data.success) {
+                    setNewsletterStatus({ loading: false, message: data.message, type: 'success' });
+                    setNewsletterEmail('');
+                  } else {
+                    setNewsletterStatus({ loading: false, message: data.message, type: 'error' });
+                  }
+                } catch (err) {
+                  setNewsletterStatus({ loading: false, message: 'Something went wrong. Please try again.', type: 'error' });
+                }
+              }}
+            >
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={newsletterEmail}
+                onChange={(e) => setNewsletterEmail(e.target.value)}
+                className="flex-1 bg-slate-800 border border-slate-700 rounded-full px-6 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                disabled={newsletterStatus.loading}
+              />
+              <button
+                type="submit"
+                className="bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white px-8 py-3 rounded-full font-semibold hover:from-violet-700 hover:to-fuchsia-700 transition disabled:opacity-50"
+                disabled={newsletterStatus.loading}
+              >
+                {newsletterStatus.loading ? 'Subscribing...' : 'Subscribe'}
+              </button>
+            </form>
+            {newsletterStatus.message && (
+              <p className={`mt-4 text-sm ${newsletterStatus.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                {newsletterStatus.message}
+              </p>
+            )}
           </div>
         </section>
-
-
       </main>
+
       <LandingFooter />
-    </div>
+    </div >
   );
 }

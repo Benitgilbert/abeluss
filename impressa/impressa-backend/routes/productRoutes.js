@@ -11,10 +11,11 @@ router.get("/featured/list", productController.getFeaturedProducts);
 router.get("/trending", productController.getTrendingProducts);
 router.get("/by-ids", productController.getProductsByIds);
 router.get("/:id", productController.getProductById);
+router.get("/:id/related", productController.getRelatedProducts);
 
 // Admin-only routes
-router.post("/", authMiddleware(["admin"]), upload.single("image"), productController.createProduct);
-router.put("/:id", authMiddleware(["admin"]), upload.single("image"), productController.updateProduct);
+router.post("/", authMiddleware(["admin"]), upload.any(), productController.createProduct);
+router.put("/:id", authMiddleware(["admin"]), upload.any(), productController.updateProduct);
 router.delete("/:id", authMiddleware(["admin"]), productController.deleteProduct);
 
 export default router;

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import DashboardCards from "../components/DashboardCards";
@@ -6,73 +7,69 @@ import WeeklyProfitChart from "../components/WeeklyProfitChart";
 import RecentOrderTable from "../components/RecentOrderTable";
 import CustomizationDemandTable from "../components/CustomizationDemandTable";
 import TopOrderedProductsTable from "../components/TopOrderedProductsTable";
-import AdminChatbot from "../components/AdminChatBot";
-
-
+import TopSellersWidget from "../components/TopSellersWidget";
+import LowStockWidget from "../components/LowStockWidget";
+import PendingApprovalsWidget from "../components/PendingApprovalsWidget";
+import OrderStatusChart from "../components/OrderStatusChart";
+import "../styles/AdminLayout.css";
 
 function AdminDashboard() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-      <div className="flex-1 flex flex-col ml-64">
-        <Topbar />
-        <main className="p-8 space-y-8 overflow-y-auto bg-gray-50">
-          {/* Header Section */}
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Dashboard Overview</h1>
-            <p className="text-gray-600 text-lg">Monitor your business performance in real-time</p>
-          </div>
+    <div className="admin-container">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="admin-main">
+        <Topbar onMenuClick={() => setSidebarOpen(true)} title="Dashboard Overview" />
+
+        <main className="dashboard-content">
 
           {/* Metrics Cards */}
-          <section>
-            <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <span className="w-1 h-6 bg-blue-600 rounded"></span>
-              Key Metrics
-            </h2>
+          <div className="section-mb">
             <DashboardCards />
-          </section>
+          </div>
 
-          {/* Charts Section */}
-          <section>
-            <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <span className="w-1 h-6 bg-blue-600 rounded"></span>
-              Performance Analytics
-            </h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <RevenueChart />
-              <WeeklyProfitChart />
+          {/* Charts Section - Row 1 */}
+          <div className="section-mb">
+            <div className="page-header">
+              <h2 className="card-title">Performance Analytics</h2>
             </div>
-          </section>
-
-          {/* AI Chatbot Section */}
-          <section>
-            <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <span className="w-1 h-6 bg-blue-600 rounded"></span>
-              AI Assistant
-            </h2>
-            <AdminChatbot />
-          </section>
-
-          {/* Tables Section */}
-          <section>
-            <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <span className="w-1 h-6 bg-blue-600 rounded"></span>
-              Recent Activity
-            </h2>
-            <div className="space-y-6">
-              {/* Recent Orders - Full Width */}
-              <RecentOrderTable />
-              
-              {/* Bottom Row - Two Tables Side by Side */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <TopOrderedProductsTable />
-                <CustomizationDemandTable />
+            <div className="two-col-grid">
+              <div className="card">
+                <RevenueChart />
+              </div>
+              <div className="card">
+                <WeeklyProfitChart />
               </div>
             </div>
-          </section>
+          </div>
+
+          {/* Multi-Vendor Insights - Row 2 */}
+          <div className="section-mb">
+            <div className="page-header">
+              <h2 className="card-title">Marketplace Insights</h2>
+            </div>
+            <div className="three-col-grid">
+              <TopSellersWidget />
+              <PendingApprovalsWidget />
+              <OrderStatusChart />
+            </div>
+          </div>
+
+          {/* Inventory & Orders - Row 3 */}
+          <div className="section-mb">
+            <div className="two-col-grid">
+              <LowStockWidget />
+              <RecentOrderTable />
+            </div>
+          </div>
+
+          {/* Products Analysis - Row 4 */}
+          <div className="two-col-grid">
+            <TopOrderedProductsTable />
+            <CustomizationDemandTable />
+          </div>
         </main>
-
-
       </div>
     </div>
   );

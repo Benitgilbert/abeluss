@@ -18,6 +18,10 @@ const orderItemSchema = new mongoose.Schema({
     ref: "Product",
     required: true,
   },
+  seller: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
   productName: String, // Store at order time
   productImage: String,
   sku: String,
@@ -29,6 +33,11 @@ const orderItemSchema = new mongoose.Schema({
   price: {
     type: Number,
     required: true,
+  },
+  cost: {
+    type: Number,
+    required: true,
+    default: 0,
   },
   subtotal: {
     type: Number,
@@ -52,10 +61,10 @@ const orderNoteSchema = new mongoose.Schema({
 
 const orderSchema = new mongoose.Schema(
   {
-    publicId: { 
-      type: String, 
-      index: true, 
-      unique: true, 
+    publicId: {
+      type: String,
+      index: true,
+      unique: true,
       required: true,
     },
     customer: {
@@ -67,6 +76,23 @@ const orderSchema = new mongoose.Schema(
       name: String,
       email: String,
       phone: String,
+    },
+    // Sales channel tracking
+    orderType: {
+      type: String,
+      enum: ["online", "pos"],
+      default: "online",
+      index: true,
+    },
+    channel: {
+      type: String,
+      enum: ["website", "store", "mobile_app"],
+      default: "website",
+    },
+    storeLocation: String,  // For multi-store tracking
+    processedBy: {          // Staff who processed POS sale
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
     items: {
       type: [orderItemSchema],
@@ -149,17 +175,17 @@ orderSchema.pre("save", function (next) {
       item.subtotal = item.price * item.quantity;
       return sum + item.subtotal;
     }, 0);
-    
+
     this.totals.subtotal = subtotal;
-    
+
     // Calculate grand total
-    this.totals.grandTotal = 
-      this.totals.subtotal + 
-      this.totals.shipping + 
-      this.totals.tax - 
+    this.totals.grandTotal =
+      this.totals.subtotal +
+      this.totals.shipping +
+      this.totals.tax -
       this.totals.discount;
   }
-  
+
   next();
 });
 

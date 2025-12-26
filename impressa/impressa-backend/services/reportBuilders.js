@@ -1,4 +1,5 @@
 import Order from "../models/Order.js";
+import User from "../models/User.js";
 
 // 📅 Monthly Report
 const getMonthlyReport = async ({ month, year }) => {
@@ -50,6 +51,80 @@ const getCustomerReport = async ({ customerId }) => {
     delivered: orders.filter(o => o.status === "delivered").length,
     totalSpent,
     mostOrderedProduct,
+  };
+
+  return { orders, summary };
+};
+
+// 👥 Customer Analytics Report (Acquisition & Retention)
+const getCustomerAnalyticsReport = async ({ start, end }) => {
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+
+  // 1. New Registrations
+  const newRegistrations = await User.countDocuments({
+    createdAt: { $gte: startDate, $lt: endDate }
+  });
+
+  // 2. Orders in period
+  const orders = await Order.find({
+    createdAt: { $gte: startDate, $lt: endDate },
+    status: { $ne: "cancelled" }
+  }).populate("customer", "name email createdAt");
+
+  // 3. Analyze Customers
+  const customerStats = {};
+  let totalRevenue = 0;
+
+  for (const order of orders) {
+    if (!order.customer) continue;
+    const cid = order.customer._id.toString();
+
+    if (!customerStats[cid]) {
+      customerStats[cid] = {
+        name: order.customer.name,
+        email: order.customer.email,
+        joinedAt: order.customer.createdAt,
+        ordersInPeriod: 0,
+        revenueInPeriod: 0,
+        isNew: order.customer.createdAt >= startDate && order.customer.createdAt < endDate
+      };
+    }
+
+    customerStats[cid].ordersInPeriod++;
+    const orderTotal = order.totals?.grandTotal || 0;
+    customerStats[cid].revenueInPeriod += orderTotal;
+    totalRevenue += orderTotal;
+  }
+
+  const activeCustomers = Object.values(customerStats);
+  const totalActive = activeCustomers.length;
+  const newActive = activeCustomers.filter(c => c.isNew).length;
+  const returningActive = totalActive - newActive;
+
+  // 4. Calculate LTV (Approximate based on period for now, or fetch all orders for these customers?)
+  // Let's fetch ALL orders for these active customers to get true LTV
+  const activeCustomerIds = Object.keys(customerStats);
+  let averageLTV = 0;
+
+  if (activeCustomerIds.length > 0) {
+    const lifetimeStats = await Order.aggregate([
+      { $match: { customer: { $in: activeCustomerIds.map(id => new mongoose.Types.ObjectId(id)) }, status: { $ne: "cancelled" } } },
+      { $group: { _id: "$customer", lifetimeSpend: { $sum: "$totals.grandTotal" } } }
+    ]);
+
+    const totalLifetimeSpend = lifetimeStats.reduce((acc, curr) => acc + curr.lifetimeSpend, 0);
+    averageLTV = totalLifetimeSpend / activeCustomerIds.length;
+  }
+
+  const summary = {
+    newRegistrations,
+    totalActiveCustomers: totalActive,
+    newActiveCustomers: newActive,
+    returningActiveCustomers: returningActive,
+    totalRevenueInPeriod: totalRevenue,
+    averageLTV: Math.round(averageLTV),
+    acquisitionRate: totalActive ? ((newActive / totalActive) * 100).toFixed(1) + "%" : "0%"
   };
 
   return { orders, summary };
@@ -160,7 +235,13 @@ export const buildReportData = async (type, filters) => {
         }
         return await getRevenueReport(filters);
       }
-      default: 
+      case "customer-analytics": {
+        if (!filters.start || !filters.end) {
+          throw new Error("Customer Analytics report requires 'start' and 'end' parameters");
+        }
+        return await getCustomerAnalyticsReport(filters);
+      }
+      default:
         throw new Error(`Unsupported report type: ${type}`);
     }
   } catch (error) {

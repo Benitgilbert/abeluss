@@ -2,44 +2,130 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>impressa OTP</title>
+    <title>IMPRESSA Security Verification</title>
     <style>
       body {
-        font-family: 'Poppins', sans-serif;
-        background-color: #f4f4f4;
-        padding: 40px;
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        background-color: #f8fafc;
+        margin: 0;
+        padding: 40px 0;
       }
-      .card {
-        max-width: 480px;
-        margin: auto;
-        background: white;
-        border-radius: 8px;
+      .container {
+        max-width: 520px;
+        margin: 0 auto;
+        background: #ffffff;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        border: 1px solid #e2e8f0;
+      }
+      .header {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
         padding: 32px;
         text-align: center;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
       }
-      .otp {
-        font-size: 28px;
-        font-weight: bold;
-        letter-spacing: 8px;
-        color: #007BFF;
+      .header h1 {
+        color: white;
+        margin: 0;
+        font-size: 24px;
+        letter-spacing: 1px;
+        font-weight: 700;
+      }
+      .content {
+        padding: 40px 32px;
+        text-align: center;
+      }
+      .icon-circle {
+        width: 64px;
+        height: 64px;
+        background-color: #eff6ff;
+        border-radius: 50%;
+        margin: 0 auto 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .icon-text {
+        font-size: 32px;
+      }
+      h2 {
+        color: #1e293b;
+        font-size: 20px;
+        margin: 0 0 12px;
+        font-weight: 600;
+      }
+      p {
+        color: #64748b;
+        font-size: 15px;
+        line-height: 1.6;
+        margin: 0 0 24px;
+      }
+      .otp-container {
+        background-color: #f8fafc;
+        border: 1px dashed #cbd5e1;
+        border-radius: 12px;
+        padding: 20px;
         margin: 24px 0;
       }
+      .otp-code {
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: 8px;
+        color: #2563eb;
+        display: block;
+      }
+      .expiry {
+        font-size: 13px;
+        color: #94a3b8;
+        margin-top: 8px;
+      }
       .footer {
+        background-color: #f8fafc;
+        padding: 24px;
+        text-align: center;
+        border-top: 1px solid #e2e8f0;
+      }
+      .footer p {
         font-size: 12px;
-        color: #aaa;
-        margin-top: 32px;
+        color: #94a3b8;
+        margin: 0;
+      }
+      .secure-badge {
+        display: inline-block;
+        margin-top: 12px;
+        padding: 4px 12px;
+        background-color: #ecfdf5;
+        color: #059669;
+        border-radius: 99px;
+        font-size: 11px;
+        font-weight: 600;
       }
     </style>
   </head>
   <body>
-    <div class="card">
-      <img src="cid:impressa-logo" alt="impressa" style="height: 40px; margin-bottom: 16px;" />
-      <h2>Admin Login OTP</h2>
-      <p>Use this code to securely log in to impressa Admin.<br />This code will expire in <strong>20 minutes</strong>.</p>
-      <div class="otp">{{otp}}</div>
-      <p>This code will securely log you in using:<br /><span style="color: #007BFF;">{{email}}</span></p>
-      <p class="footer">If you didn’t request this email, you can safely ignore it.</p>
+    <div class="container">
+      <div class="header">
+        <h1>IMPRESSA</h1>
+      </div>
+      <div class="content">
+        <div class="icon-circle">
+          <span class="icon-text">🛡️</span>
+        </div>
+        <h2>Security Verification</h2>
+        <p>We received a request to access your account. Please use the verification code below to complete the process.</p>
+        
+        <div class="otp-container">
+          <span class="otp-code">{{otp}}</span>
+          <div class="expiry">Valid for 5 minutes</div>
+        </div>
+
+        <p>This code was sent to <strong style="color: #1e293b;">{{email}}</strong>.<br>If you didn't request this code, please ignore this email or contact support.</p>
+      </div>
+      <div class="footer">
+        <p>&copy; 2024 Impressa. All rights reserved.</p>
+        <div class="secure-badge">Secured by Impressa Auth</div>
+      </div>
     </div>
   </body>
 </html>

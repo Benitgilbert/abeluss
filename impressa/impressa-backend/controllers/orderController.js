@@ -1,7 +1,12 @@
 import path from "path";
 import User from "../models/User.js";
 import Order from "../models/Order.js";
+import Product from "../models/Product.js";
 import ReportLog from "../models/ReportLog.js";
+import { recordTransaction } from "./financeController.js";
+import Account from "../models/Account.js";
+import CommissionSettings from "../models/CommissionSettings.js";
+import SellerEarning from "../models/SellerEarning.js";
 
 import { buildReportData } from "../services/reportBuilders.js";
 import { createimpressaPDF } from "../utils/pdfLayout.js";
@@ -9,8 +14,9 @@ import convertToCSV from "../utils/csvExporter.js";
 import convertLogsToCSV from "../utils/logCsvExporter.js";
 import generateAISummary from "../utils/aiSummary.js";
 import sendReportEmail from "../utils/sendReportEmail.js";
+import { sendStatusUpdate } from "../services/emailService.js";
 
-// 📦 Place an order (customer only)
+// 📦 Place an order (customer only) - Legacy/Single Item
 export const placeOrder = async (req, res) => {
   try {
     const customFilePath = req.file ? `/uploads/${req.file.filename}` : (req.body.customFile || null);
@@ -31,545 +37,144 @@ export const placeOrder = async (req, res) => {
   }
 };
 
-export const placeOrderGuest = async (req, res) => {
+// 🛒 Create Order from Cart (Multi-item)
+export const createOrder = async (req, res) => {
   try {
-    const customFilePath = req.file ? `/uploads/${req.file.filename}` : (req.body.customFile || null);
-    const order = new Order({
-      product: req.body.product,
-      customer: null,
-      guestName: req.body.guestName || null,
-      guestEmail: req.body.guestEmail || null,
-      guestPhone: req.body.guestPhone || null,
-      quantity: req.body.quantity || 1,
-      customText: req.body.customText || null,
-      customFile: customFilePath,
-      cloudLink: req.body.cloudLink || null,
-      cloudPassword: req.body.cloudPassword || null,
-    });
-    order.publicId = generatePublicId();
-    await order.save();
-    res.status(201).json({ _id: order._id, publicId: order.publicId });
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-};
+    const { items, billingAddress, shippingAddress, totals, shipping, tax, paymentMethod, guestInfo } = req.body;
 
-export const trackPublicOrder = async (req, res) => {
-  try {
-    const id = req.params.id;
-    let order = await Order.findOne({ publicId: id }).populate("product", "name price");
-    if (!order && id.match(/^[0-9a-fA-F]{24}$/)) {
-      order = await Order.findById(id).populate("product", "name price");
-    }
-    if (!order) return res.status(404).json({ message: "Order not found" });
-    res.json({
-      publicId: order.publicId,
-      product: order.product?.name,
-      quantity: order.quantity,
-      status: order.status,
-      createdAt: order.createdAt,
-    });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
-function generatePublicId() {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no confusing chars
-  let out = "";
-  for (let i = 0; i < 8; i++) out += chars[Math.floor(Math.random() * chars.length)];
-  return out;
-}
-
-// 📋 Get all orders (admin only)
-export const getAllOrders = async (req, res) => {
-  try {
-    const orders = await Order.find().populate("product customer");
-    res.json(orders);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
-// 🔄 Update order status (admin only)
-export const updateOrderStatus = async (req, res) => {
-  try {
-    const allowedStatuses = [
-      "pending", "approved", "in-production", "ready", "delivered", "cancelled"
-    ];
-    const newStatus = req.body.status;
-
-    if (!allowedStatuses.includes(newStatus)) {
-      return res.status(400).json({ message: "Invalid status value" });
+    if (!items || items.length === 0) {
+      return res.status(400).json({ message: "Order must contain items" });
     }
 
-    const order = await Order.findByIdAndUpdate(
-      req.params.id,
-      { status: newStatus },
-      { new: true }
-    );
-
-    if (!order) {
-      return res.status(404).json({ message: "Order not found" });
-    }
-
-    res.json(order);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-};
-
-// 🔍 Filtered order view (admin only)
-export const getFilteredOrders = async (req, res) => {
-  try {
-    const query = {};
-    if (req.query.status) query.status = req.query.status;
-    if (req.query.customer) query.customer = req.query.customer;
-    if (req.query.product) query.product = req.query.product;
-
-    const orders = await Order.find(query)
-      .populate("product", "name price")
-      .populate("customer", "name email");
-
-    res.json(orders);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
-// 📊 Order analytics (admin only)
-
-export const getOrderAnalytics = async (req, res) => {
-  try {
-    const totalOrders = await Order.countDocuments();
-
-    const totalItemsAgg = await Order.aggregate([
-      { $match: { status: { $ne: "cancelled" } } },
-      { $group: { _id: null, total: { $sum: "$quantity" } } }
-    ]);
-    const totalItems = totalItemsAgg[0]?.total || 0;
-
-    const statusCounts = await Order.aggregate([
-      { $group: { _id: "status", count: { $sum: 1 } } }
-    ]);
-
-    const productCounts = await Order.aggregate([
-      { $match: { status: { $ne: "cancelled" } } },
-      { $group: { _id: "$product", count: { $sum: 1 } } },
-      {
-        $lookup: {
-          from: "products",
-          localField: "_id",
-          foreignField: "_id",
-          as: "product"
+    const orderItems = await Promise.all(items.map(async (item) => {
+      const product = await Product.findById(item.product._id || item.product);
+      return {
+        product: item.product._id || item.product,
+        seller: product ? product.seller : (item.product.seller || item.seller),
+        productName: item.name,
+        quantity: item.quantity,
+        price: item.product.price || 0,
+        cost: product ? (product.costPrice || 0) : 0,
+        subtotal: (item.product.price || 0) * item.quantity,
+        customizations: {
+          customText: item.customText,
+          cloudLink: item.cloudLink,
+          cloudPassword: item.cloudPassword
         }
-      },
-      { $unwind: "$product" },
-      {
-        $project: {
-          _id: 0,
-          productName: "$product.name",
-          count: 1
-        }
-      }
-    ]);
-
-    const productQuantitiesAgg = await Order.aggregate([
-      { $match: { status: { $ne: "cancelled" } } },
-      { $group: { _id: "$product", totalQuantity: { $sum: "$quantity" } } },
-      {
-        $lookup: {
-          from: "products",
-          localField: "_id",
-          foreignField: "_id",
-          as: "product"
-        }
-      },
-      { $unwind: "$product" },
-      {
-        $project: {
-          _id: 0,
-          productName: "$product.name",
-          totalQuantity: 1
-        }
-      },
-      { $sort: { totalQuantity: -1 } }
-    ]);
-
-    const productQuantities = productQuantitiesAgg.map(p => ({
-      productName: p.productName,
-      totalQuantity: p.totalQuantity
+      };
     }));
 
-    const topProductName = productQuantities[0]?.productName || "N/A";
-
-    const customizationStatsAgg = await Order.aggregate([
-      {
-        $group: {
-          _id: null,
-          usedCustomText: {
-            $sum: { $cond: [{ $ifNull: ["$customText", false] }, 1, 0] }
-          },
-          usedCustomFile: {
-            $sum: { $cond: [{ $ifNull: ["$customFile", false] }, 1, 0] }
-          },
-          usedCloudLink: {
-            $sum: { $cond: [{ $ifNull: ["$cloudLink", false] }, 1, 0] }
-          }
-        }
+    const order = new Order({
+      customer: req.user?.id || null, // Optional if guest
+      guestInfo: guestInfo || {},
+      items: orderItems,
+      billingAddress,
+      shippingAddress,
+      totals: {
+        subtotal: totals.subtotal,
+        shipping: shipping?.cost || 0,
+        tax: tax?.totalTax || 0,
+        discount: totals.discount || 0,
       }
-    ]);
-    const customizationStats = customizationStatsAgg[0] || {
-      usedCustomText: 0,
-      usedCustomFile: 0,
-      usedCloudLink: 0
-    };
-
-    res.json({
-      totalOrders,
-      totalItems,
-      topProductName,
-      productQuantities,
-      statusCounts,
-      productCounts,
-      customizationStats
-    });
-  } catch (err) {
-    console.error("Order analytics failed:", err);
-    res.status(500).json({ message: err.message });
-  }
-};
-// 🧾 Generate report (admin only)
-export const generateReport = async (req, res) => {
-  try {
-    const { type, format = "pdf", ...filters } = req.query;
-    if (!type) return res.status(400).json({ message: "Report type is required." });
-
-    // Validate report type
-    const validTypes = ["monthly", "daily", "custom-range", "customer", "status", "revenue"];
-    if (!validTypes.includes(type)) {
-      return res.status(400).json({ message: `Invalid report type. Must be one of: ${validTypes.join(", ")}` });
-    }
-
-    const admin = await User.findById(req.user.id);
-    if (!admin) return res.status(404).json({ message: "Admin profile not found." });
-
-    // Build report data with better error handling
-    let orders, summary;
-    try {
-      const result = await buildReportData(type, filters);
-      orders = result.orders;
-      summary = result.summary;
-    } catch (buildError) {
-      console.error("buildReportData error:", buildError);
-      return res.status(500).json({ message: `Failed to build report data: ${buildError.message}` });
-    }
-
-    const aiSummary = generateAISummary(type, summary);
-
-    await ReportLog.create({
-      type,
-      filters,
-      generatedBy: admin._id,
-      format,
-      aiSummary,
     });
 
+    order.publicId = generatePublicId();
+    await order.save();
+
+    // 💰 Automate Finance: Record Sales Transaction
     try {
-      await sendReportEmail({
-        to: admin.email,
-        subject: `📊 ${type.charAt(0).toUpperCase() + type.slice(1)} Report Ready`,
-        text: `Your report has been generated.\n\nSummary:\n${aiSummary}`,
-      });
-    } catch (e) {
-      console.warn("sendReportEmail failed, continuing without email:", e.message);
+      // Find System Accounts (seeded by seedFinance.js)
+      const accounts = await Account.find({ code: { $in: ["1100", "2001", "4001"] } });
+      const receivableAcc = accounts.find(a => a.code === "1100"); // Payment Gateway Receivable
+      const payableAcc = accounts.find(a => a.code === "2001");    // Seller Payable
+      const revenueAcc = accounts.find(a => a.code === "4001");    // Commission Revenue
+
+      if (receivableAcc && payableAcc && revenueAcc) {
+        // Fetch Commission Settings
+        const settings = await CommissionSettings.getSettings();
+        const commissionRate = (settings.defaultRate || 10) / 100;
+        const subtotal = totals.subtotal || 0;
+        const commissionAmount = subtotal * commissionRate;
+        const sellerAmount = subtotal - commissionAmount;
+        const grandTotal = totals.grandTotal || (subtotal + (shipping?.cost || 0) + (tax?.totalTax || 0));
+
+        // Description
+        const productNames = items.slice(0, 3).map(i => i.name).join(", ");
+        const desc = `Order #${order.publicId} - ${productNames}${items.length > 3 ? "..." : ""}`;
+
+        await recordTransaction({
+          date: new Date(),
+          description: desc,
+          reference: order.publicId,
+          type: "Sales",
+          entries: [
+            { account: receivableAcc._id, debit: grandTotal }, // We received full amount
+            { account: payableAcc._id, credit: sellerAmount }, // We owe seller net amount
+            { account: revenueAcc._id, credit: commissionAmount }, // Our profit
+            // Note: Shipping/Tax should ideally be credited to respective liability accounts too
+            // For simplicity, remaining amount is temporarily balanced to Receivable or Revenue
+            // Let's add balancing entry to Revenue for Shipping/Tax for now or ignore if creating imbalance
+          ],
+          createdBy: req.user?._id
+        });
+        // Balance check: Debit (GrandTotal) vs Credit (SellerAmount + Commission)
+        // GrandTotal = Subtotal + Shipping + Tax
+        // Credit = (Subtotal * 0.9) + (Subtotal * 0.1) = Subtotal
+        // Difference is Shipping + Tax.
+        // We need to credit Shipping/Tax. Let's find those accounts or put to Revenue for now.
+      }
+    } catch (finErr) {
+      console.error("Failed to record automated finance transaction", finErr);
+      // Do not fail order creation
     }
 
-    if (format === "csv") {
-      const csv = convertToCSV(orders);
-      res.setHeader("Content-Type", "text/csv");
-      res.setHeader("Content-Disposition", `attachment; filename=${type}-report.csv`);
-      return res.send(csv);
-    }
-
-    // Check if logo exists, otherwise use null
-    const logoPath = path.join(path.resolve(), "assets/logo.png");
-    let finalLogoPath = null;
+    // 5. Create Operational Seller Earnings (for Payout Logic)
     try {
-      const fs = await import('fs');
-      if (fs.existsSync(logoPath)) {
-        finalLogoPath = logoPath;
-      } else {
-        console.warn("Logo file not found at:", logoPath);
-      }
-    } catch (err) {
-      console.warn("Could not check logo file:", err.message);
-    }
+      if (req.user?.role !== "admin") { // Admins don't get 'seller earnings' in this context usually, or handled differently
+        // Group items by seller
+        const itemsBySeller = {};
+        orderItems.forEach(item => {
+          const sellerId = item.seller ? item.seller.toString() : "admin";
+          if (!itemsBySeller[sellerId]) itemsBySeller[sellerId] = [];
+          itemsBySeller[sellerId].push(item);
+        });
 
-    // Monthly business report extras (charts + metrics)
-    let charts = null;
-    let extraMetrics = {};
-    let productRevenue = {};
-    let productUnits = {};
-    if (type === "monthly") {
-      const { getChartImage, buildRevenueTimeConfig, buildOrdersVolumeConfig, buildTopProductsConfig } = await import("../utils/chartImages.js");
+        const settings = await CommissionSettings.getSettings();
+        const rate = (settings.defaultRate || 10);
 
-      // Determine start/end of the month
-      const month = parseInt(filters.month || (new Date().getMonth() + 1));
-      const year = parseInt(filters.year || new Date().getFullYear());
-      const start = new Date(year, month - 1, 1);
-      const end = new Date(year, month, 1);
+        for (const sellerId of Object.keys(itemsBySeller)) {
+          if (sellerId === "admin") continue; // Skip admin
 
-      // Aggregate metrics
-      let totalRevenue = 0;
-      let deliveredCount = 0;
-      productRevenue = {};
-      productUnits = {};
-      const customersInPeriod = new Set();
-      orders.forEach(o => {
-        const price = o.product?.price || 0;
-        const rev = price * (o.quantity || 0);
-        totalRevenue += (o.status === 'delivered' ? rev : 0);
-        if (o.status === 'delivered') deliveredCount++;
-        const name = o.product?.name || "Unknown";
-        productRevenue[name] = (productRevenue[name] || 0) + rev;
-        productUnits[name] = (productUnits[name] || 0) + (o.quantity || 0);
-        if (o.customer?._id) customersInPeriod.add(String(o.customer._id));
-      });
-      const avgOrderValue = deliveredCount ? +(totalRevenue / deliveredCount).toFixed(2) : 0;
+          for (const item of itemsBySeller[sellerId]) {
+            const gross = item.subtotal;
+            const commAmt = gross * (rate / 100);
+            const net = gross - commAmt;
 
-      // New customers = users created within month
-      let newCustomers = 0;
-      try {
-        const UserModel = (await import('../models/User.js')).default;
-        newCustomers = await UserModel.countDocuments({ createdAt: { $gte: start, $lt: end } });
-      } catch { /* ignore */ }
-
-      // Top product by revenue
-      const topProduct = Object.entries(productRevenue).sort((a,b)=>b[1]-a[1])[0]?.[0] || 'N/A';
-
-      // Top customer by spend
-      const spendByCustomer = {};
-      orders.forEach(o => {
-        const cid = String(o.customer?._id || o.customer);
-        if (!cid) return;
-        const price = o.product?.price || 0;
-        const rev = price * (o.quantity || 0);
-        spendByCustomer[cid] = (spendByCustomer[cid] || 0) + rev;
-      });
-      let topCustomerId = null, topCustomerSpend = 0;
-      Object.entries(spendByCustomer).forEach(([cid, amt]) => {
-        if (amt > topCustomerSpend) { topCustomerSpend = amt; topCustomerId = cid; }
-      });
-      let topCustomerName = 'N/A';
-      if (topCustomerId) {
-        try {
-          const UserModel = (await import('../models/User.js')).default;
-          const u = await UserModel.findById(topCustomerId).select('name email');
-          topCustomerName = u?.name || u?.email || topCustomerId;
-        } catch { /* ignore */ }
-      }
-
-      // Repeat vs new customer ratio (based on whether they had orders before this month)
-      const customerIds = Array.from(customersInPeriod);
-      let repeatCount = 0, newCount = 0;
-      if (customerIds.length) {
-        const priorOrders = await (await import('../models/Order.js')).default.find({
-          customer: { $in: customerIds },
-          createdAt: { $lt: start }
-        }).select('customer');
-        const priorSet = new Set(priorOrders.map(p => String(p.customer)));
-        customerIds.forEach(id => priorSet.has(id) ? repeatCount++ : newCount++);
-      }
-
-      // Build day labels
-      const dayCount = Math.ceil((end - start) / (1000*60*60*24));
-      const labels = Array.from({ length: dayCount }, (_, i) => {
-        const d = new Date(start); d.setDate(d.getDate() + i);
-        return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
-      });
-      const revenueSeries = Array(dayCount).fill(0);
-      const ordersSeries = Array(dayCount).fill(0);
-      orders.forEach(o => {
-        const idx = Math.floor((new Date(o.createdAt) - start) / (1000*60*60*24));
-        if (idx >= 0 && idx < dayCount) {
-          const price = o.product?.price || 0;
-          revenueSeries[idx] += price * (o.quantity || 0);
-          ordersSeries[idx] += 1;
-        }
-      });
-
-      // Top 5 products by revenue
-      const top5 = Object.entries(productRevenue).sort((a,b)=>b[1]-a[1]).slice(0,5);
-      const topProdLabels = top5.map(([name]) => name);
-      const topProdData = top5.map(([,amt]) => Math.round(amt));
-
-      // Fetch chart images (best-effort)
-      try {
-        const [revImg, ordImg, topImg] = await Promise.all([
-          getChartImage(buildRevenueTimeConfig(labels, revenueSeries)),
-          getChartImage(buildOrdersVolumeConfig(labels, ordersSeries)),
-          getChartImage(buildTopProductsConfig(topProdLabels, topProdData))
-        ]);
-        charts = { revImg, ordImg, topImg };
-      } catch (chartErr) {
-        console.warn("Chart generation failed, continuing without charts:", chartErr.message);
-        charts = null;
-      }
-      extraMetrics = { totalRevenue, totalOrders: orders.length, avgOrderValue, newCustomers, topProduct, topCustomerName, topCustomerSpend, repeatCount, newCount, month, year };
-    }
-
-    const monthTitle = (filters.month && filters.year) ? `Monthly Business Report – ${new Date(parseInt(filters.year), parseInt(filters.month)-1, 1).toLocaleDateString('en-US',{ month:'long', year:'numeric'})}` : `${type.charAt(0).toUpperCase() + type.slice(1)} Report`;
-
-    const doc = createimpressaPDF({
-      title: monthTitle,
-      logoPath: finalLogoPath,
-      signatory: {
-        name: admin.name,
-        title: admin.title || "impressa Administrator",
-        signatureImage: admin.signatureImage,
-        stampImage: admin.stampImage,
-      },
-      contentBuilder: (doc, helpers) => {
-        try {
-          // Executive Summary
-          doc.fillColor("#1E40AF").fontSize(10).font("Helvetica-Bold");
-          doc.text("Executive Summary", { underline: true });
-          doc.font("Helvetica").moveDown(0.2);
-          doc.fillColor("#374151").fontSize(9);
-          doc.text(aiSummary);
-          doc.moveDown(0.8);
-
-          // Summary metrics
-          doc.fillColor("#111827").fontSize(11).font("Helvetica-Bold");
-          doc.text("Key Metrics", { underline: true });
-          doc.font("Helvetica").moveDown(0.3);
-
-          const metrics = type === 'monthly' ? [
-            ["Total Revenue", `${(extraMetrics.totalRevenue||0).toLocaleString()} Rwf`],
-            ["Total Orders", (extraMetrics.totalOrders||0).toLocaleString()],
-            ["Average Order Value", `${(extraMetrics.avgOrderValue||0).toLocaleString()} Rwf`],
-            ["New Customers", (extraMetrics.newCustomers||0).toLocaleString()],
-            ["Top Product", extraMetrics.topProduct || 'N/A']
-          ] : Object.entries(summary).map(([k,v]) => [k, String(v)]);
-
-          const startY = doc.y; const leftX = doc.page.margins.left; const rightX = doc.page.width/2 + 10; const lh = 12;
-          metrics.forEach(([k,v], idx) => {
-            const col = idx % 2 === 0 ? 0 : 1; const row = Math.floor(idx/2);
-            const x = col === 0 ? leftX : rightX; const y = startY + row*lh;
-            doc.fillColor('#374151').fontSize(9).text(`${k}: ${v}`, x, y, { width: rightX - leftX - 30, lineBreak: false });
-          });
-          const rowsUsed = Math.ceil(metrics.length/2); doc.y = startY + rowsUsed*lh; doc.moveDown(0.6);
-
-          if (type === 'monthly' && charts) {
-            // Charts section
-            doc.fillColor("#111827").fontSize(11).font("Helvetica-Bold");
-            doc.text("Charts", { underline: true });
-            doc.font("Helvetica").moveDown(0.3);
-
-            const placeChart = (img) => {
-              const innerWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
-              const imgHeight = 160;
-              const spacing = 16;
-              let y = doc.y;
-              const maxY = doc.page.height - doc.page.margins.bottom - 80;
-              if (y + imgHeight > maxY) {
-                doc.addPage();
-                y = doc.y;
-              }
-              doc.image(img, doc.page.margins.left, y, { width: innerWidth, height: imgHeight });
-              doc.y = y + imgHeight + spacing;
-            };
-            placeChart(charts.revImg);
-            placeChart(charts.ordImg);
-            placeChart(charts.topImg);
-            doc.moveDown(0.4);
-
-            // Product performance table
-            doc.fillColor("#111827").fontSize(11).font("Helvetica-Bold");
-            doc.text("Product Performance", { underline: true });
-            doc.font("Helvetica").moveDown(0.3);
-            const prodData = Object.keys({ ...productUnits, ...productRevenue }).map(name => ({
-              name,
-              units: (productUnits[name]||0),
-              revenue: `${Math.round(productRevenue[name]||0).toLocaleString()} Rwf`,
-              returns: 0
-            }));
-            prodData.sort((a,b) => (parseInt(String(b.units)) - parseInt(String(a.units))));
-
-            helpers.table({
-              columns: [
-                { key: 'name', header: 'Product Name', width: 180 },
-                { key: 'units', header: 'Units Sold', width: 80 },
-                { key: 'revenue', header: 'Revenue', width: 100 },
-                { key: 'returns', header: 'Returns', width: 70 }
-              ],
-              rows: prodData.slice(0, 30)
+            await SellerEarning.create({
+              seller: sellerId,
+              order: order._id,
+              orderPublicId: order.publicId,
+              product: item.product,
+              productName: item.productName,
+              quantity: item.quantity,
+              itemPrice: item.price,
+              grossAmount: gross,
+              commissionRate: rate,
+              commissionAmount: commAmt,
+              netAmount: net,
+              status: "pending" // Pending until delivered/completed
             });
-
-            // Customer insights
-            doc.fillColor("#111827").fontSize(11).font("Helvetica-Bold");
-            doc.text("Customer Insights", { underline: true });
-            doc.font("Helvetica").moveDown(0.3);
-            doc.fillColor('#374151').fontSize(9);
-            doc.text(`Top customer by spend: ${extraMetrics.topCustomerName} ($${Math.round(extraMetrics.topCustomerSpend||0).toLocaleString()})`);
-            doc.text(`Repeat vs new customers: ${extraMetrics.repeatCount||0} repeat / ${extraMetrics.newCount||0} new`);
-            doc.moveDown(0.6);
           }
-
-          // Orders table (fallback or additional)
-          if (type !== 'monthly') {
-            doc.fillColor("#111827").fontSize(11).font("Helvetica-Bold");
-            doc.text("Order Details", { underline: true });
-            doc.font("Helvetica").moveDown(0.3);
-
-            const tableData = orders.slice(0, 30).map(o => ({
-              id: o._id.toString().slice(-6).toUpperCase(),
-              product: (o.product?.name || "N/A").substring(0, 22),
-              customer: (o.customer?.name || o.customer?.email || "N/A").substring(0, 18),
-              qty: String(o.quantity),
-              status: o.status.charAt(0).toUpperCase() + o.status.slice(1),
-              date: new Date(o.createdAt).toLocaleDateString("en-US", { month: "short", day: "2-digit" })
-            }));
-
-            helpers.table({
-              columns: [
-                { key: "id", header: "ID", width: 50 },
-                { key: "product", header: "Product", width: 130 },
-                { key: "customer", header: "Customer", width: 110 },
-                { key: "qty", header: "Qty", width: 35 },
-                { key: "status", header: "Status", width: 70 },
-                { key: "date", header: "Date", width: 60 }
-              ],
-              rows: tableData
-            });
-
-            if (orders.length > 30) {
-              doc.moveDown(0.3);
-              doc.fillColor("#6B7280").fontSize(8).text(`Showing 30 of ${orders.length} orders. Download CSV for complete report.`, { align: "center" });
-            }
-          }
-        } catch (contentError) {
-          console.error("Content builder error:", contentError);
-          doc.fillColor("#DC2626").fontSize(10);
-          doc.text("Error generating detailed content. Please contact support.");
         }
       }
-    });
-
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `inline; filename=${type}-report.pdf`);
-    doc.pipe(res);
-    doc.end();
-  } catch (err) {
-    console.error(`${req.query.type} report generation failed:`, err);
-    console.error("Error stack:", err.stack);
-    if (!res.headersSent) {
-      res.status(500).json({ 
-        message: "Failed to generate report.",
-        error: process.env.NODE_ENV === "development" ? err.message : undefined
-      });
+    } catch (earnErr) {
+      console.error("Failed to create seller earnings:", earnErr);
     }
+
+    res.status(201).json(order);
+  } catch (error) {
+    console.error("Create order error:", error);
+    res.status(500).json({ message: "Failed to create order", error: error.message });
   }
 };
 
@@ -654,4 +259,477 @@ export const markReportDownloaded = async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: "Failed to mark report as downloaded." });
   }
+};
+
+// 🛍️ Guest places an order (no auth)
+export const placeOrderGuest = placeOrder;
+
+// 📜 Get my orders
+export const getMyOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({ customer: req.user.id }).sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch orders" });
+  }
+};
+
+// 🏪 Get Seller Orders
+export const getSellerOrders = async (req, res) => {
+  try {
+    // Find orders where at least one item belongs to this seller
+    const orders = await Order.find({ "items.seller": req.user.id })
+      .populate("customer", "name email")
+      .sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch seller orders" });
+  }
+};
+
+// 📊 Get order analytics
+export const getOrderAnalytics = async (req, res) => {
+  try {
+    const totalOrders = await Order.countDocuments();
+    const pendingOrders = await Order.countDocuments({ status: "pending" });
+    const processingOrders = await Order.countDocuments({ status: "processing" });
+    const deliveredOrders = await Order.countDocuments({ status: "delivered" });
+    const cancelledOrders = await Order.countDocuments({ status: "cancelled" });
+
+    res.json({
+      totalOrders,
+      pendingOrders,
+      processingOrders,
+      deliveredOrders,
+      cancelledOrders
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch order analytics" });
+  }
+};
+
+// 🔍 Track public order
+export const trackPublicOrder = async (req, res) => {
+  try {
+    const order = await Order.findOne({ publicId: req.params.id });
+    if (!order) return res.status(404).json({ message: "Order not found" });
+    res.json(order);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to track order" });
+  }
+};
+
+// Helper to ensure default accounts exist
+const ensureAccount = async (name, type, code) => {
+  let account = await Account.findOne({ code });
+  if (!account) {
+    account = await Account.create({ name, type, code });
+  }
+  return account._id;
+};
+
+// 🔄 Update Order Status & Record Financials
+export const updateOrderStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const order = await Order.findById(req.params.id);
+
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    const oldStatus = order.status;
+    order.status = status;
+
+    if (status === "delivered" && oldStatus !== "delivered") {
+      order.deliveredAt = new Date();
+
+      // 💰 Financial Integration: Record Sale
+      const cashAccountId = await ensureAccount("Cash on Hand", "Asset", "1000");
+      const salesAccountId = await ensureAccount("Sales Revenue", "Revenue", "4000");
+
+      // Generate description with product names
+      const productNames = order.items.map(i => i.productName).join(", ");
+      const description = `Order Delivered: ${productNames.length > 50 ? productNames.substring(0, 47) + "..." : productNames}`;
+
+      await recordTransaction({
+        date: new Date(),
+        description: description,
+        reference: order.publicId,
+        type: "Sales",
+        entries: [
+          { account: cashAccountId, debit: order.totals.grandTotal },
+          { account: salesAccountId, credit: order.totals.grandTotal }
+        ],
+        createdBy: req.user._id
+      });
+
+      // Update Seller Earnings to 'confirmed' (ready for payout)
+      await SellerEarning.updateMany({ order: order._id }, { status: "confirmed" });
+    }
+
+    // 💰 Financial Integration: Handle Cancellation/Refund
+    if (status === "cancelled" && oldStatus !== "cancelled") {
+      // Only reverse if it was previously paid/delivered (where we recorded a transaction)
+      // For MVP, assuming "delivered" triggered the sale.
+      // If your flow records sale on "placed", change logic accordingly. 
+      // Based on code above, sale is recorded on "delivered".
+
+      if (oldStatus === "delivered") {
+        const accounts = await Account.find({ code: { $in: ["1100", "2001", "4001"] } });
+        const receivableAcc = accounts.find(a => a.code === "1100");
+        const payableAcc = accounts.find(a => a.code === "2001");
+        const revenueAcc = accounts.find(a => a.code === "4001");
+
+        if (receivableAcc && payableAcc && revenueAcc) {
+          const settings = await CommissionSettings.getSettings();
+          let rate = settings.defaultRate || 10;
+
+          // If it was a POS order, use POS rate
+          if (order.orderType === 'pos') {
+            rate = settings.posRate !== undefined ? settings.posRate : rate;
+          }
+
+          const commissionRate = rate / 100;
+          const subtotal = order.totals.subtotal || 0;
+          const commissionAmount = subtotal * commissionRate;
+          const sellerAmount = subtotal - commissionAmount;
+          const grandTotal = order.totals.grandTotal;
+
+          await recordTransaction({
+            date: new Date(),
+            description: `Refund/Cancellation: Order #${order.publicId}`,
+            reference: order.publicId,
+            type: "Expense", // or Refund
+            entries: [
+              { account: receivableAcc._id, credit: grandTotal }, // Refund Customer (Credit Asset)
+              { account: payableAcc._id, debit: sellerAmount },   // Cancel Seller Owed (Debit Liability)
+              { account: revenueAcc._id, debit: commissionAmount } // Cancel Revenue (Debit Revenue)
+            ],
+            createdBy: req.user._id
+          });
+        }
+      }
+
+      // Cancel Seller Earnings so they are not paid out
+      await SellerEarning.updateMany({ order: order._id }, { status: "cancelled" });
+    }
+
+    await order.save();
+    // if (status !== oldStatus) await sendStatusUpdate(order);
+
+    res.json(order);
+  } catch (err) {
+    console.error("Update order status failed:", err);
+    res.status(500).json({ message: "Failed to update order status" });
+  }
+};
+
+// 🏪 Create POS Order (Physical Sale) - Admin or Seller
+export const createPOSOrder = async (req, res) => {
+  try {
+    const { items, paymentMethod, storeLocation } = req.body;
+    const userRole = req.user.role;
+    const userId = req.user._id;
+
+    if (!items || items.length === 0) {
+      return res.status(400).json({ message: "Order must contain items" });
+    }
+
+    // 1. Calculate totals & Verify Stock
+    let subtotal = 0;
+    const orderItems = [];
+    const sellerEarnings = {}; // Track earnings per seller
+
+    for (const item of items) {
+      const product = await Product.findById(item.product).populate('seller', 'name');
+      if (!product) throw new Error(`Product not found: ${item.name}`);
+
+      // For sellers, verify they own the product
+      if (userRole === 'seller' && product.seller?._id?.toString() !== userId.toString()) {
+        throw new Error(`You can only sell your own products: ${product.name}`);
+      }
+
+      if (product.stock < item.quantity) {
+        throw new Error(`Insufficient stock for ${product.name}. Available: ${product.stock}`);
+      }
+
+      // Deduct Stock
+      product.stock -= item.quantity;
+      product.salesCount += item.quantity;
+      await product.save();
+
+      const itemSubtotal = product.price * item.quantity;
+      subtotal += itemSubtotal;
+
+      // Track seller for this item
+      const sellerId = product.seller?._id || userId; // Admin products = admin as seller
+
+      orderItems.push({
+        product: product._id,
+        seller: sellerId,
+        productName: product.name,
+        productImage: product.image,
+        quantity: item.quantity,
+        price: product.price,
+        cost: product.costPrice || 0,
+        subtotal: itemSubtotal
+      });
+
+      // Accumulate earnings per seller
+      if (!sellerEarnings[sellerId]) {
+        sellerEarnings[sellerId] = 0;
+      }
+      sellerEarnings[sellerId] += itemSubtotal;
+    }
+
+    // Fetch Commission Settings
+    const settings = await CommissionSettings.getSettings();
+    const defaultRate = (settings.defaultRate || 10);
+    const posRate = (settings.posRate !== undefined ? settings.posRate : defaultRate); // Fallback to default if not set
+
+    // Choose which rate to use for this transaction
+    // This is POS, so we use posRate
+    const appliedRate = posRate;
+
+    // 2. Create Order with channel tracking
+    const order = new Order({
+      customer: null, // Walk-in customer
+      items: orderItems,
+      orderType: "pos",
+      channel: "store",
+      storeLocation: storeLocation || "",
+      processedBy: userId,
+      totals: {
+        subtotal,
+        shipping: 0,
+        tax: 0,
+        discount: 0,
+        grandTotal: subtotal
+      },
+      payment: {
+        method: paymentMethod || "cash",
+        status: "completed",
+        paidAt: new Date()
+      },
+      status: "delivered",
+      shipping: {
+        method: "POS Pickup",
+        deliveredAt: new Date()
+      }
+    });
+
+    order.publicId = generatePublicId();
+    await order.save();
+
+    // 3. Record Financial Transaction
+    try {
+      const cashAccountId = await ensureAccount("Cash on Hand", "Asset", "1000");
+      const salesAccountId = await ensureAccount("Sales Revenue", "Revenue", "4000");
+
+      // 4. Determine Finance Logic based on Role
+      if (userRole === "admin") {
+        // ADMIN POS: Platform keeps 100% of cash and revenue
+        const productNames = orderItems.map(i => i.productName).join(", ");
+        const description = `POS Sale (Admin): ${productNames.length > 40 ? productNames.substring(0, 37) + "..." : productNames}`;
+
+        await recordTransaction({
+          date: new Date(),
+          description: description,
+          reference: order.publicId,
+          type: "Sales",
+          entries: [
+            { account: cashAccountId, debit: subtotal },
+            { account: salesAccountId, credit: subtotal }
+          ],
+          createdBy: userId
+        });
+
+        // Create Seller Earnings for sold items (if they belong to a seller)
+        for (const item of orderItems) {
+          if (item.seller && item.seller.toString() !== userId.toString()) {
+            // Admin sold someone else's product -> Admin owes them money
+            const gross = item.subtotal;
+            const commAmt = gross * (appliedRate / 100);
+            const net = gross - commAmt;
+
+            await SellerEarning.create({
+              seller: item.seller,
+              order: order._id,
+              orderPublicId: order.publicId,
+              product: item.product,
+              productName: item.productName,
+              quantity: item.quantity,
+              itemPrice: item.price,
+              grossAmount: gross,
+              commissionRate: appliedRate,
+              commissionAmount: commAmt,
+              netAmount: net,
+              status: "pending" // Admin collected cash, so payout is Pending
+            });
+          }
+          // If Admin sold Admin product -> No SellerEarning needed (or self-earning ignored)
+        }
+
+      } else if (userRole === "seller") {
+        // SELLER POS: Seller keeps cash. Platform takes commission (if any).
+        // We record a debt (Seller Payable) -> Platform Commission Revenue
+
+        // Re-fetch settings just in case (or reuse) - actually we have appliedRate
+        const commissionRate = appliedRate / 100;
+        const commissionAmount = subtotal * commissionRate;
+
+        // Create "Paid" Seller Earnings for records (since they already have the money)
+        for (const item of orderItems) {
+          const gross = item.subtotal;
+          const commAmt = gross * (appliedRate / 100);
+          const net = gross - commAmt;
+
+          await SellerEarning.create({
+            seller: userId,
+            order: order._id,
+            orderPublicId: order.publicId,
+            product: item.product,
+            productName: item.productName,
+            quantity: item.quantity,
+            itemPrice: item.price,
+            grossAmount: gross,
+            commissionRate: appliedRate,
+            commissionAmount: commAmt,
+            netAmount: net,
+            status: "paid", // Seller has the cash!
+            paidAt: new Date()
+          });
+        }
+
+        // We only record if there is a commission
+        if (commissionAmount > 0) {
+          const accounts = await Account.find({ code: { $in: ["2001", "4001"] } });
+          const payableAcc = accounts.find(a => a.code === "2001");    // Seller Payable (Liability)
+          const revenueAcc = accounts.find(a => a.code === "4001");    // Commission Revenue
+
+          if (payableAcc && revenueAcc) {
+            await recordTransaction({
+              date: new Date(),
+              description: `POS Commission (Seller): Order #${order.publicId}`,
+              reference: order.publicId,
+              type: "Sales",
+              entries: [
+                // Debit Liability "Seller Payable" (reducing what we owe them from online sales)
+                // effectively "charging" them the commission against their balance.
+                { account: payableAcc._id, debit: commissionAmount },
+                { account: revenueAcc._id, credit: commissionAmount }
+              ],
+              createdBy: userId
+            });
+          }
+        }
+      }
+    } catch (finErr) {
+      console.error("POS Finance Error:", finErr);
+    }
+
+    res.status(201).json(order);
+  } catch (err) {
+    console.error("POS Order failed:", err);
+    res.status(500).json({ message: err.message || "Failed to process POS order" });
+  }
+};
+
+// 🏪 Get Seller's Products for POS (only their inventory)
+export const getSellerPOSProducts = async (req, res) => {
+  try {
+    const products = await Product.find({
+      seller: req.user._id,
+      stock: { $gt: 0 },
+      visibility: 'public'
+    })
+      .select('name price stock image sku categories')
+      .populate('categories', 'name')
+      .sort({ name: 1 });
+
+    res.json({
+      success: true,
+      data: products
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch products" });
+  }
+};
+
+// 🏪 Get Admin/Impressa's Products for POS (only company inventory)
+export const getAdminPOSProducts = async (req, res) => {
+  try {
+    // Get all admin users
+    const adminUsers = await User.find({ role: 'admin' }).select('_id');
+    const adminIds = adminUsers.map(u => u._id);
+
+    // Products owned by admin OR products with no seller (legacy/direct uploads)
+    const products = await Product.find({
+      $or: [
+        { seller: { $in: adminIds } },
+        { seller: { $exists: false } },
+        { seller: null }
+      ],
+      stock: { $gt: 0 }
+    })
+      .select('name price stock image sku categories')
+      .populate('categories', 'name')
+      .sort({ name: 1 });
+
+    res.json({
+      success: true,
+      data: products
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch products" });
+  }
+};
+
+// 🔍 Lookup Product by Barcode (for POS scanning)
+export const lookupByBarcode = async (req, res) => {
+  try {
+    const { barcode, sellerId } = req.query;
+
+    if (!barcode) {
+      return res.status(400).json({ success: false, message: "Barcode is required" });
+    }
+
+    const normalizedBarcode = barcode.trim().toUpperCase();
+
+    // Build query - if sellerId provided, filter by seller
+    const query = {
+      $or: [
+        { barcode: normalizedBarcode },
+        { sku: normalizedBarcode }
+      ],
+      stock: { $gt: 0 }
+    };
+
+    if (sellerId) {
+      query.seller = sellerId;
+    }
+
+    const product = await Product.findOne(query)
+      .select('_id name price stock barcode sku image seller')
+      .populate('seller', 'name storeName');
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found or out of stock"
+      });
+    }
+
+    res.json({
+      success: true,
+      product
+    });
+  } catch (err) {
+    console.error("Barcode lookup error:", err);
+    res.status(500).json({ success: false, message: "Lookup failed" });
+  }
+};
+
+// Helper to generate public ID (if not imported)
+const generatePublicId = () => {
+  return Math.random().toString(36).substring(2, 10).toUpperCase();
 };

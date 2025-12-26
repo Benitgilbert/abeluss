@@ -1,0 +1,53 @@
+/* Dark Mode Support for ProductCreateEditModal */
+[data-theme="dark"] .bg-white {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .text-gray-800,
+[data-theme="dark"] .text-gray-700,
+[data-theme="dark"] .text-gray-600 {
+    color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .text-gray-500 {
+    color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .border-b,
+[data-theme="dark"] .border,
+[data-theme="dark"] .border-t {
+    border-color: #334155 !important;
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+    color: #64748b !important;
+}
+
+[data-theme="dark"] .bg-gray-50 {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+}
+
+[data-theme="dark"] .hover\:bg-gray-100:hover {
+    background-color: #334155 !important;
+}
+
+[data-theme="dark"] button.text-gray-500:hover {
+    color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .bg-white.px-2.py-1.rounded.border {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+}

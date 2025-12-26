@@ -22,3 +22,18 @@ export const authMiddleware = (requiredRoles = []) => {
 
 export const verifyToken = authMiddleware();
 export const verifyAdmin = authMiddleware(["admin"]);
+export const verifySeller = authMiddleware(["admin", "seller"]);
+
+export const optionalAuth = (req, res, next) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) {
+    return next();
+  }
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = { id: decoded.id, role: decoded.role };
+  } catch (err) {
+    // If token is invalid, we just proceed as guest (req.user remains undefined)
+  }
+  next();
+};

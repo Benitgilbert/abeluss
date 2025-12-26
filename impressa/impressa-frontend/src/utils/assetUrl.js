@@ -5,10 +5,18 @@ import api from "./axiosInstance";
 // - If input starts with /uploads/, prefix backend origin (strip trailing /api from baseURL)
 // - Otherwise return input
 export default function assetUrl(path) {
-  if (!path) return path;
+  if (!path) return "";
+  // For absolute URLs (like placeholders from cloudinary)
   if (/^https?:\/\//i.test(path)) return path;
-  const base = (api?.defaults?.baseURL || "").replace(/\/$/, "");
-  const origin = base.endsWith("/api") ? base.slice(0, -4) : base; // drop /api
-  if (path.startsWith("/uploads/")) return `${origin}${path}`;
-  return path;
+
+  // For backend-provided paths
+  if (path.startsWith("/uploads/")) {
+    // Use environment variable or fallback to localhost:5000
+    // We strip /api if it's included in the env var, though here we just want the origin
+    const backendUrl = "http://localhost:5000";
+    return `${backendUrl}${path}`;
+  }
+
+  // For local public paths
+  return process.env.PUBLIC_URL + path;
 }

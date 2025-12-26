@@ -9,19 +9,16 @@ import { getAnomalyAlerts } from "../utils/anomalyUtils.js";
 export const getDashboardAnalytics = async (req, res) => {
   try {
     // Week boundaries
-   const now = new Date();
+    const now = new Date();
 
-const startOfThisWeek = new Date(now);
-startOfThisWeek.setDate(now.getDate() - now.getDay());
-startOfThisWeek.setHours(0, 0, 0, 0);
+    const startOfThisWeek = new Date(now);
+    startOfThisWeek.setDate(now.getDate() - now.getDay());
+    startOfThisWeek.setHours(0, 0, 0, 0);
 
-const startOfLastWeek = new Date(startOfThisWeek);
-startOfLastWeek.setDate(startOfThisWeek.getDate() - 7);
+    const startOfLastWeek = new Date(startOfThisWeek);
+    startOfLastWeek.setDate(startOfThisWeek.getDate() - 7);
 
-const endOfLastWeek = new Date(startOfThisWeek); // Sunday of last week
-
-
-
+    const endOfLastWeek = new Date(startOfThisWeek); // Sunday of last week
 
     // Core counts
     const [
@@ -30,6 +27,7 @@ const endOfLastWeek = new Date(startOfThisWeek); // Sunday of last week
       inProductionOrders,
       cancelledOrders,
       totalProducts,
+      totalInventory,
       totalUsers,
       recentOrders,
       customizationDemand,
@@ -42,41 +40,61 @@ const endOfLastWeek = new Date(startOfThisWeek); // Sunday of last week
       activeThisWeek,
       activeLastWeek,
       pendingOrders
-
     ] = await Promise.all([
       Order.countDocuments(),
       Order.countDocuments({ status: "delivered" }),
       Order.countDocuments({ status: "in-production" }),
       Order.countDocuments({ status: "cancelled" }),
       Product.countDocuments(),
+      Product.aggregate([{ $group: { _id: null, total: { $sum: "$stock" } } }]).then(res => res[0]?.total || 0),
       User.countDocuments(),
-      Order.find().sort({ createdAt: -1 }).limit(10).populate("product customer"),
+      Order.find().sort({ createdAt: -1 }).limit(10).populate("items.product customer"),
       Order.aggregate([
+        { $unwind: "$items" },
         {
           $group: {
             _id: null,
-            customText: { $sum: { $cond: [{ $ifNull: ["$customText", false] }, 1, 0] } },
-            customFile: { $sum: { $cond: [{ $ifNull: ["$customFile", false] }, 1, 0] } },
-            cloudLink: { $sum: { $cond: [{ $ifNull: ["$cloudLink", false] }, 1, 0] } }
+            customText: { $sum: { $cond: [{ $ifNull: ["$items.customizations.customText", false] }, 1, 0] } },
+            customFile: { $sum: { $cond: [{ $ifNull: ["$items.customizations.customFile", false] }, 1, 0] } },
+            cloudLink: { $sum: { $cond: [{ $ifNull: ["$items.customizations.cloudLink", false] }, 1, 0] } }
           }
         }
       ]),
-
-  Order.countDocuments({ status: "delivered", createdAt: { $gte: startOfThisWeek } }),
-  Order.countDocuments({ status: "delivered", createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek } }),
-  Order.countDocuments({ status: "cancelled", createdAt: { $gte: startOfThisWeek } }),
-  Order.countDocuments({ status: "cancelled", createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek } }),
-  Order.countDocuments({
-    createdAt: { $gte: startOfThisWeek },
-    $or: [{ customText: { $exists: true } }, { customFile: { $exists: true } }, { cloudLink: { $exists: true } }]
-  }),
-  Order.countDocuments({
-    createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek },
-    $or: [{ customText: { $exists: true } }, { customFile: { $exists: true } }, { cloudLink: { $exists: true } }]
-  }),
-  Order.distinct("customer", { createdAt: { $gte: startOfThisWeek } }).then((u) => u.length),
-  Order.distinct("customer", { createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek } }).then((u) => u.length),
-  Order.countDocuments({ status: { $in: ["pending", "processing"] } }) 
+      Order.countDocuments({ status: "delivered", createdAt: { $gte: startOfThisWeek } }),
+      Order.countDocuments({ status: "delivered", createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek } }),
+      Order.countDocuments({ status: "cancelled", createdAt: { $gte: startOfThisWeek } }),
+      Order.countDocuments({ status: "cancelled", createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek } }),
+      Order.aggregate([
+        { $match: { createdAt: { $gte: startOfThisWeek } } },
+        { $unwind: "$items" },
+        {
+          $match: {
+            $or: [
+              { "items.customizations.customText": { $exists: true, $ne: null } },
+              { "items.customizations.customFile": { $exists: true, $ne: null } },
+              { "items.customizations.cloudLink": { $exists: true, $ne: null } }
+            ]
+          }
+        },
+        { $count: "count" }
+      ]).then(res => res[0]?.count || 0),
+      Order.aggregate([
+        { $match: { createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek } } },
+        { $unwind: "$items" },
+        {
+          $match: {
+            $or: [
+              { "items.customizations.customText": { $exists: true, $ne: null } },
+              { "items.customizations.customFile": { $exists: true, $ne: null } },
+              { "items.customizations.cloudLink": { $exists: true, $ne: null } }
+            ]
+          }
+        },
+        { $count: "count" }
+      ]).then(res => res[0]?.count || 0),
+      Order.distinct("customer", { createdAt: { $gte: startOfThisWeek } }).then((u) => u.length),
+      Order.distinct("customer", { createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek } }).then((u) => u.length),
+      Order.countDocuments({ status: { $in: ["pending", "processing"] } })
     ]);
 
     // Revenue this month
@@ -88,18 +106,9 @@ const endOfLastWeek = new Date(startOfThisWeek); // Sunday of last week
         }
       },
       {
-        $lookup: {
-          from: "products",
-          localField: "product",
-          foreignField: "_id",
-          as: "product"
-        }
-      },
-      { $unwind: "$product" },
-      {
         $group: {
           _id: null,
-          totalRevenue: { $sum: { $multiply: ["$product.price", "$quantity"] } }
+          totalRevenue: { $sum: "$totals.grandTotal" }
         }
       }
     ]);
@@ -107,93 +116,68 @@ const endOfLastWeek = new Date(startOfThisWeek); // Sunday of last week
 
     // Weekly change metrics
     const [
-  ordersThisWeek,
-  ordersLastWeek,
-  revenueThisWeekAgg,
-  revenueLastWeekAgg,
-  usersThisWeek,
-  usersLastWeek,
-  pendingThisWeek,
-  pendingLastWeek,
-  itemsThisWeekAgg,
-  itemsLastWeekAgg
-] = await Promise.all([
-  Order.countDocuments({ createdAt: { $gte: startOfThisWeek } }),
-  Order.countDocuments({ createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek } }),
-  Order.aggregate([
-    { $match: { status: "delivered", createdAt: { $gte: startOfThisWeek } } },
-    {
-      $lookup: {
-        from: "products",
-        localField: "product",
-        foreignField: "_id",
-        as: "product"
+      ordersThisWeek,
+      ordersLastWeek,
+      revenueThisWeekAgg,
+      revenueLastWeekAgg,
+      usersThisWeek,
+      usersLastWeek,
+      pendingThisWeek,
+      pendingLastWeek,
+      itemsThisWeekAgg,
+      itemsLastWeekAgg
+    ] = await Promise.all([
+      Order.countDocuments({ createdAt: { $gte: startOfThisWeek } }),
+      Order.countDocuments({ createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek } }),
+      Order.aggregate([
+        { $match: { status: "delivered", createdAt: { $gte: startOfThisWeek } } },
+        { $group: { _id: null, total: { $sum: "$totals.grandTotal" } } }
+      ]),
+      Order.aggregate([
+        { $match: { status: "delivered", createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek } } },
+        { $group: { _id: null, total: { $sum: "$totals.grandTotal" } } }
+      ]),
+      User.countDocuments({ createdAt: { $gte: startOfThisWeek } }),
+      User.countDocuments({ createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek } }),
+      Order.countDocuments({ status: { $in: ["pending", "processing"] }, createdAt: { $gte: startOfThisWeek } }),
+      Order.countDocuments({ status: { $in: ["pending", "processing"] }, createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek } }),
+      Order.aggregate([
+        { $match: { status: { $ne: "cancelled" }, createdAt: { $gte: startOfThisWeek } } },
+        { $unwind: "$items" },
+        { $group: { _id: null, total: { $sum: "$items.quantity" } } }
+      ]),
+      Order.aggregate([
+        { $match: { status: { $ne: "cancelled" }, createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek } } },
+        { $unwind: "$items" },
+        { $group: { _id: null, total: { $sum: "$items.quantity" } } }
+      ])
+    ]);
+
+    const itemsThisWeek = itemsThisWeekAgg[0]?.total || 0;
+    const itemsLastWeek = itemsLastWeekAgg[0]?.total || 0;
+
+    const totalItemsAgg = await Order.aggregate([
+      { $match: { status: { $not: { $regex: "^cancelled$", $options: "i" } } } },
+      { $unwind: "$items" },
+      { $group: { _id: null, total: { $sum: "$items.quantity" } } }
+    ]);
+
+    const totalItems = totalItemsAgg[0]?.total || 0;
+
+    // New customers this month
+    const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const newCustomersThisMonth = await User.countDocuments({ createdAt: { $gte: startOfThisMonth } });
+
+    // Active users (distinct customers who placed orders this week)
+    const activeUsers = activeThisWeek;
+
+    const calcChange = (current, previous) => {
+      if (previous === 0) {
+        if (current === 0) return "0%";
+        return "New"; // no % needed
       }
-    },
-    { $unwind: "$product" },
-    {
-      $group: {
-        _id: null,
-        total: { $sum: { $multiply: ["$product.price", "$quantity"] } }
-      }
-    }
-  ]),
-  Order.aggregate([
-    { $match: { status: "delivered", createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek } } },
-    {
-      $lookup: {
-        from: "products",
-        localField: "product",
-        foreignField: "_id",
-        as: "product"
-      }
-    },
-    { $unwind: "$product" },
-    {
-      $group: {
-        _id: null,
-        total: { $sum: { $multiply: ["$product.price", "$quantity"] } }
-      }
-    }
-  ]),
-  User.countDocuments({ createdAt: { $gte: startOfThisWeek } }),
-  User.countDocuments({ createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek } }),
-  Order.countDocuments({ status: { $in: ["pending", "processing"] }, createdAt: { $gte: startOfThisWeek } }),
-  Order.countDocuments({ status: { $in: ["pending", "processing"] }, createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek } }),
-  Order.aggregate([
-    { $match: { status: { $ne: "cancelled" }, createdAt: { $gte: startOfThisWeek } } },
-    { $group: { _id: null, total: { $sum: "$quantity" } } }
-  ]),
-  Order.aggregate([
-    { $match: { status: { $ne: "cancelled" }, createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek } } },
-    { $group: { _id: null, total: { $sum: "$quantity" } } }
-  ])
-]);
-
-const itemsThisWeek = itemsThisWeekAgg[0]?.total || 0;
-const itemsLastWeek = itemsLastWeekAgg[0]?.total || 0;
-
-const totalItemsAgg = await Order.aggregate([
-  { $match: { status: { $not: { $regex: "^cancelled$", $options: "i" } } } },
-  { $group: { _id: null, total: { $sum: "$quantity" } } }
-]);
-
-const totalItems = totalItemsAgg[0]?.total || 0;
-
-// New customers this month
-const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-const newCustomersThisMonth = await User.countDocuments({ createdAt: { $gte: startOfThisMonth } });
-
-// Active users (distinct customers who placed orders this week)
-const activeUsers = activeThisWeek;
-
-  const calcChange = (current, previous) => {
-  if (previous === 0) {
-    if (current === 0) return "0%";
-    return "New"; // no % needed
-  }
-  return `${(((current - previous) / previous) * 100).toFixed(2)}%`;
-};
+      return `${(((current - previous) / previous) * 100).toFixed(2)}%`;
+    };
 
     const changes = {
       ordersChange: calcChange(ordersThisWeek, ordersLastWeek),
@@ -205,32 +189,22 @@ const activeUsers = activeThisWeek;
       customChange: calcChange(customThisWeek, customLastWeek),
       activeChange: calcChange(activeThisWeek, activeLastWeek),
       itemsChange: calcChange(itemsThisWeek, itemsLastWeek)
-    
     };
 
     // Monthly revenue & sales (for line chart)
     const monthlyRevenue = await Order.aggregate([
       { $match: { status: "delivered" } },
       {
-        $lookup: {
-          from: "products",
-          localField: "product",
-          foreignField: "_id",
-          as: "product"
-        }
-      },
-      { $unwind: "$product" },
-      {
         $group: {
           _id: { $month: "$createdAt" },
-          revenue: { $sum: { $multiply: ["$product.price", "$quantity"] } },
-          sales: { $sum: "$quantity" }
+          revenue: { $sum: "$totals.grandTotal" }, // Sum grandTotal per order
+          sales: { $sum: { $sum: "$items.quantity" } } // Sum quantities of all items
         }
       },
       { $sort: { "_id": 1 } }
     ]);
 
-    // Weekly profit (for bar chart)
+    // Weekly profit (for bar chart) - Profit = GrandTotal - Cost
     const weeklyProfit = await Order.aggregate([
       {
         $match: {
@@ -239,18 +213,24 @@ const activeUsers = activeThisWeek;
         }
       },
       {
-        $lookup: {
-          from: "products",
-          localField: "product",
-          foreignField: "_id",
-          as: "product"
-        }
-      },
-      { $unwind: "$product" },
-      {
         $group: {
           _id: { $dayOfWeek: "$createdAt" },
-          profit: { $sum: { $multiply: ["$product.price", "$quantity"] } }
+          profit: {
+            $sum: {
+              $subtract: [
+                "$totals.grandTotal",
+                {
+                  $sum: {
+                    $map: {
+                      input: "$items",
+                      as: "item",
+                      in: { $multiply: [{ $ifNull: ["$$item.cost", 0] }, "$$item.quantity"] }
+                    }
+                  }
+                }
+              ]
+            }
+          }
         }
       },
       { $sort: { "_id": 1 } }
@@ -263,7 +243,10 @@ const activeUsers = activeThisWeek;
 
     // Top-selling products (for bar chart)
     const topProducts = await Order.aggregate([
-      { $group: { _id: "$product", count: { $sum: 1 } } },
+      { $unwind: "$items" },
+      { $group: { _id: "$items.product", count: { $sum: "$items.quantity" } } },
+      { $sort: { count: -1 } },
+      { $limit: 5 },
       {
         $lookup: {
           from: "products",
@@ -278,84 +261,117 @@ const activeUsers = activeThisWeek;
           productName: "$product.name",
           count: 1
         }
-      },
-      { $sort: { count: -1 } },
-      { $limit: 5 }
+      }
     ]);
 
     const [topThisWeek, topLastWeek] = await Promise.all([
-  Order.aggregate([
-    { $match: { createdAt: { $gte: startOfThisWeek } } },
-    { $group: { _id: "$product", count: { $sum: 1 } } },
-    { $sort: { count: -1 } },
-    { $limit: 1 },
-    {
-      $lookup: {
-        from: "products",
-        localField: "_id",
-        foreignField: "_id",
-        as: "product"
-      }
-    },
-    { $unwind: "$product" },
-    {
-      $project: {
-        productName: "$product.name",
-        count: 1
-      }
-    }
-  ]),
-  Order.aggregate([
-    { $match: { createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek } } },
-    { $group: { _id: "$product", count: { $sum: 1 } } },
-    { $sort: { count: -1 } },
-    { $limit: 1 },
-    {
-      $lookup: {
-        from: "products",
-        localField: "_id",
-        foreignField: "_id",
-        as: "product"
-      }
-    },
-    { $unwind: "$product" },
-    {
-      $project: {
-        productName: "$product.name",
-        count: 1
-      }
-    }
-  ])
-]);
+      Order.aggregate([
+        { $match: { createdAt: { $gte: startOfThisWeek } } },
+        { $unwind: "$items" },
+        { $group: { _id: "$items.product", count: { $sum: "$items.quantity" } } },
+        { $sort: { count: -1 } },
+        { $limit: 1 },
+        {
+          $lookup: {
+            from: "products",
+            localField: "_id",
+            foreignField: "_id",
+            as: "product"
+          }
+        },
+        { $unwind: "$product" },
+        { $project: { productName: "$product.name", count: 1 } }
+      ]),
+      Order.aggregate([
+        { $match: { createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek } } },
+        { $unwind: "$items" },
+        { $group: { _id: "$items.product", count: { $sum: "$items.quantity" } } },
+        { $sort: { count: -1 } },
+        { $limit: 1 },
+        {
+          $lookup: {
+            from: "products",
+            localField: "_id",
+            foreignField: "_id",
+            as: "product"
+          }
+        },
+        { $unwind: "$product" },
+        { $project: { productName: "$product.name", count: 1 } }
+      ])
+    ]);
 
-const topProductChange = topThisWeek[0] && topLastWeek[0]
-  ? calcChange(topThisWeek[0].count, topLastWeek[0].count)
-  : null;
+    const topProductChange = topThisWeek[0] && topLastWeek[0]
+      ? calcChange(topThisWeek[0].count, topLastWeek[0].count)
+      : null;
 
+    const topProductName = topThisWeek[0]?.productName || (topProducts[0]?.productName || "N/A");
 
-const topProductByQuantityAgg = await Order.aggregate([
-  { $match: { status: { $ne: "cancelled" } } },
-  { $group: { _id: "$product", totalQuantity: { $sum: "$quantity" } } },
-  {
-    $lookup: {
-      from: "products",
-      localField: "_id",
-      foreignField: "_id",
-      as: "product"
-    }
-  },
-  { $unwind: "$product" },
-  { $sort: { totalQuantity: -1 } },
-  { $limit: 1 },
-  {
-    $project: {
-      _id: 0,
-      productName: "$product.name"
-    }
-  }
-]);
+    // Seller stats (for multi-vendor dashboard)
+    const [totalSellers, activeSellers, pendingSellers, rejectedSellers] = await Promise.all([
+      User.countDocuments({ role: 'seller' }),
+      User.countDocuments({ role: 'seller', sellerStatus: 'active' }),
+      User.countDocuments({ role: 'seller', sellerStatus: 'pending' }),
+      User.countDocuments({ role: 'seller', sellerStatus: 'rejected' })
+    ]);
 
-const topProductName = topProductByQuantityAgg[0]?.productName || "N/A";  
+    // Top Sellers by revenue (last 30 days)
+    const topSellers = await Order.aggregate([
+      { $match: { status: 'delivered', createdAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } } },
+      { $unwind: '$items' },
+      {
+        $lookup: {
+          from: 'products',
+          localField: 'items.product',
+          foreignField: '_id',
+          as: 'productInfo'
+        }
+      },
+      { $unwind: '$productInfo' },
+      {
+        $group: {
+          _id: '$productInfo.seller',
+          revenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } },
+          orders: { $sum: 1 }
+        }
+      },
+      { $sort: { revenue: -1 } },
+      { $limit: 5 },
+      {
+        $lookup: {
+          from: 'users',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'sellerInfo'
+        }
+      },
+      { $unwind: '$sellerInfo' },
+      {
+        $project: {
+          sellerId: '$_id',
+          name: '$sellerInfo.name',
+          storeName: '$sellerInfo.storeName',
+          revenue: 1,
+          orders: 1
+        }
+      }
+    ]);
+
+    // Pending Seller Approvals (latest 5)
+    const pendingSellerApprovals = await User.find({ role: 'seller', sellerStatus: 'pending' })
+      .select('name email storeName createdAt')
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    // Low Stock Alerts (products with stock < 10)
+    const lowStockProducts = await Product.find({ stock: { $gt: 0, $lte: 10 }, visibility: 'public' })
+      .select('name stock image seller')
+      .populate('seller', 'storeName')
+      .sort({ stock: 1 })
+      .limit(10);
+
+    // Out of Stock count
+    const outOfStockCount = await Product.countDocuments({ stock: 0, visibility: 'public' });
 
     res.json({
       // Cards
@@ -364,6 +380,7 @@ const topProductName = topProductByQuantityAgg[0]?.productName || "N/A";
       inProductionOrders,
       cancelledOrders,
       totalProducts,
+      totalInventory,
       pendingOrders,
       totalUsers,
       newCustomersThisMonth,
@@ -379,6 +396,20 @@ const topProductName = topProductByQuantityAgg[0]?.productName || "N/A";
         (customizationDemand[0]?.customFile || 0) +
         (customizationDemand[0]?.cloudLink || 0),
 
+      // Seller Stats (Multi-vendor)
+      sellerStats: {
+        total: totalSellers,
+        active: activeSellers,
+        pending: pendingSellers,
+        rejected: rejectedSellers
+      },
+      topSellers,
+      pendingSellerApprovals,
+
+      // Inventory Alerts
+      lowStockProducts,
+      outOfStockCount,
+
       // Tables
       recentOrders,
       customizationDemand: customizationDemand[0] || {},
@@ -387,7 +418,6 @@ const topProductName = topProductByQuantityAgg[0]?.productName || "N/A";
       monthlyRevenue,
       weeklyProfit,
       statusCounts,
-      topProducts,
 
       // Real week-over-week changes
       changes
@@ -407,19 +437,10 @@ export const getForecast = async (req, res) => {
         $match: { status: "delivered" }
       },
       {
-        $lookup: {
-          from: "products",
-          localField: "product",
-          foreignField: "_id",
-          as: "product"
-        }
-      },
-      { $unwind: "$product" },
-      {
         $group: {
           _id: { $month: "$createdAt" },
-          revenue: { $sum: { $multiply: ["$product.price", "$quantity"] } },
-          orders: { $sum: "$quantity" }
+          revenue: { $sum: "$totals.grandTotal" },
+          orders: { $sum: 1 } // Count of orders, not items
         }
       },
       { $sort: { "_id": 1 } }
@@ -460,15 +481,17 @@ export const getForecast = async (req, res) => {
 export const getProductRecommendations = async (req, res) => {
   try {
     // Step 1: Get all delivered orders with product IDs
-    const orders = await Order.find({ status: "delivered" }).select("product customer");
+    const orders = await Order.find({ status: "delivered" }).select("items.product customer");
 
     // Step 2: Build a map of customer → products
     const customerProductMap = {};
     orders.forEach((order) => {
       const customerId = order.customer.toString();
-      const productId = order.product.toString();
       if (!customerProductMap[customerId]) customerProductMap[customerId] = new Set();
-      customerProductMap[customerId].add(productId);
+
+      order.items.forEach(item => {
+        customerProductMap[customerId].add(item.product.toString());
+      });
     });
 
     // Step 3: Count co-occurrences of product pairs
@@ -540,23 +563,26 @@ export const getAnomalies = async (req, res) => {
     const cancelledPrevWeek = await countByStatus("cancelled", twoWeeksAgo, oneWeekAgo);
 
     // Custom orders
-    const customLastWeek = await Order.countDocuments({
-      createdAt: { $gte: oneWeekAgo, $lt: now },
-      $or: [
-        { customText: { $exists: true, $ne: null } },
-        { customFile: { $exists: true, $ne: null } },
-        { cloudLink: { $exists: true, $ne: null } }
-      ]
-    });
+    const countCustom = async (start, end) => {
+      const result = await Order.aggregate([
+        { $match: { createdAt: { $gte: start, $lt: end } } },
+        { $unwind: "$items" },
+        {
+          $match: {
+            $or: [
+              { "items.customizations.customText": { $exists: true, $ne: null } },
+              { "items.customizations.customFile": { $exists: true, $ne: null } },
+              { "items.customizations.cloudLink": { $exists: true, $ne: null } }
+            ]
+          }
+        },
+        { $count: "count" }
+      ]);
+      return result[0]?.count || 0;
+    };
 
-    const customPrevWeek = await Order.countDocuments({
-      createdAt: { $gte: twoWeeksAgo, $lt: oneWeekAgo },
-      $or: [
-        { customText: { $exists: true, $ne: null } },
-        { customFile: { $exists: true, $ne: null } },
-        { cloudLink: { $exists: true, $ne: null } }
-      ]
-    });
+    const customLastWeek = await countCustom(oneWeekAgo, now);
+    const customPrevWeek = await countCustom(twoWeeksAgo, oneWeekAgo);
 
     const anomalies = [];
 
@@ -616,11 +642,10 @@ impressa Admin Dashboard Analytics:
 - Cancelled Orders: ${analytics.cancelledOrders}
 - Pending Orders: ${analytics.pendingOrders} 
 - Revenue This Month: ${analytics.revenueThisMonth.toLocaleString()} RWF
-- Top Product: ${
-      Array.isArray(analytics.topProducts) && analytics.topProducts.length > 0
+- Top Product: ${Array.isArray(analytics.topProducts) && analytics.topProducts.length > 0
         ? `${analytics.topProducts[0].productName} (${analytics.topProducts[0].count} orders)`
         : "N/A (0 orders)"
-    }
+      }
 - Custom Orders: ${analytics.customOrders}
 - Forecasted Revenue: ${forecast.projectedRevenue.toLocaleString()} RWF
 - Forecasted Orders: ${forecast.projectedOrders}
@@ -643,9 +668,9 @@ Respond with a helpful, natural-language answer based on the data above.
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "command-r-plus-08-2024",
+        model: "command-r-08-2024",
         message: prompt,
-        temperature: 0.7
+        temperature: 0.3
       })
     });
 

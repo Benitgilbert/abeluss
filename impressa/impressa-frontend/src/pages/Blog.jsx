@@ -1,88 +1,91 @@
-import Header from "../components/Header";
-import LandingFooter from "../components/LandingFooter";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { FaUser, FaCalendarAlt, FaSearch } from "react-icons/fa";
+import Header from "../components/Header";
+import LandingFooter from "../components/LandingFooter";
+import api from "../utils/axiosInstance";
+import "./Blog.css";
 
 export default function Blog() {
-  const blogPosts = [
-    {
-      id: 1,
-      title: "The Ultimate Guide to Choosing Your Business Card",
-      excerpt: "Your business card is a reflection of your brand. Learn how to choose the right design, paper, and finish to make a lasting impression.",
-      author: "Benit N",
-      date: "October 26, 2025",
-      image: "/images/blog-1.jpg",
-      category: "Design Tips",
-    },
-    {
-      id: 2,
-      title: "5 Creative Ways to Use Flyers for Your Business",
-      excerpt: "Flyers are not dead! Discover five innovative ways to use flyers to promote your business and attract new customers.",
-      author: "Jane Doe",
-      date: "October 22, 2025",
-      image: "/images/blog-2.jpg",
-      category: "Marketing",
-    },
-    {
-      id: 3,
-      title: "The Power of Branded Merchandise",
-      excerpt: "Branded merchandise is a powerful tool for building brand loyalty. Learn how to choose the right products for your brand.",
-      author: "John Smith",
-      date: "October 18, 2025",
-      image: "/images/blog-3.jpg",
-      category: "Branding",
-    },
-  ];
+  const [blogPosts, setBlogPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        const { data } = await api.get("/blogs");
+        setBlogPosts(data);
+      } catch (err) {
+        console.error("Error fetching blogs:", err);
+        setError("Failed to load blogs. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBlogs();
+  }, []);
 
   const categories = ["Design Tips", "Marketing", "Branding", "Inspiration"];
 
   return (
-    <div className="font-roboto bg-gray-50">
+    <div className="blog-page-wrapper">
       <Header />
 
-      <main className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>Impressa Blog</h1>
-            <p className="mt-4 text-lg text-gray-600">Insights, tips, and inspiration for your printing projects.</p>
+      <main className="blog-main-section">
+        <div className="blog-container">
+          <div className="blog-header">
+            <h1 className="blog-title">Impressa Blog</h1>
+            <p className="blog-desc">Insights, tips, and inspiration for your printing projects.</p>
           </div>
-          <div className="grid lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
-              <div className="space-y-12">
-                {blogPosts.map((post) => (
-                  <div key={post.title} className="bg-white p-8 rounded-lg shadow-lg">
-                    <img src={process.env.PUBLIC_URL + post.image} alt={post.title} className="w-full h-64 object-cover rounded-lg mb-6" />
-                    <div className="flex items-center text-sm text-gray-500 mb-2">
-                      <div className="flex items-center">
-                        <FaUser className="mr-2" />
-                        <span>{post.author}</span>
+          <div className="blog-layout-grid">
+            <div className="blog-content-col">
+              {loading ? (
+                <div className="blog-loading">Loading blogs...</div>
+              ) : error ? (
+                <div className="blog-error">{error}</div>
+              ) : blogPosts.length === 0 ? (
+                <div className="blog-empty">No blog posts found.</div>
+              ) : (
+                <div className="blog-list-space">
+                  {blogPosts.map((post) => (
+                    <div key={post._id} className="blog-card">
+                      {post.image && (
+                        <img src={post.image.startsWith('http') ? post.image : process.env.PUBLIC_URL + post.image} alt={post.title} className="blog-card-img" />
+                      )}
+                      <div className="blog-meta">
+                        <div className="blog-meta-item">
+                          <FaUser className="blog-meta-icon" />
+                          <span>{post.author}</span>
+                        </div>
+                        <div className="blog-meta-item">
+                          <FaCalendarAlt className="blog-meta-icon" />
+                          <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <div className="blog-meta-item">
+                          <Link to="#" className="blog-category-link">{post.category}</Link>
+                        </div>
                       </div>
-                      <div className="flex items-center ml-4">
-                        <FaCalendarAlt className="mr-2" />
-                        <span>{post.date}</span>
-                      </div>
-                      <div className="ml-4">
-                        <Link to="#" className="text-blue-600 hover:underline">{post.category}</Link>
-                      </div>
+                      <h2 className="blog-card-title">{post.title}</h2>
+                      <p className="blog-card-excerpt">{post.excerpt}</p>
+                      <Link to={`/blog/${post._id}`} className="blog-read-more">Read More &rarr;</Link>
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-800 mb-2">{post.title}</h2>
-                    <p className="text-gray-600 mb-4">{post.excerpt}</p>
-                    <Link to={`/blog/${post.id}`} className="text-blue-600 hover:underline font-semibold">Read More &rarr;</Link>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
-            <div className="bg-white p-8 rounded-lg shadow-lg">
-              <h2 className="text-2xl font-bold text-gray-800 mb-6">Search</h2>
-              <div className="relative">
-                <input type="text" placeholder="Search..." className="w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" />
-                <FaSearch className="absolute right-4 top-4 text-gray-400" />
+            <div className="blog-sidebar">
+              <h2 className="blog-sidebar-title">Search</h2>
+              <div className="blog-search-wrapper">
+                <input type="text" placeholder="Search..." className="blog-search-input" />
+                <FaSearch className="blog-search-icon" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 mt-8 mb-6">Categories</h2>
-              <ul className="space-y-4">
+              <h2 className="blog-sidebar-title blog-sidebar-title-mt">Categories</h2>
+              <ul className="blog-categories-list">
                 {categories.map((category) => (
                   <li key={category}>
-                    <Link to="#" className="text-gray-600 hover:text-blue-600 hover:underline">{category}</Link>
+                    <Link to="#" className="blog-category-item-link">{category}</Link>
                   </li>
                 ))}
               </ul>

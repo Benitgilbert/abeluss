@@ -1,82 +1,136 @@
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import crypto from "crypto";
-import sendReportEmail from "../utils/sendReportEmail.js";
+import { sendReportEmail } from "../utils/sendReportEmail.js";
 import { renderTemplate } from "../utils/emailTemplate.js";
+import { processSellerAutoApproval } from "../utils/autoApproval.js";
 
-// Register a new user
+// Generate tokens
+const generateTokens = (user) => {
+  const refreshSecret = process.env.JWT_REFRESH_SECRET || process.env.REFRESH_SECRET;
+
+  if (!process.env.JWT_SECRET || !refreshSecret) {
+    throw new Error("JWT_SECRET or REFRESH_SECRET is not defined in environment variables");
+  }
+  const accessToken = jwt.sign(
+    { id: user._id, role: user.role },
+    process.env.JWT_SECRET,
+    { expiresIn: "15m" }
+  );
+  const refreshToken = jwt.sign(
+    { id: user._id },
+    refreshSecret,
+    { expiresIn: "7d" }
+  );
+  return { accessToken, refreshToken };
+};
+
 export const register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, storeName, storeDescription, storePhone } = req.body;
 
+    // Check if user exists
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ message: "User already exists" });
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // 🔐 Determine role based on who is calling
-    let assignedRole = "customer"; // default for public
-    if (req.user && req.user.role === "admin") {
-      // Admin can assign any valid role
-      const allowedRoles = ["admin", "cashier", "inventory", "delivery", "customer", "guest"];
-      assignedRole = allowedRoles.includes(role) ? role : "customer";
-    }
-
-    const user = new User({
+    // Create user with seller profile if role is seller
+    const userData = {
       name,
       email,
-      password: hashedPassword,
-      role: assignedRole,
-    });
+      password,
+      role: role || "customer"
+    };
 
+    // Add seller-specific fields if registering as seller
+    if (role === 'seller') {
+      userData.storeName = storeName;
+      userData.storeDescription = storeDescription;
+      userData.storePhone = storePhone;
+      userData.sellerStatus = 'pending';
+    }
+
+    const user = new User(userData);
     await user.save();
-    res.status(201).json({ message: "User registered successfully" });
+
+    // If registering as seller, check for auto-approval
+    let approvalResult = null;
+    if (role === 'seller') {
+      approvalResult = await processSellerAutoApproval(user._id);
+    }
+
+    res.status(201).json({
+      message: "User registered successfully",
+      ...(approvalResult && {
+        sellerApproval: {
+          approved: approvalResult.approved,
+          score: approvalResult.score,
+          message: approvalResult.message
+        }
+      })
+    });
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
 
-// Login user
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    // Check user
     const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
 
+    // Check password
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
 
-    const accessToken = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1h" });
-    const refreshToken = jwt.sign({ id: user._id }, process.env.REFRESH_SECRET, { expiresIn: "7d" });
+    // Generate tokens
+    const { accessToken, refreshToken } = generateTokens(user);
 
+    // Save refresh token to DB (optional, for revocation)
     user.refreshToken = refreshToken;
     await user.save();
 
-    res.status(200).json({
+    res.json({
       accessToken,
       refreshToken,
-      user: { name: user.name, email: user.email, role: user.role }
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        profileImage: user.profileImage
+      },
     });
   } catch (err) {
+    console.error("Login Error Details:", err);
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
 
-// Refresh token
 export const refreshToken = async (req, res) => {
-  try {
-    const { token } = req.body;
-    if (!token) return res.status(400).json({ message: "No refresh token provided" });
+  const { token } = req.body;
+  if (!token) return res.status(401).json({ message: "Refresh token required" });
 
-    const payload = jwt.verify(token, process.env.REFRESH_SECRET);
-    const user = await User.findById(payload.id);
+  try {
+    const refreshSecret = process.env.JWT_REFRESH_SECRET || process.env.REFRESH_SECRET;
+    const decoded = jwt.verify(token, refreshSecret);
+    const user = await User.findById(decoded.id);
+
     if (!user || user.refreshToken !== token) {
       return res.status(403).json({ message: "Invalid refresh token" });
     }
 
-    const newAccessToken = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1h" });
-    res.json({ accessToken: newAccessToken });
+    const tokens = generateTokens(user);
+    user.refreshToken = tokens.refreshToken;
+    await user.save();
+
+    res.json(tokens);
   } catch (err) {
     res.status(403).json({ message: "Token expired or invalid" });
   }
@@ -101,51 +155,20 @@ export const adminLoginStep1 = async (req, res) => {
     email: user.email,
   });
 
-await sendReportEmail({
-  to: user.email,
-  subject: "🔐 impressa Admin Login OTP",
-  text: `Hello ${user.name},
+  await sendReportEmail({
+    to: user.email,
+    subject: "🔐 impressa Admin Login OTP",
+    text: `Hello ${user.name},
 
 Your impressa admin login code is: ${otp}
 
-This code will expire in 20 minutes. Please do not share it with anyone.
+This code will expire in 5 minutes. Please do not share it with anyone.
 
 If you did not request this login, you can safely ignore this message.
 
 — impressa Security Team`,
-  html: `
-    <!DOCTYPE html>
-    <html>
-      <body style="font-family: sans-serif; background-color: #f4f4f4; padding: 40px;">
-        <div style="max-width: 480px; margin: auto; background: white; border-radius: 8px; padding: 32px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-          
-          <!-- Header -->
-          <h2 style="font-size: 22px; font-weight: 600; color: #333; margin-bottom: 12px;">Admin Login OTP</h2>
-          <p style="font-size: 14px; color: #666; margin-bottom: 24px;">
-            Use this code to securely log in to impressa Admin.<br />
-            This code will expire in <strong>20 minutes</strong>.
-          </p>
-
-          <!-- OTP Code -->
-          <div style="font-size: 28px; font-weight: bold; letter-spacing: 8px; margin-bottom: 24px; color: #007BFF;">
-            ${otp.toString().split("").join(" ")}
-          </div>
-
-          <!-- Info Text -->
-          <p style="font-size: 14px; color: #666;">
-            This code will securely log you in using:<br />
-            <span style="color: #007BFF;">${user.email}</span>
-          </p>
-
-          <!-- Footer -->
-          <p style="font-size: 12px; color: #aaa; margin-top: 32px;">
-            If you didn’t request this email, you can safely ignore it.
-          </p>
-        </div>
-      </body>
-    </html>
-  `
-});
+    html: htmlContent
+  });
 
   res.json({ message: "OTP sent to admin email" });
 };
@@ -154,19 +177,29 @@ If you did not request this login, you can safely ignore this message.
 export const adminLoginStep2 = async (req, res) => {
   const { email, otp } = req.body;
   const user = await User.findOne({ email, role: "admin" });
+
   if (!user || user.otp !== otp || Date.now() > user.otpExpires) {
     return res.status(401).json({ message: "Invalid or expired OTP" });
   }
 
+  // Clear OTP
   user.otp = null;
   user.otpExpires = null;
+
+  // Generate tokens
+  const { accessToken, refreshToken } = generateTokens(user);
+  user.refreshToken = refreshToken;
   await user.save();
 
-  const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1h" });
-
   res.json({
-    token,
-    user: { name: user.name, email: user.email, role: user.role },
+    token: accessToken,
+    refreshToken,
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role
+    }
   });
 };
 
@@ -182,155 +215,175 @@ export const resendAdminOTP = async (req, res) => {
     user.otpExpires = Date.now() + 5 * 60 * 1000;
     await user.save();
 
+    const htmlContent = renderTemplate("otp-template", {
+      otp: otp.split("").join(" "),
+      email: user.email,
+    });
+
     await sendReportEmail({
-  to: user.email,
-  subject: "🔁 impressa Admin Login OTP (Resent)",
-  html: `
-    <div style="font-family: sans-serif; background-color: #f4f4f4; padding: 40px;">
-      <div style="max-width: 480px; margin: auto; background: white; border-radius: 8px; padding: 32px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-        
-        <!-- Logo -->
-        <div style="margin-bottom: 16px;">
-          <img src="cid:impressa-logo" alt="impressa" style="height: 40px;" />
-        </div>
-
-        <!-- Header -->
-        <h2 style="font-size: 22px; font-weight: 600; color: #333; margin-bottom: 12px;">Your New Admin Login Code</h2>
-        <p style="font-size: 14px; color: #666; margin-bottom: 24px;">
-          This is your updated one-time login code for impressa Admin.<br />
-          It will expire in <strong>20 minutes</strong>.
-        </p>
-
-        <!-- OTP Code -->
-        <div style="font-size: 28px; font-weight: bold; letter-spacing: 8px; margin-bottom: 24px; color: #000;">
-          ${otp.toString().split("").join(" ")}
-        </div>
-
-        <!-- Info Text -->
-        <p style="font-size: 14px; color: #666;">
-          This code will securely log you in using:<br />
-          <span style="color: #007BFF;">${user.email}</span>
-        </p>
-
-        <!-- Footer -->
-        <p style="font-size: 12px; color: #aaa; margin-top: 32px;">
-          If you didn’t request this email, you can safely ignore it.
-        </p>
-      </div>
-    </div>
-  `,
-  attachments: [
-    {
-      filename: "logo.png",
-      path: "D:/Benit/prototype/impressa-backend/assets/logo.png",
-      cid: "impressa-logo"
-    }
-  ]
-});
+      to: user.email,
+      subject: "🔁 impressa Admin Login OTP (Resent)",
+      html: htmlContent
+    });
 
     res.json({ message: "OTP resent to admin email" });
-  } catch (err) {
+  } catch (error) {
+    console.error("Resend OTP error:", error);
     res.status(500).json({ message: "Failed to resend OTP" });
   }
 };
 
-// Logout
-export const logout = async (req, res) => {
-  await User.findByIdAndUpdate(req.user.id, { refreshToken: null });
-  res.json({ message: "Logged out successfully" });
-};
-
-// Admin creates user
-export const createUserByAdmin = async (req, res) => {
+// Request Password Reset
+export const requestPasswordReset = async (req, res) => {
   try {
-    const { name, email, role } = req.body;
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Access denied" });
-    }
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ message: "User already exists" });
-
-    const tempPassword = Math.random().toString(36).slice(-8);
-    const hashedPassword = await bcrypt.hash(tempPassword, 10);
-
-    const user = new User({ name, email, password: hashedPassword, role });
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.otp = otp;
+    user.otpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
     await user.save();
 
-    await sendReportEmail({
-      to: email,
-      subject: "impressa Account Created",
-      text: `Your temporary password is: ${tempPassword}`,
+    const htmlContent = renderTemplate("otp-template", {
+      otp: otp.split("").join(" "),
+      email: user.email,
     });
 
-    res.status(201).json({ message: "User created and email sent" });
-  } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
+    await sendReportEmail({
+      to: user.email,
+      subject: "🔑 impressa Password Reset Code",
+      html: htmlContent
+    });
+
+    res.json({ message: "Password reset code sent" });
+  } catch (error) {
+    console.error("Password reset request error:", error);
+    res.status(500).json({ message: "Failed to send reset code" });
   }
 };
 
-// Request password reset
-export const requestPasswordReset = async (req, res) => {
-  const { email } = req.body;
-  const user = await User.findOne({ email });
-  if (!user) return res.status(404).json({ message: "User not found" });
-
-  const resetToken = crypto.randomBytes(32).toString("hex");
-  user.resetToken = resetToken;
-  user.resetExpires = Date.now() + 15 * 60 * 1000;
-  await user.save();
-
-  await sendReportEmail({
-    to: email,
-    subject: "impressa Password Reset",
-    text: `Use this code to reset your password: ${resetToken}`,
-  });
-
-  res.json({ message: "Reset token sent to email" });
-};
-
-// Confirm password reset
+// Confirm Password Reset
 export const confirmPasswordReset = async (req, res) => {
-  const { email, token, newPassword } = req.body;
-  const user = await User.findOne({ email });
-  if (!user || user.resetToken !== token || Date.now() > user.resetExpires) {
-    return res.status(400).json({ message: "Invalid or expired token" });
+  try {
+    const { email, token, newPassword } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user || user.otp !== token || Date.now() > user.otpExpires) {
+      return res.status(400).json({ message: "Invalid or expired reset code" });
+    }
+
+    user.password = newPassword; // Will be hashed by pre-save hook
+    user.otp = null;
+    user.otpExpires = null;
+    await user.save();
+
+    res.json({ message: "Password reset successful" });
+  } catch (error) {
+    console.error("Password reset confirm error:", error);
+    res.status(500).json({ message: "Failed to reset password" });
   }
-
-  user.password = await bcrypt.hash(newPassword, 10);
-  user.resetToken = null;
-  user.resetExpires = null;
-  await user.save();
-
-  res.json({ message: "Password reset successful" });
 };
 
-// Get all users
+export const getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password -refreshToken -otp -otpExpires");
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+export const getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password -refreshToken -otp -otpExpires");
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+export const updateProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (req.body.name) user.name = req.body.name;
+    if (req.body.email) user.email = req.body.email;
+    if (req.body.password) user.password = req.body.password; // Will be hashed by pre-save hook
+
+    // Seller Profile Updates
+    if (req.body.storeName) user.storeName = req.body.storeName;
+    if (req.body.storeDescription) user.storeDescription = req.body.storeDescription;
+    if (req.body.storePhone) user.storePhone = req.body.storePhone;
+
+    if (req.files && req.files.length > 0) {
+      req.files.forEach(file => {
+        if (file.fieldname === 'profileImage') {
+          user.profileImage = `/uploads/${file.filename}`;
+        } else if (file.fieldname === 'storeLogo') {
+          user.storeLogo = `/uploads/${file.filename}`;
+        }
+      });
+    }
+
+    await user.save();
+
+    res.json({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      profileImage: user.profileImage
+    });
+  } catch (error) {
+    console.error("Update profile error:", error);
+    res.status(500).json({ message: "Update failed" });
+  }
+};
+
+export const getTeamMembers = async (req, res) => {
+  try {
+    // Fetch users with 'admin' role, excluding sensitive data
+    const teamMembers = await User.find({ role: 'admin' }).select('name role profileImage');
+    res.json(teamMembers);
+  } catch (error) {
+    console.error("Error fetching team members:", error);
+    res.status(500).json({ message: "Failed to fetch team members" });
+  }
+};
+
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find().select("-password");
+    const users = await User.find().select('-password -otp -otpExpires');
     res.json(users);
-  } catch (err) {
-    res.status(500).json({ message: "Failed to fetch users", error: err.message });
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(500).json({ message: "Failed to fetch users" });
   }
 };
 
-// Delete user
 export const deleteUser = async (req, res) => {
   try {
     await User.findByIdAndDelete(req.params.id);
-    res.json({ message: "User deleted" });
-  } catch (err) {
+    res.json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting user:", error);
     res.status(500).json({ message: "Failed to delete user" });
   }
 };
 
-// Update user
 export const updateUser = async (req, res) => {
   try {
-    const updated = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.json(updated);
-  } catch (err) {
-    res.status(400).json({ message: "Failed to update user" });
+    const { name, email, role } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { name, email, role },
+      { new: true }
+    ).select('-password');
+    res.json(user);
+  } catch (error) {
+    console.error("Error updating user:", error);
+    res.status(500).json({ message: "Failed to update user" });
   }
 };

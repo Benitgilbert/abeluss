@@ -156,6 +156,7 @@ export function CartProvider({ children }) {
   const rawItems = cart?.items || [];
   const items = rawItems.map((it) => ({
     product: it.product,
+    name: it.productName || it.product?.name,
     quantity: it.quantity,
     customText: it.customizations?.customText || "",
     cloudLink: it.customizations?.cloudLink || "",
@@ -227,8 +228,19 @@ export function CartProvider({ children }) {
     removeCoupon,
     updateQty,
     setFile,
-    getFile,
     removeMany,
+    sessionToken: cart?.sessionToken || null,
+    mergeCart: async () => {
+      try {
+        const token = cart?.sessionToken;
+        if (!token) return;
+        const payload = await api.mergeCart(token);
+        setCartSafe(payload.data || null);
+        return payload;
+      } catch (err) {
+        console.error("Failed to merge cart:", err);
+      }
+    },
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

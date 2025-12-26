@@ -1,6 +1,6 @@
 import express from "express";
 import * as orderController from "../controllers/orderController.js";
-import { authMiddleware } from "../middleware/authMiddleware.js";
+import { authMiddleware, optionalAuth } from "../middleware/authMiddleware.js";
 import { reportLimiter, analyticsLimiter } from "../middleware/rateLimiter.js";
 import upload from "../middleware/uploadMiddleware.js";
 
@@ -9,20 +9,18 @@ const router = express.Router();
 // Customer places an order (supports file upload)
 router.post("/", authMiddleware(["customer"]), upload.single("customFile"), orderController.placeOrder);
 
+// Create multi-item order (Cart Checkout)
+router.post("/create", optionalAuth, orderController.createOrder); // Guests or Users
+
 // Guest places an order (no auth)
 router.post("/public", upload.single("customFile"), orderController.placeOrderGuest);
 
-// Admin views all orders
-router.get("/", authMiddleware(["admin"]), orderController.getAllOrders);
+// Get my orders
+router.get("/my-orders", authMiddleware(["customer", "admin"]), orderController.getMyOrders);
 
-// Admin updates order status
-router.put("/:id/status", authMiddleware(["admin"]), orderController.updateOrderStatus);
+// Get Seller Orders
+router.get("/seller", authMiddleware(["seller", "admin"]), orderController.getSellerOrders);
 
-// Admin filtered view
-router.get("/filter", authMiddleware(["admin"]), orderController.getFilteredOrders);
-
-// Analytics
-router.get("/report", authMiddleware(["admin"]), reportLimiter, orderController.generateReport);
 router.get("/report/logs", authMiddleware(["admin"]), reportLimiter, orderController.getReportLogs);
 router.get("/analytics", authMiddleware(["admin"]), analyticsLimiter, orderController.getOrderAnalytics);
 
@@ -31,5 +29,20 @@ router.get("/track/:id", orderController.trackPublicOrder);
 
 router.post("/report/logs/:id/view", authMiddleware(["admin"]), orderController.markReportViewed);
 router.post("/report/logs/:id/download", authMiddleware(["admin"]), orderController.markReportDownloaded);
+
+// POS Order (Admin only - for Impressa's own products)
+router.post("/pos", authMiddleware(["admin"]), orderController.createPOSOrder);
+
+// POS Order (Seller - for seller's own products)
+router.post("/seller/pos", authMiddleware(["seller"]), orderController.createPOSOrder);
+
+// Get seller's POS products (only their inventory)
+router.get("/seller/pos-products", authMiddleware(["seller"]), orderController.getSellerPOSProducts);
+
+// Get admin/Impressa's POS products (only company inventory)
+router.get("/admin/pos-products", authMiddleware(["admin"]), orderController.getAdminPOSProducts);
+
+// Barcode lookup for POS scanning
+router.get("/pos/lookup", authMiddleware(["admin", "seller"]), orderController.lookupByBarcode);
 
 export default router;

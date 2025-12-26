@@ -20,7 +20,7 @@ export const getCart = async (req, res, next) => {
     let cart = await Cart.findOrCreateBySession(sessionToken, userId);
     cart = await Cart.findById(cart._id).populate({
       path: "items.product",
-      select: "name price image stock visibility",
+      select: "name price image stock visibility shippingClass weight dimensions",
     });
 
     // Set cookie for session tracking
@@ -52,7 +52,7 @@ export const addToCart = async (req, res, next) => {
       return next(error);
     }
 
-    const { productId, quantity = 1, customizations = {} } = itemData;
+    const { productId, quantity = 1, variationId, customizations = {} } = itemData;
 
     if (!productId) {
       const error = new Error("Product ID is required");
@@ -71,7 +71,7 @@ export const addToCart = async (req, res, next) => {
     if (!sessionToken) {
       sessionToken = Cart.generateSessionToken();
     }
-    
+
     const userId = req.user?._id;
 
     // Find or create cart
@@ -85,27 +85,37 @@ export const addToCart = async (req, res, next) => {
       return next(error);
     }
 
-    // NOTE: Relaxed visibility and stock checks to avoid 400 errors when adding to cart.
-    // If you want to enforce these rules, reintroduce them with your desired logic.
-    //
-    // Example strict checks (commented out):
-    // if (product.visibility !== "public") {
-    //   const error = new Error("Product is not available");
-    //   error.statusCode = 400;
-    //   return next(error);
-    // }
-    //
-    // if (product.stock < quantity) {
-    //   const error = new Error(`Only ${product.stock} items available in stock`);
-    //   error.statusCode = 400;
-    //   return next(error);
-    // }
+    let price = product.price;
+    let name = product.name;
+    let image = product.image;
+
+    // Handle Variable Product
+    if (variationId) {
+      const variation = product.variations.find(v => v.sku === variationId);
+      if (!variation) {
+        const error = new Error("Invalid variation");
+        error.statusCode = 400;
+        return next(error);
+      }
+
+      price = variation.price;
+      // Append attributes to name
+      const attrString = Object.values(variation.attributes).join(" / ");
+      name = `${product.name} - ${attrString}`;
+      if (variation.image) image = variation.image;
+
+      // Check variation stock if needed
+      // if (variation.stock < quantity) ...
+    }
 
     // Add item to cart
     await cart.addItem({
       product: productId,
       quantity,
-      price: product.price,
+      price,
+      variationId,
+      productName: name,
+      productImage: image,
       customizations: customizations || {},
     });
 

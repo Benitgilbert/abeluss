@@ -1,0 +1,439 @@
+/* Layout */
+.admin-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f9fafb;
+    /* gray-50 */
+}
+
+.admin-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-left: 18rem;
+    /* 72 */
+    transition: margin-left 0.3s;
+}
+
+@media (max-width: 1024px) {
+    .admin-main {
+        margin-left: 0;
+    }
+}
+
+/* Main Content Area */
+.admin-content {
+    padding: 1.5rem;
+    overflow: auto;
+}
+
+.admin-header {
+    margin-bottom: 2rem;
+}
+
+.admin-title {
+    font-size: 1.875rem;
+    /* 3xl */
+    font-weight: 700;
+    color: #111827;
+    /* gray-900 */
+}
+
+.admin-subtitle {
+    font-size: 0.875rem;
+    color: #6b7280;
+    /* gray-500 */
+    margin-top: 0.5rem;
+}
+
+/* Product Table Component */
+.product-table-container {
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.product-table-header {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (min-width: 640px) {
+    .product-table-header {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+}
+
+.product-table-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.product-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    background-color: #2563eb;
+    /* blue-600 */
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 500;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary:hover {
+    background-color: #1d4ed8;
+    /* blue-700 */
+}
+
+/* Search & Filters */
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.search-input {
+    width: 100%;
+    max-width: 24rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid #d1d5db;
+    /* gray-300 */
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    /* blue-500 */
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+/* Bulk Actions */
+.bulk-actions {
+    background-color: #eff6ff;
+    /* blue-50 */
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid #dbeafe;
+    /* blue-100 */
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.bulk-count {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1e40af;
+    /* blue-800 */
+}
+
+.bulk-select,
+.bulk-input {
+    font-size: 0.875rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.btn-secondary {
+    padding: 0.25rem 0.75rem;
+    background-color: #2563eb;
+    color: white;
+    font-size: 0.875rem;
+    border-radius: 0.375rem;
+    border: none;
+    cursor: pointer;
+}
+
+/* Table */
+.table-wrapper {
+    overflow-x: auto;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+}
+
+.product-table {
+    width: 100%;
+    min-width: 1000px;
+    font-size: 0.875rem;
+    text-align: left;
+    border-collapse: collapse;
+}
+
+.product-table th {
+    background-color: #f9fafb;
+    /* gray-50 */
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    color: #4b5563;
+    /* gray-600 */
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.product-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: middle;
+}
+
+.product-table tr:hover {
+    background-color: #f9fafb;
+}
+
+.product-table tr.low-stock {
+    background-color: #fef2f2;
+    /* red-50 */
+}
+
+.product-table-img {
+    height: 2.5rem;
+    width: 2.5rem;
+    object-fit: cover;
+    border-radius: 0.375rem;
+}
+
+.product-name {
+    font-weight: 500;
+    color: #111827;
+}
+
+.product-desc {
+    font-size: 0.75rem;
+    color: #6b7280;
+    max-width: 20rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Action Buttons */
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    border: 1px solid;
+    transition: all 0.2s;
+}
+
+.btn-edit {
+    background-color: white;
+    border-color: #bfdbfe;
+    /* blue-200 */
+    color: #1d4ed8;
+    /* blue-700 */
+}
+
+.btn-edit:hover {
+    background-color: #eff6ff;
+}
+
+.btn-delete {
+    background-color: white;
+    border-color: #fecaca;
+    /* red-200 */
+    color: #b91c1c;
+    /* red-700 */
+}
+
+.btn-delete:hover {
+    background-color: #fef2f2;
+}
+
+/* Pagination */
+.pagination {
+    margin-top: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.pagination-info {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.pagination-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    background-color: white;
+    font-size: 0.875rem;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-btn:not(:disabled):hover {
+    background-color: #f9fafb;
+}
+
+/* Status Badges */
+.badge {
+    display: inline-flex;
+    padding: 0.125rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.badge-gray {
+    background-color: #f3f4f6;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+}
+
+/* Dark Mode Support */
+[data-theme="dark"] .admin-layout {
+    background-color: #0f172a;
+}
+
+[data-theme="dark"] .admin-title,
+[data-theme="dark"] .product-table-title,
+[data-theme="dark"] .product-name,
+[data-theme="dark"] .bulk-count {
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .admin-subtitle,
+[data-theme="dark"] .product-table th,
+[data-theme="dark"] .product-desc,
+[data-theme="dark"] .pagination-info,
+[data-theme="dark"] .pagination-controls label,
+[data-theme="dark"] .text-gray-500,
+[data-theme="dark"] .text-gray-600 {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .product-table-container {
+    background-color: #1e293b;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .search-input,
+[data-theme="dark"] .bulk-select,
+[data-theme="dark"] .bulk-input,
+[data-theme="dark"] .pagination-btn,
+[data-theme="dark"] .pagination select {
+    background-color: #0f172a;
+    border-color: #334155;
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .search-input:focus,
+[data-theme="dark"] .bulk-select:focus,
+[data-theme="dark"] .bulk-input:focus,
+[data-theme="dark"] .pagination select:focus {
+    border-color: #3b82f6;
+}
+
+[data-theme="dark"] .bulk-actions {
+    background-color: rgba(59, 130, 246, 0.1);
+    border-color: #1e3a8a;
+}
+
+[data-theme="dark"] .table-wrapper {
+    border-color: #334155;
+}
+
+[data-theme="dark"] .product-table th {
+    background-color: #0f172a;
+    border-bottom-color: #334155;
+}
+
+[data-theme="dark"] .product-table td {
+    border-bottom-color: #334155;
+}
+
+[data-theme="dark"] .product-table tr:hover {
+    background-color: #334155;
+}
+
+[data-theme="dark"] .product-table tr.low-stock {
+    background-color: rgba(220, 38, 38, 0.1);
+}
+
+[data-theme="dark"] .btn-edit,
+[data-theme="dark"] .btn-delete {
+    background-color: #0f172a;
+    border-color: #334155;
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .btn-edit {
+    color: #60a5fa;
+    border-color: #2563eb;
+}
+
+[data-theme="dark"] .btn-edit:hover {
+    background-color: rgba(37, 99, 235, 0.1);
+}
+
+[data-theme="dark"] .btn-delete {
+    color: #f87171;
+    border-color: #dc2626;
+}
+
+[data-theme="dark"] .btn-delete:hover {
+    background-color: rgba(220, 38, 38, 0.1);
+}
+
+[data-theme="dark"] .pagination-btn:not(:disabled):hover {
+    background-color: #334155;
+}
+
+[data-theme="dark"] .badge-gray {
+    background-color: #334155;
+    color: #94a3b8;
+    border-color: #475569;
+}
+
+[data-theme="dark"] .product-table-img.bg-gray-100 {
+    background-color: #334155;
+    border-color: #475569;
+}

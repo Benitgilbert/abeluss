@@ -20,34 +20,48 @@ function TopOrderedProductsTable() {
     fetchTopProducts();
   }, []);
 
-  if (loading) return <div className="p-4">Loading top products...</div>;
+  if (loading) return (
+    <div className="card">
+      <div style={{ padding: "1rem" }}>Loading top products...</div>
+    </div>
+  );
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-full">
-      <h3 className="text-lg font-semibold text-gray-700 mb-4">Most Ordered Products</h3>
-      <div className="space-y-3">
+    <div className="card h-full">
+      <h3 className="card-title">Most Ordered Products</h3>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
         {products.map((product, idx) => (
-          <div 
-            key={product._id} 
-            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+          <div
+            key={product._id}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "0.75rem",
+              backgroundColor: "#f9fafb",
+              borderRadius: "0.5rem",
+              transition: "background-color 0.2s"
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f3f4f6"}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#f9fafb"}
           >
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${
-                idx === 0 ? 'bg-yellow-500' :
-                idx === 1 ? 'bg-gray-400' :
-                idx === 2 ? 'bg-orange-400' :
-                'bg-blue-500'
-              }`}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <div style={{
+                width: "2.5rem", height: "2.5rem", borderRadius: "50%",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontWeight: "bold", color: "white", flexShrink: 0,
+                backgroundColor: idx === 0 ? "#eab308" : idx === 1 ? "#9ca3af" : idx === 2 ? "#fb923c" : "#3b82f6"
+              }}>
                 #{idx + 1}
               </div>
               <div>
-                <p className="font-medium text-gray-800">{product.productName}</p>
-                <p className="text-xs text-gray-500">{product.totalOrders} orders</p>
+                <p style={{ fontWeight: 500, color: "#111827", margin: 0 }}>{product.productName}</p>
+                <p style={{ fontSize: "0.75rem", color: "#6b7280", margin: 0 }}>{product.totalOrders} orders</p>
               </div>
             </div>
-            <div className="text-right">
-              <p className="font-semibold text-gray-800">{product.totalQuantity} units</p>
-              <p className="text-xs text-gray-500">sold</p>
+            <div style={{ textAlign: "right" }}>
+              <p style={{ fontWeight: 600, color: "#111827", margin: 0 }}>{product.totalQuantity} units</p>
+              <p style={{ fontSize: "0.75rem", color: "#6b7280", margin: 0 }}>sold</p>
             </div>
           </div>
         ))}

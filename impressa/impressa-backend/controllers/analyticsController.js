@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Order from "../models/Order.js";
 
 export const getWeeklyProfit = async (req, res) => {
@@ -10,24 +11,16 @@ export const getWeeklyProfit = async (req, res) => {
         }
       },
       {
-        $lookup: {
-          from: "products",
-          localField: "product",
-          foreignField: "_id",
-          as: "product"
-        }
-      },
-      { $unwind: "$product" },
-      {
         $group: {
           _id: { $dayOfWeek: "$createdAt" },
-          profit: { $sum: { $multiply: ["$product.price", "$quantity"] } }
+          profit: { $sum: "$totals.grandTotal" }
         }
       },
       { $sort: { "_id": 1 } }
     ]);
 
     // Format the response to match frontend expectations
+    // MongoDB $dayOfWeek returns 1 (Sunday) to 7 (Saturday)
     const formattedData = weeklyProfit.map((item) => ({
       day: item._id,
       profit: item.profit
@@ -45,7 +38,7 @@ export const getRecentOrders = async (req, res) => {
     const recentOrders = await Order.find()
       .sort({ createdAt: -1 })
       .limit(10)
-      .populate("product customer");
+      .populate("items.product customer");
 
     res.json(recentOrders);
   } catch (err) {
@@ -57,12 +50,13 @@ export const getRecentOrders = async (req, res) => {
 export const getCustomizationDemand = async (req, res) => {
   try {
     const demandData = await Order.aggregate([
+      { $unwind: "$items" },
       {
         $group: {
           _id: null,
-          customText: { $sum: { $cond: [{ $ifNull: ["$customText", false] }, 1, 0] } },
-          customFile: { $sum: { $cond: [{ $ifNull: ["$customFile", false] }, 1, 0] } },
-          cloudLink: { $sum: { $cond: [{ $ifNull: ["$cloudLink", false] }, 1, 0] } }
+          customText: { $sum: { $cond: [{ $ifNull: ["$items.customizations.customText", false] }, 1, 0] } },
+          customFile: { $sum: { $cond: [{ $ifNull: ["$items.customizations.customFile", false] }, 1, 0] } },
+          cloudLink: { $sum: { $cond: [{ $ifNull: ["$items.customizations.cloudLink", false] }, 1, 0] } }
         }
       }
     ]);
@@ -86,12 +80,13 @@ export const getTopProducts = async (req, res) => {
   try {
     const topProducts = await Order.aggregate([
       { $match: { status: { $ne: "cancelled" } } },
-      { 
-        $group: { 
-          _id: "$product", 
-          totalQuantity: { $sum: "$quantity" },
+      { $unwind: "$items" },
+      {
+        $group: {
+          _id: "$items.product",
+          totalQuantity: { $sum: "$items.quantity" },
           totalOrders: { $sum: 1 }
-        } 
+        }
       },
       {
         $lookup: {
@@ -101,13 +96,13 @@ export const getTopProducts = async (req, res) => {
           as: "product"
         }
       },
-      { $unwind: "$product" },
+      { $unwind: { path: "$product", preserveNullAndEmptyArrays: true } },
       { $sort: { totalQuantity: -1 } },
       { $limit: 10 },
       {
         $project: {
           _id: 1,
-          productName: "$product.name",
+          productName: { $ifNull: ["$product.name", "Unknown Product"] },
           totalQuantity: 1,
           totalOrders: 1
         }
@@ -123,37 +118,140 @@ export const getTopProducts = async (req, res) => {
 
 export const getRevenueData = async (req, res) => {
   try {
-    const monthlyRevenue = await Order.aggregate([
-      { $match: { status: "delivered" } },
-      {
-        $lookup: {
-          from: "products",
-          localField: "product",
-          foreignField: "_id",
-          as: "product"
-        }
-      },
-      { $unwind: "$product" },
+    const { period = "month" } = req.query;
+    let groupId;
+    let matchStage = { status: "delivered" };
+    let sortStage = { "_id": 1 };
+
+    const now = new Date();
+
+    if (period === "day") {
+      // Last 30 days
+      const thirtyDaysAgo = new Date(now);
+      thirtyDaysAgo.setDate(now.getDate() - 30);
+      matchStage.createdAt = { $gte: thirtyDaysAgo };
+      groupId = { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } };
+    } else if (period === "week") {
+      // Last 12 weeks
+      const twelveWeeksAgo = new Date(now);
+      twelveWeeksAgo.setDate(now.getDate() - 12 * 7);
+      matchStage.createdAt = { $gte: twelveWeeksAgo };
+      groupId = { $isoWeek: "$createdAt" };
+    } else {
+      // Default: Month (Last 12 months)
+      const twelveMonthsAgo = new Date(now);
+      twelveMonthsAgo.setMonth(now.getMonth() - 12);
+      matchStage.createdAt = { $gte: twelveMonthsAgo };
+      groupId = { $month: "$createdAt" };
+    }
+
+    const revenueData = await Order.aggregate([
+      { $match: matchStage },
       {
         $group: {
-          _id: { $month: "$createdAt" },
-          revenue: { $sum: { $multiply: ["$product.price", "$quantity"] } },
-          sales: { $sum: "$quantity" }
+          _id: groupId,
+          revenue: { $sum: "$totals.grandTotal" },
+          sales: { $sum: { $sum: "$items.quantity" } }
         }
       },
-      { $sort: { "_id": 1 } }
+      { $sort: sortStage }
     ]);
 
-    // Format the response to match frontend expectations
-    const formattedData = monthlyRevenue.map((item) => ({
-      month: item._id,
-      revenue: item.revenue,
-      sales: item.sales
-    }));
+    // Format response
+    const formattedData = revenueData.map((item) => {
+      let label = item._id;
+      if (period === "month") {
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        label = months[item._id - 1] || item._id;
+      } else if (period === "week") {
+        label = `Week ${item._id}`;
+      }
+      // For 'day', label is already YYYY-MM-DD
+      return {
+        label,
+        revenue: item.revenue,
+        sales: item.sales
+      };
+    });
 
     res.json(formattedData);
   } catch (err) {
     console.error("Revenue data fetch failed:", err);
     res.status(500).json({ message: "Failed to load revenue data." });
+  }
+};
+
+export const getSellerRevenueData = async (req, res) => {
+  try {
+    const { period = "day" } = req.query;
+    const sellerId = req.user.id;
+
+    // Default to last 30 days for seller dashboard
+    let groupId;
+    let matchCreate = {};
+    const now = new Date();
+
+    if (period === "week") {
+      const twelveWeeksAgo = new Date(now);
+      twelveWeeksAgo.setDate(now.getDate() - 12 * 7);
+      matchCreate = { createdAt: { $gte: twelveWeeksAgo } };
+      groupId = { $isoWeek: "$createdAt" };
+    } else if (period === "month") {
+      const twelveMonthsAgo = new Date(now);
+      twelveMonthsAgo.setMonth(now.getMonth() - 12);
+      matchCreate = { createdAt: { $gte: twelveMonthsAgo } };
+      groupId = { $month: "$createdAt" };
+    } else {
+      // Default day/30days
+      const thirtyDaysAgo = new Date(now);
+      thirtyDaysAgo.setDate(now.getDate() - 30);
+      matchCreate = { createdAt: { $gte: thirtyDaysAgo } };
+      groupId = { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } };
+    }
+
+    const revenueData = await Order.aggregate([
+      {
+        $match: {
+          status: "delivered", // Only count delivered orders as realized revenue
+          ...matchCreate
+        }
+      },
+      { $unwind: "$items" },
+      {
+        $match: {
+          "items.seller": new mongoose.Types.ObjectId(sellerId)
+        }
+      },
+      {
+        $group: {
+          _id: groupId,
+          revenue: { $sum: "$items.subtotal" },
+          sales: { $sum: "$items.quantity" }
+        }
+      },
+      { $sort: { "_id": 1 } }
+    ]);
+
+    // Format response (fill gaps if needed, but for now just return data)
+    const formattedData = revenueData.map((item) => {
+      let label = item._id;
+      if (period === "month") {
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        label = months[item._id - 1] || item._id;
+      } else if (period === "week") {
+        label = `Week ${item._id}`;
+      }
+      return {
+        label,
+        revenue: item.revenue,
+        sales: item.sales
+      };
+    });
+
+    res.json(formattedData);
+
+  } catch (err) {
+    console.error("Seller revenue data fetch failed:", err);
+    res.status(500).json({ message: "Failed to load seller revenue data." });
   }
 };

@@ -6,6 +6,7 @@ const variationSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
+    sparse: true,
     uppercase: true,
     trim: true,
   },
@@ -39,6 +40,12 @@ const productSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    seller: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
     slug: {
       type: String,
       unique: true,
@@ -49,6 +56,10 @@ const productSchema = new mongoose.Schema(
     price: {
       type: Number,
       required: true,
+    },
+    costPrice: {
+      type: Number,
+      default: 0,
     },
     stock: {
       type: Number,
@@ -80,10 +91,19 @@ const productSchema = new mongoose.Schema(
       default: [],
       index: true,
     },
+    type: {
+      type: String,
+      enum: ["simple", "variable"],
+      default: "simple",
+      index: true,
+    },
     attributes: {
       type: [{
         name: { type: String, required: true },
-        values: { type: [String], required: true },
+        values: { type: [String], required: true }, // Local values
+        visible: { type: Boolean, default: true },
+        variation: { type: Boolean, default: false }, // Used for variations
+        globalAttribute: { type: mongoose.Schema.Types.ObjectId, ref: "Attribute" }, // Link to global attribute
       }],
       default: [],
     },
@@ -142,6 +162,44 @@ const productSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    // Digital Products
+    isDigital: {
+      type: Boolean,
+      default: false,
+    },
+    downloadLink: {
+      type: String,
+      trim: true,
+    },
+    // Linked Products
+    crossSells: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
+      default: [],
+    },
+    upSells: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
+      default: [],
+    },
+    shippingClass: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ShippingClass",
+    },
+    // Approval workflow for seller products
+    approvalStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending", // Default to pending for review
+      index: true,
+    },
+    approvalNote: {
+      type: String,
+      default: "",
+    },
+    approvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    approvedAt: Date,
   },
   {
     timestamps: true,
@@ -162,16 +220,16 @@ productSchema.virtual("averageRating", {
 productSchema.pre("save", async function (next) {
   if (this.isModified("name") && !this.slug) {
     let slug = slugify(this.name, { lower: true, strict: true });
-    
-    const existingProduct = await mongoose.models.Product.findOne({ 
-      slug, 
-      _id: { $ne: this._id } 
+
+    const existingProduct = await mongoose.models.Product.findOne({
+      slug,
+      _id: { $ne: this._id }
     });
-    
+
     if (existingProduct) {
       slug = `${slug}-${Date.now()}`;
     }
-    
+
     this.slug = slug;
   }
   next();

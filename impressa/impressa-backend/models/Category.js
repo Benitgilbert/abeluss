@@ -29,6 +29,10 @@ const categorySchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    color: {
+      type: String,
+      default: null, // e.g., "from-violet-500 to-purple-500"
+    },
     isActive: {
       type: Boolean,
       default: true,
@@ -66,17 +70,17 @@ categorySchema.virtual("children", {
 categorySchema.pre("save", async function (next) {
   if (this.isModified("name")) {
     let slug = slugify(this.name, { lower: true, strict: true });
-    
+
     // Check for existing slug and add suffix if needed
-    const existingCategory = await mongoose.models.Category.findOne({ 
-      slug, 
-      _id: { $ne: this._id } 
+    const existingCategory = await mongoose.models.Category.findOne({
+      slug,
+      _id: { $ne: this._id }
     });
-    
+
     if (existingCategory) {
       slug = `${slug}-${Date.now()}`;
     }
-    
+
     this.slug = slug;
   }
   next();
@@ -87,7 +91,7 @@ categorySchema.pre("save", async function (next) {
   if (this.parent && this.parent.equals(this._id)) {
     return next(new Error("Category cannot be its own parent"));
   }
-  
+
   // Check if parent exists
   if (this.parent) {
     const parentCategory = await mongoose.models.Category.findById(this.parent);
@@ -95,7 +99,7 @@ categorySchema.pre("save", async function (next) {
       return next(new Error("Parent category not found"));
     }
   }
-  
+
   next();
 });
 
