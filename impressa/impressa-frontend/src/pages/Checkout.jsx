@@ -5,6 +5,7 @@ import { useCart } from "../context/CartContext";
 import { formatRwf } from "../utils/currency";
 import api from "../utils/axiosInstance";
 import { getProvinces, getDistricts, getSectors, getCells } from "../utils/locationHelpers";
+import { useToast } from "../context/ToastContext";
 import { FaShoppingCart, FaCreditCard, FaMoneyBillWave, FaLock, FaHeart, FaSearch, FaTruck, FaMobileAlt } from "react-icons/fa";
 import LandingFooter from "../components/LandingFooter";
 import Header from "../components/Header";
@@ -12,6 +13,7 @@ import Header from "../components/Header";
 export default function CheckoutPage() {
   const { user } = useAuth();
   const { items, totals, clearCart } = useCart();
+  const { showSuccess, showError, showWarning } = useToast();
   const nav = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -180,14 +182,15 @@ export default function CheckoutPage() {
 
   const grandTotal = (totals.subtotal - (totals.discount || 0)) + shippingCost + taxData.totalTax;
 
+
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
     if (!selectedMethod) {
-      alert("Please select a shipping method");
+      showWarning("Please select a shipping method"); // Replaced alert
       return;
     }
     if (paymentMethod === "mtn_momo" && !momoPhone) {
-      alert("Please enter your Mobile Money phone number");
+      showWarning("Please enter your Mobile Money phone number"); // Replaced alert
       return;
     }
 
@@ -201,13 +204,15 @@ export default function CheckoutPage() {
       const orderPayload = {
         items,
         billingAddress: {
-          ...formData,
+          ...formData, // Spread existing form data (includes phone, email, etc.)
           fullName: `${formData.firstName} ${formData.lastName}`,
-          address: fullAddressString
+          addressLine1: formData.address, // Map address to schema field
+          address: fullAddressString // Keep for reference if needed
         },
         shippingAddress: {
           ...formData,
           fullName: `${formData.firstName} ${formData.lastName}`,
+          addressLine1: formData.address, // Map address to schema field
           address: fullAddressString
         },
         totals: { ...totals, grandTotal },
@@ -222,7 +227,7 @@ export default function CheckoutPage() {
       };
 
       const orderRes = await api.post("/orders/create", orderPayload);
-      const { orderId } = orderRes.data;
+      const orderId = orderRes.data._id; // Correctly extract _id from the Mongoose document
 
       // 2. Process Payment
       if (paymentMethod === "mtn_momo") {
@@ -244,11 +249,13 @@ export default function CheckoutPage() {
                 clearInterval(pollInterval);
                 setPaymentStatus("success");
                 clearCart();
+                showSuccess("Order placed successfully!"); // Added success toast
                 setTimeout(() => nav("/shop"), 3000); // Redirect to shop or success page
               } else if (status === "failed") {
                 clearInterval(pollInterval);
                 setPaymentStatus("failed");
                 setIsProcessing(false);
+                showError("Payment failed. Please try again."); // Failure toast
               }
             } catch (err) {
               console.error("Polling error", err);
@@ -259,13 +266,14 @@ export default function CheckoutPage() {
         // Other methods (e.g. Cash)
         setPaymentStatus("success");
         clearCart();
-        alert("Order placed successfully!");
+        showSuccess("Order placed successfully!"); // Replaced alert
         nav("/shop");
       }
 
     } catch (error) {
       console.error("Order placement failed:", error);
-      alert("Failed to place order. Please try again.");
+      const msg = error.response?.data?.message || error.message || "Failed to place order. Please try again.";
+      showError(msg); // Replaced alert with specific error
       setIsProcessing(false);
       setPaymentStatus(null);
     }

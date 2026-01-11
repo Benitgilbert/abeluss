@@ -2,18 +2,26 @@ import { useState, useEffect } from "react";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import api from "../utils/axiosInstance";
-import { FaTrash, FaEdit, FaPlus, FaTruck, FaGlobeAfrica, FaMapMarkerAlt, FaBoxOpen, FaSave, FaTimes } from "react-icons/fa";
+import { FaTrash, FaEdit, FaPlus, FaGlobeAfrica, FaMapMarkerAlt, FaBoxOpen, FaSave, FaTimes } from "react-icons/fa";
+import { useToast } from "../context/ToastContext";
+import { getProvinces, getDistricts } from "../utils/locationHelpers";
 
 function AdminShipping() {
+    const { showSuccess, showError } = useToast();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [zones, setZones] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
-    const [formData, setFormData] = useState({ name: "", regions: [{ country: "Rwanda", city: "" }], methods: [] });
+    // Updated to match backend schema: regions need province (required) and district
+    const [formData, setFormData] = useState({ name: "", regions: [{ province: "", district: "" }], methods: [] });
     const [isEdit, setIsEdit] = useState(false);
     const [editId, setEditId] = useState(null);
+    const [availableProvinces, setAvailableProvinces] = useState([]);
 
-    useEffect(() => { fetchZones(); }, []);
+    useEffect(() => {
+        fetchZones();
+        setAvailableProvinces(getProvinces());
+    }, []);
 
     const fetchZones = async () => {
         try {
@@ -22,18 +30,31 @@ function AdminShipping() {
             setLoading(false);
         } catch (error) {
             console.error("Error fetching zones:", error);
+            showError("Failed to load shipping zones");
             setLoading(false);
         }
     };
 
     const handleDelete = async (id) => {
         if (window.confirm("Are you sure you want to delete this zone?")) {
-            try { await api.delete(`/shipping/${id}`); fetchZones(); } catch (error) { console.error("Error deleting zone:", error); }
+            try {
+                await api.delete(`/shipping/${id}`);
+                showSuccess("Zone deleted successfully");
+                fetchZones();
+            } catch (error) {
+                console.error("Error deleting zone:", error);
+                showError("Failed to delete zone");
+            }
         }
     };
 
     const handleEdit = (zone) => {
-        setFormData({ name: zone.name, regions: zone.regions.length ? zone.regions : [{ country: "Rwanda", city: "" }], methods: zone.methods });
+        setFormData({
+            name: zone.name,
+            // Ensure we map back to the form structure if data exists, otherwise default
+            regions: zone.regions.length ? zone.regions : [{ province: "", district: "" }],
+            methods: zone.methods
+        });
         setIsEdit(true);
         setEditId(zone._id);
         setShowModal(true);
@@ -44,14 +65,21 @@ function AdminShipping() {
         try {
             if (isEdit) await api.put(`/shipping/${editId}`, formData);
             else await api.post("/shipping", formData);
+
+            showSuccess(isEdit ? "Zone updated successfully" : "Zone created successfully");
             setShowModal(false);
             resetForm();
             fetchZones();
-        } catch (error) { console.error("Error saving zone:", error); alert("Failed to save zone"); }
+        } catch (error) {
+            console.error("Error saving zone:", error);
+            // improvements: Show specific error message from backend if available
+            const msg = error.response?.data?.message || "Failed to save zone";
+            showError(msg);
+        }
     };
 
     const resetForm = () => {
-        setFormData({ name: "", regions: [{ country: "Rwanda", city: "" }], methods: [] });
+        setFormData({ name: "", regions: [{ province: "", district: "" }], methods: [] });
         setIsEdit(false);
         setEditId(null);
     };
@@ -59,6 +87,26 @@ function AdminShipping() {
     const addMethod = () => setFormData({ ...formData, methods: [...formData.methods, { name: "Standard Shipping", type: "flat_rate", cost: 0, isActive: true }] });
     const updateMethod = (index, field, value) => { const newMethods = [...formData.methods]; newMethods[index][field] = value; setFormData({ ...formData, methods: newMethods }); };
     const removeMethod = (index) => { const newMethods = formData.methods.filter((_, i) => i !== index); setFormData({ ...formData, methods: newMethods }); };
+
+    // Helper to update regions
+    const updateRegion = (index, field, value) => {
+        const newRegions = [...formData.regions];
+        newRegions[index][field] = value;
+        // Reset district if province changes
+        if (field === 'province') {
+            newRegions[index].district = "";
+        }
+        setFormData({ ...formData, regions: newRegions });
+    };
+
+    const addRegion = () => {
+        setFormData({ ...formData, regions: [...formData.regions, { province: "", district: "" }] });
+    };
+
+    const removeRegion = (index) => {
+        const newRegions = formData.regions.filter((_, i) => i !== index);
+        setFormData({ ...formData, regions: newRegions });
+    };
 
     return (
         <div className="min-h-screen bg-cream-100 dark:bg-charcoal-900 transition-colors duration-300">
@@ -96,7 +144,7 @@ function AdminShipping() {
                                                 <h3 className="text-lg font-bold text-charcoal-800 dark:text-white line-clamp-1">{zone.name}</h3>
                                                 <div className="flex items-center gap-1 text-sm text-charcoal-500 dark:text-charcoal-400 mt-1">
                                                     <FaMapMarkerAlt className="text-xs" />
-                                                    <span className="line-clamp-1">{zone.regions.map(r => r.city || r.country).join(", ") || 'No regions'}</span>
+                                                    <span className="line-clamp-1">{zone.regions.map(r => r.district ? `${r.district}, ${r.province}` : r.province).join(" | ") || 'No regions'}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -165,15 +213,48 @@ function AdminShipping() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-charcoal-700 dark:text-charcoal-300 mb-2">Regions</label>
-                                        {formData.regions.map((region, idx) => (
-                                            <div key={idx} className="grid grid-cols-2 gap-3 mb-2">
-                                                <input type="text" placeholder="Country" value={region.country} onChange={(e) => { const newRegions = [...formData.regions]; newRegions[idx].country = e.target.value; setFormData({ ...formData, regions: newRegions }); }}
-                                                    className="w-full px-4 py-2.5 bg-cream-50 dark:bg-charcoal-700 border border-cream-200 dark:border-charcoal-600 rounded-xl text-charcoal-800 dark:text-white outline-none focus:border-terracotta-500" />
-                                                <input type="text" placeholder="City (Optional)" value={region.city} onChange={(e) => { const newRegions = [...formData.regions]; newRegions[idx].city = e.target.value; setFormData({ ...formData, regions: newRegions }); }}
-                                                    className="w-full px-4 py-2.5 bg-cream-50 dark:bg-charcoal-700 border border-cream-200 dark:border-charcoal-600 rounded-xl text-charcoal-800 dark:text-white outline-none focus:border-terracotta-500" />
-                                            </div>
-                                        ))}
+                                        <div className="flex items-center justify-between mb-2">
+                                            <label className="block text-sm font-medium text-charcoal-700 dark:text-charcoal-300">Regions Covered</label>
+                                            <button type="button" onClick={addRegion} className="text-xs font-bold text-terracotta-500 hover:text-terracotta-600">+ Add Region</button>
+                                        </div>
+                                        {formData.regions.map((region, idx) => {
+                                            const availableDistricts = region.province ? getDistricts(region.province) : [];
+                                            return (
+                                                <div key={idx} className="grid grid-cols-12 gap-3 mb-2 relative group">
+                                                    <div className="col-span-6">
+                                                        <select
+                                                            required
+                                                            value={region.province}
+                                                            onChange={(e) => updateRegion(idx, 'province', e.target.value)}
+                                                            className="w-full px-4 py-2.5 bg-cream-50 dark:bg-charcoal-700 border border-cream-200 dark:border-charcoal-600 rounded-xl text-charcoal-800 dark:text-white outline-none focus:border-terracotta-500 appearance-none cursor-pointer"
+                                                        >
+                                                            <option value="">Select Province</option>
+                                                            {availableProvinces.map(prov => (
+                                                                <option key={prov} value={prov}>{prov}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    <div className="col-span-5">
+                                                        <select
+                                                            value={region.district}
+                                                            onChange={(e) => updateRegion(idx, 'district', e.target.value)}
+                                                            disabled={!region.province}
+                                                            className="w-full px-4 py-2.5 bg-cream-50 dark:bg-charcoal-700 border border-cream-200 dark:border-charcoal-600 rounded-xl text-charcoal-800 dark:text-white outline-none focus:border-terracotta-500 appearance-none cursor-pointer disabled:opacity-50"
+                                                        >
+                                                            <option value="">All Districts (Entire Province)</option>
+                                                            {availableDistricts.map(dist => (
+                                                                <option key={dist} value={dist}>{dist}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    <div className="col-span-1 flex items-center justify-center">
+                                                        {formData.regions.length > 1 && (
+                                                            <button type="button" onClick={() => removeRegion(idx)} className="p-2 text-charcoal-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors"><FaTrash size={14} /></button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
 

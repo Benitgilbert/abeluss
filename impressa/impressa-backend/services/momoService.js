@@ -26,6 +26,10 @@ export const getMomoToken = async () => {
     }
 
     try {
+        console.log("🔄 Fetching MoMo Token...");
+        console.log("   User:", MOMO_API_USER);
+        // console.log("   Key:", MOMO_API_KEY); // Hide sensitive key
+
         const authString = Buffer.from(`${MOMO_API_USER}:${MOMO_API_KEY}`).toString("base64");
 
         const response = await momoClient.post(
@@ -38,14 +42,17 @@ export const getMomoToken = async () => {
             }
         );
 
+        console.log("✅ MoMo Token Fetched Successfully!");
         cachedToken = response.data.access_token;
-        // Set expiry to slightly less than actual expiry (usually 3600s)
         const expiresIn = response.data.expires_in || 3600;
         tokenExpiry = new Date(new Date().getTime() + (expiresIn - 60) * 1000);
 
         return cachedToken;
     } catch (error) {
-        console.error("Error fetching MoMo token:", error.response?.data || error.message);
+        console.error("❌ Error fetching MoMo token:");
+        console.error("   Status:", error.response?.status);
+        console.error("   Data:", JSON.stringify(error.response?.data, null, 2));
+        console.error("   Message:", error.message);
         throw new Error("Failed to authenticate with MTN MoMo");
     }
 };
@@ -53,8 +60,10 @@ export const getMomoToken = async () => {
 // Request to Pay (Collections)
 export const requestToPay = async ({ amount, currency = "RWF", phone, orderId }) => {
     try {
+        console.log(`🚀 Initiating RequestToPay for Order #${orderId} - Amount: ${amount} ${currency} - Phone: ${phone}`);
+
         const token = await getMomoToken();
-        const referenceId = uuidv4(); // Unique UUID for this transaction
+        const referenceId = uuidv4();
 
         const payload = {
             amount: amount.toString(),
@@ -68,16 +77,18 @@ export const requestToPay = async ({ amount, currency = "RWF", phone, orderId })
             payeeNote: "Impressa Payment",
         };
 
-        // In sandbox, callback URL might need to be https
-        // For local dev, we might rely on polling if webhook isn't reachable
+        console.log("   Payload:", JSON.stringify(payload, null, 2));
 
-        await momoClient.post("/collection/v1_0/requesttopay", payload, {
+        const response = await momoClient.post("/collection/v1_0/requesttopay", payload, {
             headers: {
                 Authorization: `Bearer ${token}`,
                 "X-Reference-Id": referenceId,
                 "X-Callback-Url": MOMO_CALLBACK_URL,
             },
         });
+
+        console.log("✅ Payment Request Sent! Status:", response.status);
+        console.log("   Reference ID:", referenceId);
 
         return {
             success: true,
@@ -86,8 +97,11 @@ export const requestToPay = async ({ amount, currency = "RWF", phone, orderId })
             message: "Payment request sent to user's phone",
         };
     } catch (error) {
-        console.error("Error requesting payment:", error.response?.data || error.message);
-        throw new Error("Failed to initiate MoMo payment");
+        console.error("❌ Error requesting payment:");
+        console.error("   Status:", error.response?.status);
+        console.error("   Data:", JSON.stringify(error.response?.data, null, 2));
+        console.error("   Message:", error.message);
+        throw new Error("Failed to initiate MoMo payment: " + (error.response?.data?.message || error.message));
     }
 };
 
