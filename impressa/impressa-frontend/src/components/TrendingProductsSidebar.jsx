@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from "../utils/axiosInstance";
 import { FaStar, FaArrowRight } from "react-icons/fa";
-import "../styles/TrendingProductsSidebar.css";
 
 function TrendingProductsSidebar() {
     const [products, setProducts] = useState([]);
@@ -32,13 +31,11 @@ function TrendingProductsSidebar() {
     }, [products]);
 
     if (products.length === 0) {
-        // Fallback if no products
         return (
-            <div className="trending-sidebar">
-                <div className="sidebar-fallback">
-                    <h1>IMPRESSA</h1>
-                    <p>Premium Shopping Experience</p>
-                </div>
+            <div className="hidden lg:flex w-1/2 relative bg-gradient-to-br from-violet-900 via-indigo-900 to-slate-900 overflow-hidden text-white flex-col items-center justify-center text-center p-12">
+                <h1 className="text-4xl font-black mb-4 tracking-tighter">IMPRESSA</h1>
+                <p className="text-xl text-violet-200 font-medium tracking-wide">Premium Shopping Experience</p>
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
             </div>
         );
     }
@@ -46,58 +43,67 @@ function TrendingProductsSidebar() {
     const currentProduct = products[currentIndex];
 
     return (
-        <div className="trending-sidebar">
-            {/* Background Image with Blur */}
-            <div className="sidebar-bg-layer">
+        <div className="hidden lg:flex w-1/2 relative bg-slate-900 overflow-hidden text-white">
+            {/* Background Image Layer */}
+            <div className="absolute inset-0 z-0">
                 <img
                     src={`http://localhost:5000${currentProduct.images?.[0] || currentProduct.image}`}
                     alt="Background"
-                    className="sidebar-bg-image"
+                    className="w-full h-full object-cover opacity-30 blur-2xl scale-110 transition-all duration-1000 ease-in-out"
                 />
-                <div className="sidebar-overlay"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/60 to-transparent"></div>
             </div>
 
-            <div className="sidebar-content">
-                <div className="sidebar-header">
-                    <div className="trending-badge">
-                        <span>Trending Now</span>
+            <div className="relative z-10 flex flex-col justify-between w-full h-full p-16">
+                <div className="flex justify-between items-start">
+                    <div className="bg-white/10 backdrop-blur-xl px-6 py-2.5 rounded-full border border-white/20 text-[10px] font-black uppercase tracking-[0.2em]">
+                        Trending Now
                     </div>
-                    <div className="rating-stars">
+                    <div className="flex gap-1 text-amber-400">
                         {[...Array(5)].map((_, i) => (
-                            <FaStar key={i} className="star-icon" />
+                            <FaStar key={i} className="text-sm" />
                         ))}
                     </div>
                 </div>
 
-                <div className="product-display">
-                    <div className="product-image-wrapper">
-                        <div className="glow-effect"></div>
+                <div className="flex flex-col items-center text-center">
+                    <div className="relative w-80 h-80 mb-12 group cursor-pointer">
+                        <div className="absolute inset-0 bg-violet-600 rounded-full blur-3xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
                         <img
                             src={`http://localhost:5000${currentProduct.images?.[0] || currentProduct.image}`}
                             alt={currentProduct.name}
-                            className="product-image"
+                            className="relative w-full h-full object-contain drop-shadow-[0_35px_35px_rgba(0,0,0,0.5)] transform group-hover:scale-110 transition-transform duration-700 ease-out"
                         />
                     </div>
 
-                    <h2 className="product-name">{currentProduct.name}</h2>
-                    <p className="product-price">{currentProduct.price?.toLocaleString()} RWF</p>
+                    <h2 className="text-4xl font-black mb-4 tracking-tight leading-tight max-w-md">
+                        {currentProduct.name}
+                    </h2>
+                    <p className="text-2xl text-violet-300 font-bold mb-10">
+                        {currentProduct.price?.toLocaleString()} RWF
+                    </p>
 
-                    <Link to={`/product/${currentProduct._id}`} className="view-details-btn">
-                        View Details <FaArrowRight className="arrow-icon" />
+                    <Link
+                        to={`/product/${currentProduct._id}`}
+                        className="inline-flex items-center gap-3 px-10 py-5 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-white/20 transition-all group"
+                    >
+                        View Details
+                        <FaArrowRight className="group-hover:translate-x-2 transition-transform duration-300" />
                     </Link>
                 </div>
 
-                {/* Carousel Indicators */}
-                <div className="carousel-indicators">
+                <div className="flex justify-center gap-4">
                     {products.map((_, idx) => (
                         <button
                             key={idx}
                             onClick={() => setCurrentIndex(idx)}
-                            className={`indicator-dot ${idx === currentIndex ? "active" : "inactive"}`}
+                            className={`h-1.5 rounded-full transition-all duration-500 ${idx === currentIndex ? "w-12 bg-white" : "w-3 bg-white/30 hover:bg-white/50"}`}
                         />
                     ))}
                 </div>
             </div>
+
+            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 pointer-events-none z-20"></div>
         </div>
     );
 }

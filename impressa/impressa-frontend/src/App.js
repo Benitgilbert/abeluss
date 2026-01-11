@@ -54,10 +54,13 @@ import AdminSellerReports from "./pages/AdminSellerReports";
 import SellerRegistration from "./pages/SellerRegistration";
 import SellerPOS from "./pages/SellerPOS";
 import SellerProducts from "./pages/SellerProducts";
-import SellerAddProduct from "./pages/SellerAddProduct";
+// SellerAddProduct removed
+
 import SellerOrders from "./pages/SellerOrders";
 import SellerPayouts from "./pages/SellerPayouts";
 import SellerProfile from "./pages/SellerProfile";
+import AdminNotifications from "./pages/AdminNotifications";
+
 import { CartProvider } from "./context/CartContext";
 import { WishlistProvider } from "./context/WishlistContext";
 import { ToastProvider } from "./context/ToastContext";
@@ -131,11 +134,8 @@ function App() {
                       <SellerProducts />
                     </ProtectedRoute>
                   } />
-                  <Route path="/seller/products/add" element={
-                    <ProtectedRoute allowedRoles={['seller', 'admin']}>
-                      <SellerAddProduct />
-                    </ProtectedRoute>
-                  } />
+                  {/* SellerAddProduct route removed */}
+
                   <Route path="/seller/orders" element={
                     <ProtectedRoute allowedRoles={['seller', 'admin']}>
                       <SellerOrders />
@@ -290,6 +290,12 @@ function App() {
                       <POS />
                     </ProtectedRoute>
                   } />
+                  <Route path="/admin/notifications" element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                      <AdminNotifications />
+                    </ProtectedRoute>
+                  } />
+
                 </Routes>
               </Router>
             </ToastProvider>

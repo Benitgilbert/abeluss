@@ -157,12 +157,7 @@ function ProductTable() {
           <h2 className="product-table-title">Product Catalog</h2>
           <div className="product-actions">
             <div className="hidden sm:block text-sm text-gray-500">{total} items</div>
-            <button
-              onClick={() => setCreating(true)}
-              className="btn-primary"
-            >
-              + Add Product
-            </button>
+            {/* Add Product button removed to enforce creation via Seller Dashboard */}
           </div>
         </div>
       </div>

@@ -1,26 +1,26 @@
 import UserCreateForm from "./UserCreateForm";
+import "../styles/PremiumModal.css";
 
 function UserCreateModal({ isOpen, onClose, onUserCreated }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 relative">
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-xl font-bold"
-        >
-          &times;
-        </button>
+    <div className="modal-overlay">
+      <div className="modal-content" style={{ maxWidth: '500px' }}>
+        <div className="modal-header">
+          <h3 className="modal-title">Create New User</h3>
+          <button onClick={onClose} className="btn-close">×</button>
+        </div>
 
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4">Create New User</h2>
-
-        <UserCreateForm
-          onSuccess={() => {
-            onUserCreated?.();
-            onClose();
-          }}
-        />
+        <div className="modal-body">
+          <UserCreateForm
+            onSuccess={() => {
+              onUserCreated?.();
+              onClose();
+            }}
+            onCancel={onClose}
+          />
+        </div>
       </div>
     </div>
   );

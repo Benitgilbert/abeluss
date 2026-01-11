@@ -16,65 +16,68 @@ function UserCreateForm({ onSuccess }) {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-  setError("");
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
-  try {
-    await axios.post("/admin/users", formData); // ✅ baseURL already includes /api
-    onSuccess?.();
-    setFormData({ name: "", email: "", password: "", role: "customer" });
-  } catch (err) {
-    setError(err.response?.data?.message || "Failed to create user");
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      await axios.post("/admin/users", formData); // ✅ baseURL already includes /api
+      onSuccess?.();
+      setFormData({ name: "", email: "", password: "", role: "customer" });
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to create user");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Name</label>
+    <form onSubmit={handleSubmit} className="modal-form-grid">
+      <div className="form-group full-width">
+        <label className="form-label">Full Name</label>
         <input
           name="name"
           value={formData.name}
           onChange={handleChange}
           required
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+          className="form-input"
+          placeholder="e.g. John Doe"
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Email</label>
+      <div className="form-group">
+        <label className="form-label">Email Address</label>
         <input
           name="email"
           value={formData.email}
           onChange={handleChange}
           required
           type="email"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+          className="form-input"
+          placeholder="john@example.com"
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Password</label>
+      <div className="form-group">
+        <label className="form-label">Password</label>
         <input
           name="password"
           value={formData.password}
           onChange={handleChange}
           required
           type="password"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+          className="form-input"
+          placeholder="••••••••"
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Role</label>
+      <div className="form-group full-width">
+        <label className="form-label">User Role</label>
         <select
           name="role"
           value={formData.role}
           onChange={handleChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+          className="form-select"
         >
           {["customer", "cashier", "inventory", "delivery", "admin"].map(role => (
             <option key={role} value={role}>
@@ -84,15 +87,18 @@ function UserCreateForm({ onSuccess }) {
         </select>
       </div>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <div className="p-3 bg-red-50 text-red-500 text-sm rounded-lg full-width">{error}</div>}
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition"
-      >
-        {loading ? "Creating..." : "Create User"}
-      </button>
+      <div className="modal-footer full-width -mx-6 -mb-6 mt-8">
+        <button type="button" onClick={onSuccess} className="btn-cancel">Cancel</button>
+        <button
+          type="submit"
+          disabled={loading}
+          className="btn-submit"
+        >
+          {loading ? "Creating..." : "Create User"}
+        </button>
+      </div>
     </form>
   );
 }

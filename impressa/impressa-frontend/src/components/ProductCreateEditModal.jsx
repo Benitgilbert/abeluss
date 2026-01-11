@@ -1,201 +1,125 @@
 import { useEffect, useState } from "react";
 import api from "../utils/axiosInstance";
-import "./ProductCreateEditModal.css";
+// import "../styles/PremiumModal.css"; // Removed for Tailwind styling
 
 function ProductCreateEditModal({ product, onClose, onSaved }) {
   const isEdit = !!product;
   const [activeTab, setActiveTab] = useState("general");
   const [globalAttributes, setGlobalAttributes] = useState([]);
-  const [allProducts, setAllProducts] = useState([]); // For linked products selection
+  const [allProducts, setAllProducts] = useState([]);
   const [shippingClasses, setShippingClasses] = useState([]);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   const [form, setForm] = useState({
-    name: "",
-    description: "",
-    price: "",
-    stock: "",
-    image: "",
-    type: "simple",
-    customizable: false,
-    customizationOptions: [],
-    attributes: [],
-    variations: [],
-    isDigital: false,
-    downloadLink: "",
-    crossSells: [],
-    upSells: [],
-    shippingClass: "",
-    featured: false
+    name: product?.name || "",
+    description: product?.description || "",
+    price: product?.price || "",
+    stock: product?.stock || "",
+    category: product?.category || "",
+    image: product?.image || "",
+    type: product?.type || "simple",
+    customizable: product?.customizable || false,
+    featured: product?.featured || false,
+    customizationOptions: product?.customizationOptions || [],
+    isDigital: product?.isDigital || false,
+    downloadLink: product?.downloadLink || "",
+    upSells: product?.upSells?.map((p) => (typeof p === "object" ? p._id : p)) || [],
+    crossSells: product?.crossSells?.map((p) => (typeof p === "object" ? p._id : p)) || [],
+    shippingClass: product?.shippingClass || "",
+    attributes: product?.attributes || [],
+    variations: product?.variations || [],
   });
 
   const [variationImages, setVariationImages] = useState({});
 
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-
-  // Fetch global attributes and products on mount
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [attrsRes, productsRes, shippingClassesRes] = await Promise.all([
-          api.get("/attributes"),
-          api.get("/products?limit=100"), // Fetch enough products for selection
-          api.get("/shipping-classes")
-        ]);
-        setGlobalAttributes(attrsRes.data);
-        setAllProducts(productsRes.data);
-        setShippingClasses(shippingClassesRes.data.data || []);
-      } catch (err) {
-        console.error("Failed to fetch initial data", err);
-      }
-    };
-    fetchData();
+    fetchGlobalAttributes();
+    fetchAllProducts();
+    fetchShippingClasses();
   }, []);
 
-  useEffect(() => {
-    if (isEdit) {
-      setForm({
-        name: product.name || "",
-        description: product.description || "",
-        price: product.price ?? "",
-        stock: product.stock ?? "",
-        image: product.image || "",
-        type: product.type || "simple",
-        customizable: !!product.customizable,
-        customizationOptions: Array.isArray(product.customizationOptions) ? product.customizationOptions : [],
-        attributes: product.attributes || [],
-        variations: product.variations || [],
-        isDigital: !!product.isDigital,
-        downloadLink: product.downloadLink || "",
-        crossSells: product.crossSells || [],
-        upSells: product.upSells || [],
-        shippingClass: product.shippingClass || "",
-        featured: !!product.featured
-      });
+  const fetchGlobalAttributes = async () => {
+    try {
+      const res = await api.get("/attributes");
+      setGlobalAttributes(res.data.data || res.data);
+    } catch (err) {
+      console.error("Failed to fetch attributes:", err);
     }
-  }, [isEdit, product]);
+  };
+
+  const fetchAllProducts = async () => {
+    try {
+      const res = await api.get("/products?limit=100");
+      setAllProducts(res.data.data?.products || res.data.products || []);
+    } catch (err) {
+      console.error("Failed to fetch products:", err);
+    }
+  };
+
+  const fetchShippingClasses = async () => {
+    try {
+      const res = await api.get("/shipping-classes");
+      setShippingClasses(res.data.data || res.data);
+    } catch (err) {
+      console.error("Failed to fetch shipping classes:", err);
+    }
+  };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    if (name === "price" || name === "stock") {
-      setForm((f) => ({ ...f, [name]: value === "" ? "" : Number(value) }));
-    } else if (name === "customizable") {
-      setForm((f) => ({ ...f, customizable: e.target.checked }));
-    } else if (name === "isDigital") {
-      setForm((f) => ({ ...f, isDigital: e.target.checked }));
-    } else if (name === "featured") {
-      setForm((f) => ({ ...f, featured: e.target.checked }));
-    } else {
-      setForm((f) => ({ ...f, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value
+    }));
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setForm((prev) => ({ ...prev, image: file }));
     }
   };
 
-  const toggleOption = (opt) => {
-    setForm((f) => {
-      const has = f.customizationOptions.includes(opt);
-      const next = has ? f.customizationOptions.filter((o) => o !== opt) : [...f.customizationOptions, opt];
-      return { ...f, customizationOptions: next };
-    });
+  const handleAttributeChange = (index, field, value) => {
+    const updated = [...form.attributes];
+    updated[index][field] = value;
+    setForm((prev) => ({ ...prev, attributes: updated }));
   };
 
-  // Linked Products Management
-  const toggleLinkedProduct = (type, productId) => {
-    setForm(f => {
-      const list = f[type] || [];
-      const exists = list.includes(productId);
-      const newList = exists ? list.filter(id => id !== productId) : [...list, productId];
-      return { ...f, [type]: newList };
-    });
+  const handleAddAttribute = () => {
+    setForm((prev) => ({
+      ...prev,
+      attributes: [...prev.attributes, { key: "", value: "" }],
+    }));
   };
 
-  // Attribute Management
-  const addAttribute = (globalAttrId) => {
-    const globalAttr = globalAttributes.find(a => a._id === globalAttrId);
-    if (!globalAttr) return;
-
-    // Check if already added
-    if (form.attributes.find(a => a.name === globalAttr.name)) return;
-
-    const newAttr = {
-      name: globalAttr.name,
-      values: [], // Selected values
-      visible: true,
-      variation: true,
-      globalAttribute: globalAttr._id,
-      options: globalAttr.values.map(v => v.name) // Available options
-    };
-
-    setForm(f => ({ ...f, attributes: [...f.attributes, newAttr] }));
+  const handleRemoveAttribute = (index) => {
+    const updated = [...form.attributes];
+    updated.splice(index, 1);
+    setForm((prev) => ({ ...prev, attributes: updated }));
   };
 
-  const updateAttributeValues = (index, selectedOptions) => {
-    const newAttrs = [...form.attributes];
-    newAttrs[index].values = selectedOptions;
-    setForm(f => ({ ...f, attributes: newAttrs }));
+  const handleVariationChange = (index, field, value) => {
+    const updated = [...form.variations];
+    updated[index][field] = value;
+    setForm((prev) => ({ ...prev, variations: updated }));
   };
 
-  const removeAttribute = (index) => {
-    const newAttrs = [...form.attributes];
-    newAttrs.splice(index, 1);
-    setForm(f => ({ ...f, attributes: newAttrs }));
+  const handleAddVariation = () => {
+    setForm((prev) => ({
+      ...prev,
+      variations: [
+        ...prev.variations,
+        { name: "", price: form.price, stock: form.stock },
+      ],
+    }));
   };
 
-  // Variation Management
-  const generateVariations = () => {
-    // Simple Cartesian product for now
-    // Only consider attributes marked for variation
-    const variationAttrs = form.attributes.filter(a => a.variation && a.values.length > 0);
-
-    if (form.variations.length > 0 && !window.confirm("This will overwrite existing variations. Continue?")) {
-      return;
-    }
-
-    if (variationAttrs.length === 0) {
-      alert("No attributes selected for variation!");
-      return;
-    }
-
-    // Helper to generate combinations
-    const cartesian = (args) => {
-      const r = [];
-      const max = args.length - 1;
-      function helper(arr, i) {
-        for (let j = 0, l = args[i].values.length; j < l; j++) {
-          const a = arr.slice(0); // clone arr
-          a.push(args[i].values[j]);
-          if (i === max) r.push(a);
-          else helper(a, i + 1);
-        }
-      }
-      helper([], 0);
-      return r;
-    };
-
-    const combinations = cartesian(variationAttrs);
-
-    const newVariations = combinations.map(combo => {
-      const sku = `${form.name.substring(0, 3).toUpperCase()}-${combo.join("-").toUpperCase()}-${Math.floor(Math.random() * 1000)}`;
-      const attrMap = {};
-      variationAttrs.forEach((attr, idx) => {
-        attrMap[attr.name] = combo[idx];
-      });
-
-      return {
-        sku,
-        price: form.price,
-        stock: form.stock,
-        attributes: attrMap,
-        isActive: true
-      };
-    });
-
-    setForm(f => ({ ...f, variations: newVariations }));
-  };
-
-  const updateVariation = (index, field, value) => {
-    const newVars = [...form.variations];
-    newVars[index][field] = value;
-    setForm(f => ({ ...f, variations: newVars }));
+  const handleRemoveVariation = (index) => {
+    const updated = [...form.variations];
+    updated.splice(index, 1);
+    setForm((prev) => ({ ...prev, variations: updated }));
   };
 
   const handleSubmit = async (e) => {
@@ -213,31 +137,19 @@ function ProductCreateEditModal({ product, onClose, onSaved }) {
 
       fd.append("customizable", String(form.customizable));
       fd.append("featured", String(form.featured));
-      fd.append("customizationOptions", JSON.stringify(form.customizationOptions));
-
-      // Digital Product Fields
       fd.append("isDigital", String(form.isDigital));
       fd.append("downloadLink", form.downloadLink);
 
-      // Linked Products
-      fd.append("crossSells", JSON.stringify(form.crossSells));
-      fd.append("upSells", JSON.stringify(form.upSells));
-
-      // Shipping Class
-      if (form.shippingClass) fd.append("shippingClass", form.shippingClass);
-
-      // Attributes & Variations
       fd.append("attributes", JSON.stringify(form.attributes));
       fd.append("variations", JSON.stringify(form.variations));
+      fd.append("upSells", JSON.stringify(form.upSells));
+      fd.append("crossSells", JSON.stringify(form.crossSells));
+
+      if (form.shippingClass) fd.append("shippingClass", form.shippingClass);
 
       if (form.image instanceof File) {
         fd.append("image", form.image);
       }
-
-      // Append variation images
-      Object.keys(variationImages).forEach(key => {
-        fd.append(`variation_image_${key}`, variationImages[key]);
-      });
 
       const config = { headers: { "Content-Type": "multipart/form-data" } };
       const res = isEdit
@@ -253,338 +165,372 @@ function ProductCreateEditModal({ product, onClose, onSaved }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4">
-      <div className="bg-white w-full sm:max-w-3xl sm:rounded shadow-lg max-h-[90vh] flex flex-col">
-        <div className="px-4 py-3 border-b flex items-center justify-between">
-          <h3 className="font-semibold text-gray-800">{isEdit ? "Edit Product" : "Create Product"}</h3>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-lg">×</button>
-        </div>
-
-        {error && <div className="px-4 pt-3 text-sm text-red-600">{error}</div>}
-
-        <div className="flex border-b overflow-x-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh] transition-colors duration-200">
+        {/* Header */}
+        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-t-xl sticky top-0 z-10 transition-colors">
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white">{isEdit ? "Edit Product" : "Create Product"}</h3>
           <button
-            className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${activeTab === 'general' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
-            onClick={() => setActiveTab('general')}
+            onClick={onClose}
+            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-700"
           >
-            General
-          </button>
-          <button
-            className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${activeTab === 'attributes' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
-            onClick={() => setActiveTab('attributes')}
-          >
-            Attributes
-          </button>
-          {form.type === 'variable' && (
-            <button
-              className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${activeTab === 'variations' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
-              onClick={() => setActiveTab('variations')}
-            >
-              Variations
-            </button>
-          )}
-          <button
-            className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${activeTab === 'linked' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
-            onClick={() => setActiveTab('linked')}
-          >
-            Linked Products
-          </button>
-          <button
-            className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${activeTab === 'shipping' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
-            onClick={() => setActiveTab('shipping')}
-          >
-            Shipping
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 space-y-3 overflow-y-auto flex-1">
+        {/* Tabs */}
+        <div className="flex px-6 border-b border-gray-100 dark:border-gray-700 overflow-x-auto scrollbar-hide bg-white dark:bg-gray-800 transition-colors">
+          {["general", "attributes", "variations", "linked products", "shipping"].map((tab) => {
+            if (tab === "variations" && form.type !== "variable") return null;
+            return (
+              <button
+                key={tab}
+                className={`py-3 mr-6 text-sm font-medium border-b-2 transition-colors whitespace-nowrap focus:outline-none ${activeTab === tab
+                  ? "border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400"
+                  : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-200 dark:hover:border-gray-600"
+                  }`}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </button>
+            );
+          })}
+        </div>
 
-          {/* GENERAL TAB */}
-          {activeTab === 'general' && (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">Product Type</label>
-                  <select name="type" value={form.type} onChange={handleChange} className="w-full border rounded px-3 py-2 text-sm">
-                    <option value="simple">Simple Product</option>
-                    <option value="variable">Variable Product</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">Name</label>
-                  <input name="name" value={form.name} onChange={handleChange} required className="w-full border rounded px-3 py-2 text-sm" />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">Base Price</label>
-                  <input name="price" type="number" min="0" step="0.01" value={form.price} onChange={handleChange} className="w-full border rounded px-3 py-2 text-sm" />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">Stock (Total)</label>
-                  <input name="stock" type="number" min="0" step="1" value={form.stock} onChange={handleChange} className="w-full border rounded px-3 py-2 text-sm" />
-                </div>
+        {/* Content Body */}
+        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto flex-1 custom-scrollbar bg-white dark:bg-gray-800 transition-colors">
+          {error && (
+            <div className="mb-6 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 flex items-start">
+              <div className="flex-shrink-0 text-red-400 mt-0.5">
+                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
               </div>
-
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">Description</label>
-                <textarea name="description" rows={3} value={form.description} onChange={handleChange} className="w-full border rounded px-3 py-2 text-sm"></textarea>
-              </div>
-
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">Product Image</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) setForm((f) => ({ ...f, image: file }));
-                  }}
-                  className="w-full border rounded px-3 py-2 text-sm"
-                />
-                <div className="mt-2">
-                  {form.image instanceof File ? (
-                    <img src={URL.createObjectURL(form.image)} alt="preview" className="h-16 w-16 object-cover rounded border" />
-                  ) : form.image ? (
-                    <img src={form.image} alt="current" className="h-16 w-16 object-cover rounded border" />
-                  ) : null}
-                </div>
-              </div>
-
-              <div className="border-t pt-3 space-y-3">
-                <label className="flex items-center gap-2 text-sm text-gray-800">
-                  <input type="checkbox" name="customizable" checked={form.customizable} onChange={handleChange} />
-                  This product allows customer customization
-                </label>
-                {form.customizable && (
-                  <div className="pl-6 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                    {["image", "text", "cloud", "pdf"].map(opt => (
-                      <label key={opt} className="inline-flex items-center gap-2">
-                        <input type="checkbox" checked={form.customizationOptions.includes(opt)} onChange={() => toggleOption(opt)} />
-                        Custom {opt.charAt(0).toUpperCase() + opt.slice(1)}
-                      </label>
-                    ))}
-                  </div>
-                )}
-
-                <label className="flex items-center gap-2 text-sm text-gray-800">
-                  <input type="checkbox" name="isDigital" checked={form.isDigital} onChange={handleChange} />
-                  This is a Digital Product (Downloadable)
-                </label>
-
-                <label className="flex items-center gap-2 text-sm text-gray-800">
-                  <input type="checkbox" name="featured" checked={form.featured} onChange={handleChange} />
-                  Featured Product (Show on Home Page)
-                </label>
-                {form.isDigital && (
-                  <div className="pl-6">
-                    <label className="block text-xs text-gray-600 mb-1">Download Link (URL)</label>
-                    <input
-                      type="url"
-                      name="downloadLink"
-                      value={form.downloadLink}
-                      onChange={handleChange}
-                      placeholder="https://example.com/file.zip"
-                      className="w-full border rounded px-3 py-2 text-sm"
-                    />
-                  </div>
-                )}
-              </div>
-            </>
+              <div className="ml-3 text-sm text-red-700 dark:text-red-400">{error}</div>
+            </div>
           )}
 
-          {/* ATTRIBUTES TAB */}
-          {activeTab === 'attributes' && (
-            <div className="space-y-4">
-              <div className="flex gap-2">
+          {activeTab === "general" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="md:col-span-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Product Type</label>
                 <select
-                  className="border rounded px-3 py-2 text-sm flex-1"
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      addAttribute(e.target.value);
-                      e.target.value = "";
-                    }
-                  }}
+                  name="type"
+                  value={form.type}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 dark:text-white transition-all text-sm"
                 >
-                  <option value="">Add existing attribute...</option>
-                  {globalAttributes.map(attr => (
-                    <option key={attr._id} value={attr._id}>{attr.name}</option>
-                  ))}
+                  <option value="simple">Simple Product</option>
+                  <option value="variable">Variable Product</option>
                 </select>
               </div>
 
-              {form.attributes.map((attr, idx) => (
-                <div key={idx} className="border rounded p-3 bg-gray-50">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-semibold">{attr.name}</span>
-                    <button type="button" onClick={() => removeAttribute(idx)} className="text-red-500 text-sm">Remove</button>
-                  </div>
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    {attr.options && attr.options.map(opt => (
-                      <label key={opt} className="inline-flex items-center gap-1 bg-white px-2 py-1 rounded border text-sm">
-                        <input
-                          type="checkbox"
-                          checked={attr.values.includes(opt)}
-                          onChange={(e) => {
-                            const newValues = e.target.checked
-                              ? [...attr.values, opt]
-                              : attr.values.filter(v => v !== opt);
-                            updateAttributeValues(idx, newValues);
-                          }}
-                        />
-                        {opt}
-                      </label>
-                    ))}
-                  </div>
-                  <label className="flex items-center gap-2 text-xs text-gray-600">
-                    <input
-                      type="checkbox"
-                      checked={attr.variation}
-                      onChange={(e) => {
-                        const newAttrs = [...form.attributes];
-                        newAttrs[idx].variation = e.target.checked;
-                        setForm(f => ({ ...f, attributes: newAttrs }));
-                      }}
-                    />
-                    Used for variations
+              <div className="md:col-span-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={form.name}
+                  onChange={handleChange}
+                  required
+                  placeholder="Product Name"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 dark:text-white transition-all text-sm placeholder-gray-400 dark:placeholder-gray-500"
+                />
+              </div>
+
+              <div className="md:col-span-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Base Price</label>
+                <input
+                  type="number"
+                  name="price"
+                  value={form.price}
+                  onChange={handleChange}
+                  placeholder="0.00"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 dark:text-white transition-all text-sm placeholder-gray-400 dark:placeholder-gray-500"
+                />
+              </div>
+
+              <div className="md:col-span-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Stock (Total)</label>
+                <input
+                  type="number"
+                  name="stock"
+                  value={form.stock}
+                  onChange={handleChange}
+                  placeholder="0"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 dark:text-white transition-all text-sm placeholder-gray-400 dark:placeholder-gray-500"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Description</label>
+                <textarea
+                  name="description"
+                  value={form.description}
+                  onChange={handleChange}
+                  placeholder="Detail your product features..."
+                  rows="4"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 dark:text-white transition-all text-sm resize-y placeholder-gray-400 dark:placeholder-gray-500"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Product Image</label>
+                <div className="flex items-center gap-4">
+                  <label className="flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer transition-all">
+                    <span>Choose File</span>
+                    <input type="file" onChange={handleImageChange} className="sr-only" />
                   </label>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                    {form.image instanceof File ? form.image.name : (form.image ? "Image Selected" : "No file chosen")}
+                  </span>
                 </div>
-              ))}
+              </div>
+
+              <div className="md:col-span-2 space-y-3 pt-2">
+                <label className="flex items-center space-x-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    name="customizable"
+                    checked={form.customizable}
+                    onChange={handleChange}
+                    className="w-4 h-4 text-indigo-600 border-gray-300 dark:border-gray-500 rounded focus:ring-indigo-500 dark:bg-gray-700 transition-all"
+                  />
+                  <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">This product allows customer customization</span>
+                </label>
+                <label className="flex items-center space-x-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    name="isDigital"
+                    checked={form.isDigital}
+                    onChange={handleChange}
+                    className="w-4 h-4 text-indigo-600 border-gray-300 dark:border-gray-500 rounded focus:ring-indigo-500 dark:bg-gray-700 transition-all"
+                  />
+                  <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">This is a Digital Product (Downloadable)</span>
+                </label>
+                <label className="flex items-center space-x-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    name="featured"
+                    checked={form.featured}
+                    onChange={handleChange}
+                    className="w-4 h-4 text-indigo-600 border-gray-300 dark:border-gray-500 rounded focus:ring-indigo-500 dark:bg-gray-700 transition-all"
+                  />
+                  <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">Featured Product (Show on Home Page)</span>
+                </label>
+              </div>
+
+              {form.isDigital && (
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Download Link</label>
+                  <input
+                    type="url"
+                    name="downloadLink"
+                    value={form.downloadLink}
+                    onChange={handleChange}
+                    placeholder="https://..."
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 dark:text-white transition-all text-sm placeholder-gray-400 dark:placeholder-gray-500"
+                  />
+                </div>
+              )}
             </div>
           )}
 
-          {/* VARIATIONS TAB */}
-          {activeTab === 'variations' && (
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">{form.variations.length} variations</span>
+          {activeTab === "attributes" && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border border-gray-100 dark:border-gray-700">
+                <div>
+                  <h4 className="font-semibold text-gray-800 dark:text-white">Product Attributes</h4>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Define characteristics like color, size, or material.</p>
+                </div>
                 <button
                   type="button"
-                  onClick={generateVariations}
-                  className="text-sm text-blue-600 hover:underline"
+                  onClick={handleAddAttribute}
+                  className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-400 text-gray-600 dark:text-gray-300 text-xs px-3 py-1.5 rounded-md font-medium transition-all shadow-sm"
                 >
-                  Generate Variations
+                  + Add Attribute
                 </button>
               </div>
-
-              {form.variations.map((v, idx) => (
-                <div key={idx} className="border rounded p-3 bg-gray-50 text-sm">
-                  <div className="flex justify-between mb-2 font-medium">
-                    <span>{Object.values(v.attributes).join(" / ")}</span>
-                    <span className="text-gray-500">{v.sku}</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-xs text-gray-500">Price</label>
+              {form.attributes.length === 0 && (
+                <div className="text-center py-8 text-gray-400 dark:text-gray-500 text-sm italic">
+                  No attributes added yet.
+                </div>
+              )}
+              {form.attributes.map((attr, index) => (
+                <div key={index} className="p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 hover:shadow-sm transition-shadow">
+                  <div className="grid grid-cols-1 md:grid-cols-7 gap-4 items-end">
+                    <div className="md:col-span-3">
+                      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide">Key</label>
                       <input
-                        type="number"
-                        value={v.price}
-                        onChange={(e) => updateVariation(idx, 'price', e.target.value)}
-                        className="w-full border rounded px-2 py-1"
+                        type="text"
+                        placeholder="e.g. Color"
+                        value={attr.key}
+                        onChange={(e) => handleAttributeChange(index, "key", e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 dark:text-white text-sm"
                       />
                     </div>
-                    <div>
-                      <label className="block text-xs text-gray-500">Stock</label>
+                    <div className="md:col-span-3">
+                      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide">Value</label>
                       <input
-                        type="number"
-                        value={v.stock}
-                        onChange={(e) => updateVariation(idx, 'stock', e.target.value)}
-                        className="w-full border rounded px-2 py-1"
+                        type="text"
+                        placeholder="e.g. Blue"
+                        value={attr.value}
+                        onChange={(e) => handleAttributeChange(index, "value", e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 dark:text-white text-sm"
                       />
                     </div>
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-xs text-gray-500">Variation Image</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) setVariationImages(prev => ({ ...prev, [idx]: file }));
-                      }}
-                      className="w-full border rounded px-2 py-1 text-xs"
-                    />
-                    {variationImages[idx] ? (
-                      <div className="text-xs text-green-600 mt-1">New image selected</div>
-                    ) : v.image ? (
-                      <img src={v.image} alt="variation" className="h-8 w-8 object-cover mt-1 rounded border" />
-                    ) : null}
+                    <div className="md:col-span-1">
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveAttribute(index)}
+                        className="w-full py-2 text-red-500 hover:text-red-700 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 border border-transparent hover:border-red-100 dark:hover:border-red-800 rounded-md text-sm font-medium transition-colors"
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
                 </div>
-
               ))}
             </div>
           )}
 
-          {/* LINKED PRODUCTS TAB */}
-          {activeTab === 'linked' && (
+          {activeTab === "variations" && (
             <div className="space-y-6">
-              <div>
-                <h4 className="font-medium text-gray-800 mb-2">Up-Sells</h4>
-                <p className="text-xs text-gray-500 mb-2">Products you recommend instead of the currently viewed product (e.g., more profitable, better quality).</p>
-                <div className="border rounded p-2 max-h-40 overflow-y-auto bg-gray-50">
-                  {allProducts.filter(p => p._id !== product?._id).map(p => (
-                    <label key={p._id} className="flex items-center gap-2 p-1 hover:bg-gray-100 rounded cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={form.upSells.includes(p._id)}
-                        onChange={() => toggleLinkedProduct('upSells', p._id)}
-                      />
-                      <span className="text-sm">{p.name}</span>
-                    </label>
-                  ))}
+              <div className="flex justify-between items-center bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg border border-indigo-100 dark:border-indigo-800/30">
+                <div>
+                  <h4 className="font-semibold text-indigo-900 dark:text-indigo-300">Product Variations</h4>
+                  <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-1">Manage stock and prices for different versions.</p>
                 </div>
+                <button
+                  type="button"
+                  onClick={handleAddVariation}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-1.5 rounded-md font-medium transition-all shadow-sm"
+                >
+                  + Add Variation
+                </button>
               </div>
-
-              <div>
-                <h4 className="font-medium text-gray-800 mb-2">Cross-Sells</h4>
-                <p className="text-xs text-gray-500 mb-2">Products you promote in the cart, based on the current product (e.g., accessories).</p>
-                <div className="border rounded p-2 max-h-40 overflow-y-auto bg-gray-50">
-                  {allProducts.filter(p => p._id !== product?._id).map(p => (
-                    <label key={p._id} className="flex items-center gap-2 p-1 hover:bg-gray-100 rounded cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={form.crossSells.includes(p._id)}
-                        onChange={() => toggleLinkedProduct('crossSells', p._id)}
-                      />
-                      <span className="text-sm">{p.name}</span>
-                    </label>
-                  ))}
+              {form.variations.length === 0 && (
+                <div className="text-center py-8 text-gray-400 dark:text-gray-500 text-sm italic">
+                  No variations added yet.
                 </div>
+              )}
+              {form.variations.map((v, idx) => (
+                <div key={idx} className="p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 shadow-sm hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 items-end">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide">Variation</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. XL / Red"
+                        value={v.name}
+                        onChange={(e) => handleVariationChange(idx, "name", e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white dark:bg-gray-700 dark:text-white text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide">Price</label>
+                      <input
+                        type="number"
+                        placeholder="Override Price"
+                        value={v.price}
+                        onChange={(e) => handleVariationChange(idx, "price", e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white dark:bg-gray-700 dark:text-white text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide">Stock</label>
+                      <input
+                        type="number"
+                        placeholder="Qty"
+                        value={v.stock}
+                        onChange={(e) => handleVariationChange(idx, "stock", e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white dark:bg-gray-700 dark:text-white text-sm"
+                      />
+                    </div>
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveVariation(idx)}
+                        className="w-full py-2 text-red-500 hover:text-red-700 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 border border-red-100 dark:border-red-900/30 rounded-md text-sm font-medium transition-all"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {activeTab === "linked products" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Up-Sells</label>
+                <select
+                  multiple
+                  value={form.upSells}
+                  onChange={(e) => setForm({ ...form, upSells: Array.from(e.target.selectedOptions, o => o.value) })}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 dark:text-white transition-all text-sm h-48"
+                >
+                  {allProducts.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
+                </select>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Hold Ctrl (Windows) or cmd (Mac) to select multiple.</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Cross-Sells</label>
+                <select
+                  multiple
+                  value={form.crossSells}
+                  onChange={(e) => setForm({ ...form, crossSells: Array.from(e.target.selectedOptions, o => o.value) })}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 dark:text-white transition-all text-sm h-48"
+                >
+                  {allProducts.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
+                </select>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Products to promote in the cart.</p>
               </div>
             </div>
           )}
 
-          {/* SHIPPING TAB */}
-          {activeTab === 'shipping' && (
-            <div className="space-y-4">
+          {activeTab === "shipping" && (
+            <div className="grid grid-cols-1 gap-6">
               <div>
-                <label className="block text-xs text-gray-600 mb-1">Shipping Class</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Shipping Class</label>
                 <select
                   name="shippingClass"
                   value={form.shippingClass}
                   onChange={handleChange}
-                  className="w-full border rounded px-3 py-2 text-sm"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 dark:text-white transition-all text-sm"
                 >
                   <option value="">No Shipping Class</option>
-                  {shippingClasses.map(sc => (
-                    <option key={sc._id} value={sc._id}>{sc.name}</option>
-                  ))}
+                  {shippingClasses.map(sc => <option key={sc._id} value={sc._id}>{sc.name}</option>)}
                 </select>
-                <p className="text-xs text-gray-500 mt-1">
-                  Assign a shipping class to apply specific shipping rules (e.g., Heavy Items).
-                </p>
               </div>
             </div>
           )}
-
-          <div className="pt-2 flex items-center justify-end gap-2 border-t mt-4">
-            <button type="button" onClick={onClose} className="px-3 py-2 rounded border text-sm">Cancel</button>
-            <button type="submit" disabled={saving} className={`px-3 py-2 rounded text-sm text-white ${saving ? "bg-blue-300" : "bg-blue-600 hover:bg-blue-700"}`}>
-              {saving ? "Saving…" : (isEdit ? "Save Changes" : "Create Product")}
-            </button>
-          </div>
         </form>
-      </div >
-    </div >
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-b-xl flex justify-end gap-3 transition-colors">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white transition-colors shadow-sm"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={saving}
+            onClick={handleSubmit}
+            className="px-5 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-100 dark:focus:ring-indigo-900 transition-colors shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            {saving ? "Saving Product..." : (isEdit ? "Save Changes" : "Create Product")}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 

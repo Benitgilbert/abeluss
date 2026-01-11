@@ -1,67 +1,72 @@
 import { FaChartBar, FaBox, FaSignOutAlt, FaStore, FaList, FaShoppingCart, FaPlus, FaMoneyBillWave } from "react-icons/fa";
 import { Link, useLocation } from "react-router-dom";
-import "../styles/AdminLayout.css";
 
 function SellerSidebar() {
     const location = useLocation();
 
-    const isActive = (path) => {
-        return location.pathname === path ? "nav-link active" : "nav-link";
+    const getLinkClass = (path) => {
+        const baseClass = "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group";
+        const activeClass = "bg-indigo-600/20 text-indigo-400 font-semibold border-l-4 border-indigo-500 rounded-l-none";
+        const inactiveClass = "text-gray-400 hover:text-white hover:bg-white/5";
+
+        return `${baseClass} ${location.pathname === path ? activeClass : inactiveClass}`;
     };
 
     return (
-        <aside className="admin-sidebar" style={{ width: '260px', top: '70px', height: 'calc(100vh - 70px)' }}>
-            <div className="sidebar-header">
-                <h1 className="brand">
-                    SELLER
+        <aside className="w-64 flex-shrink-0 bg-[#0f172a] text-white flex flex-col h-screen sticky top-0 border-r border-white/5 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-800">
+            <div className="p-6">
+                <h1 className="text-2xl font-black bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent tracking-tight">
+                    IMPRESSA
                 </h1>
-                <p className="brand-sub">Portal</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-bold mt-1">Seller Portal</p>
             </div>
 
-            <div className="nav-section">
-                <div className="nav-label">Overview</div>
-                <Link to="/seller/dashboard" className={isActive('/seller/dashboard')}>
-                    <FaChartBar className="nav-icon" />
-                    <span>Dashboard</span>
-                </Link>
-                <Link to="/seller/profile" className={isActive('/seller/profile')}>
-                    <FaStore className="nav-icon" />
-                    <span>My Store Profile</span>
-                </Link>
+            <div className="flex-1 px-3 space-y-6">
+                <div className="space-y-1">
+                    <div className="px-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Overview</div>
+                    <Link to="/seller/dashboard" className={getLinkClass('/seller/dashboard')}>
+                        <FaChartBar className="text-lg opacity-70 group-hover:opacity-100" />
+                        <span>Dashboard</span>
+                    </Link>
+                    <Link to="/seller/profile" className={getLinkClass('/seller/profile')}>
+                        <FaStore className="text-lg opacity-70 group-hover:opacity-100" />
+                        <span>My Store</span>
+                    </Link>
+                </div>
+
+                <div className="space-y-1">
+                    <div className="px-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Actions</div>
+                    <Link to="/seller/pos" className={getLinkClass('/seller/pos')}>
+                        <FaShoppingCart className="text-lg opacity-70 group-hover:opacity-100" />
+                        <span>Open POS</span>
+                    </Link>
+                    <Link to="/seller/products" className={getLinkClass('/seller/products')}>
+                        <FaPlus className="text-lg opacity-70 group-hover:opacity-100" />
+                        <span>Add Product</span>
+                    </Link>
+                </div>
+
+                <div className="space-y-1">
+                    <div className="px-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Management</div>
+                    <Link to="/seller/products" className={getLinkClass('/seller/products')}>
+                        <FaBox className="text-lg opacity-70 group-hover:opacity-100" />
+                        <span>My Products</span>
+                    </Link>
+                    <Link to="/seller/orders" className={getLinkClass('/seller/orders')}>
+                        <FaList className="text-lg opacity-70 group-hover:opacity-100" />
+                        <span>My Orders</span>
+                    </Link>
+                    <Link to="/seller/payouts" className={getLinkClass('/seller/payouts')}>
+                        <FaMoneyBillWave className="text-lg opacity-70 group-hover:opacity-100" />
+                        <span>Payouts</span>
+                    </Link>
+                </div>
             </div>
 
-            <div className="nav-section">
-                <div className="nav-label">Actions</div>
-                <Link to="/seller/pos" className={isActive('/seller/pos')}>
-                    <FaShoppingCart className="nav-icon" />
-                    <span>Open POS</span>
-                </Link>
-                <Link to="/seller/products/add" className={isActive('/seller/products/add')}>
-                    <FaPlus className="nav-icon" />
-                    <span>Add Product</span>
-                </Link>
-            </div>
-
-            <div className="nav-section">
-                <div className="nav-label">Management</div>
-                <Link to="/seller/products" className={isActive('/seller/products')}>
-                    <FaBox className="nav-icon" />
-                    <span>My Products</span>
-                </Link>
-                <Link to="/seller/orders" className={isActive('/seller/orders')}>
-                    <FaList className="nav-icon" />
-                    <span>My Orders</span>
-                </Link>
-                <Link to="/seller/payouts" className={isActive('/seller/payouts')}>
-                    <FaMoneyBillWave className="nav-icon" />
-                    <span>Payouts & Earnings</span>
-                </Link>
-            </div>
-
-            <div className="logout-div">
-                <Link to="/logout" className="logout-btn">
-                    <FaSignOutAlt className="nav-icon" />
-                    <span>Logout</span>
+            <div className="p-4 mt-auto border-t border-white/5">
+                <Link to="/logout" className="flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-200">
+                    <FaSignOutAlt className="text-lg" />
+                    <span className="font-medium">Logout</span>
                 </Link>
             </div>
         </aside>
