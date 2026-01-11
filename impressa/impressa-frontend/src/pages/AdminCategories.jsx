@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { FaPlus, FaEdit, FaTrash, FaImage, FaPalette, FaSave, FaTimes, FaFolder } from 'react-icons/fa';
+import api from '../utils/axiosInstance';
 import Sidebar from '../components/Sidebar';
 import Topbar from '../components/Topbar';
+import '../styles/PremiumModal.css';
 import './AdminCategories.css';
 
 const colorOptions = [
@@ -34,7 +36,7 @@ export default function AdminCategories() {
         isActive: true,
     });
 
-    const API_URL = 'http://localhost:5000/api';
+    // const API_URL = 'http://localhost:5000/api'; // No longer needed with axiosInstance
 
     useEffect(() => {
         fetchCategories();
@@ -42,15 +44,12 @@ export default function AdminCategories() {
 
     const fetchCategories = async () => {
         try {
-            const token = localStorage.getItem('authToken');
-            const res = await fetch(`${API_URL}/categories`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            const data = await res.json();
-            if (data.success) {
-                setCategories(data.data);
+            const res = await api.get('/categories');
+            if (res.data.success) {
+                setCategories(res.data.data);
             }
         } catch (err) {
+            console.error('Failed to fetch categories:', err);
             setError('Failed to fetch categories');
         } finally {
             setLoading(false);
@@ -63,34 +62,29 @@ export default function AdminCategories() {
         setSuccess('');
 
         try {
-            const token = localStorage.getItem('authToken');
             const url = editingCategory
-                ? `${API_URL}/categories/${editingCategory._id}`
-                : `${API_URL}/categories`;
+                ? `/categories/${editingCategory._id}`
+                : `/categories`;
 
-            const res = await fetch(url, {
-                method: editingCategory ? 'PUT' : 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({
+            const res = await api({
+                method: editingCategory ? 'put' : 'post',
+                url: url,
+                data: {
                     ...form,
                     parent: form.parent || null
-                })
+                }
             });
 
-            const data = await res.json();
-
-            if (data.success) {
+            if (res.data.success) {
                 setSuccess(editingCategory ? 'Category updated!' : 'Category created!');
                 fetchCategories();
                 closeModal();
             } else {
-                setError(data.message || 'Failed to save category');
+                setError(res.data.message || 'Failed to save category');
             }
         } catch (err) {
-            setError('Failed to save category');
+            console.error('Save error:', err);
+            setError(err.response?.data?.message || 'Failed to save category');
         }
     };
 
@@ -98,22 +92,16 @@ export default function AdminCategories() {
         if (!window.confirm('Are you sure you want to delete this category?')) return;
 
         try {
-            const token = localStorage.getItem('authToken');
-            const res = await fetch(`${API_URL}/categories/${id}`, {
-                method: 'DELETE',
-                headers: { Authorization: `Bearer ${token}` }
-            });
-
-            const data = await res.json();
-
-            if (data.success) {
+            const res = await api.delete(`/categories/${id}`);
+            if (res.data.success) {
                 setSuccess('Category deleted!');
                 fetchCategories();
             } else {
-                setError(data.message || 'Failed to delete category');
+                setError(res.data.message || 'Failed to delete category');
             }
         } catch (err) {
-            setError('Failed to delete category');
+            console.error('Delete error:', err);
+            setError(err.response?.data?.message || 'Failed to delete category');
         }
     };
 
@@ -257,125 +245,113 @@ export default function AdminCategories() {
                         </table>
                     </div>
 
-                    {/* Modal */}
                     {showModal && (
-                        <div className="modal-overlay" onClick={closeModal}>
-                            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-overlay">
+                            <div className="modal-content">
                                 <div className="modal-header">
                                     <h3 className="modal-title">
                                         {editingCategory ? 'Edit Category' : 'Add New Category'}
                                     </h3>
-                                    <button onClick={closeModal} className="btn-close">
-                                        <FaTimes />
-                                    </button>
+                                    <button onClick={closeModal} className="btn-close">&times;</button>
                                 </div>
 
-                                {error && <div className="alert alert-error">{error}</div>}
+                                <form onSubmit={handleSubmit} className="modal-body">
+                                    {error && <div className="p-3 mb-4 text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg">{error}</div>}
 
-                                <form onSubmit={handleSubmit}>
-                                    {/* Name */}
-                                    <div className="form-group">
-                                        <label className="form-label">Category Name *</label>
-                                        <input
-                                            type="text"
-                                            className="form-input"
-                                            value={form.name}
-                                            onChange={(e) => setForm({ ...form, name: e.target.value })}
-                                            placeholder="e.g., Electronics"
-                                            required
-                                        />
-                                    </div>
+                                    <div className="modal-form-grid">
+                                        <div className="form-group">
+                                            <label className="form-label">Category Name *</label>
+                                            <input
+                                                type="text"
+                                                className="form-input"
+                                                value={form.name}
+                                                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                                                placeholder="e.g., Electronics"
+                                                required
+                                            />
+                                        </div>
 
-                                    {/* Description */}
-                                    <div className="form-group">
-                                        <label className="form-label">Description</label>
-                                        <textarea
-                                            className="form-input form-textarea"
-                                            value={form.description}
-                                            onChange={(e) => setForm({ ...form, description: e.target.value })}
-                                            placeholder="Brief description of this category"
-                                        />
-                                    </div>
+                                        <div className="form-group">
+                                            <label className="form-label">Parent Category</label>
+                                            <select
+                                                className="form-select"
+                                                value={form.parent}
+                                                onChange={(e) => setForm({ ...form, parent: e.target.value })}
+                                            >
+                                                <option value="">None (Top Level)</option>
+                                                {categories
+                                                    .filter(c => c._id !== editingCategory?._id)
+                                                    .map(c => (
+                                                        <option key={c._id} value={c._id}>{c.name}</option>
+                                                    ))
+                                                }
+                                            </select>
+                                        </div>
 
-                                    {/* Parent Category */}
-                                    <div className="form-group">
-                                        <label className="form-label">Parent Category</label>
-                                        <select
-                                            className="form-select"
-                                            value={form.parent}
-                                            onChange={(e) => setForm({ ...form, parent: e.target.value })}
-                                        >
-                                            <option value="">None (Top Level)</option>
-                                            {categories
-                                                .filter(c => c._id !== editingCategory?._id)
-                                                .map(c => (
-                                                    <option key={c._id} value={c._id}>{c.name}</option>
-                                                ))
-                                            }
-                                        </select>
-                                    </div>
+                                        <div className="form-group full-width">
+                                            <label className="form-label">Description</label>
+                                            <textarea
+                                                className="form-textarea"
+                                                value={form.description}
+                                                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                                                placeholder="Brief description of this category"
+                                            />
+                                        </div>
 
-                                    {/* Image URL */}
-                                    <div className="form-group">
-                                        <label className="form-label">
-                                            <FaImage className="label-icon" />
-                                            Image URL
-                                        </label>
-                                        <input
-                                            type="url"
-                                            className="form-input"
-                                            value={form.image}
-                                            onChange={(e) => setForm({ ...form, image: e.target.value })}
-                                            placeholder="https://example.com/image.jpg"
-                                        />
-                                        {form.image && (
-                                            <div className="image-preview-container">
-                                                <img
-                                                    src={form.image}
-                                                    alt="Preview"
-                                                    className="image-preview"
-                                                    onError={(e) => e.target.style.display = 'none'}
-                                                />
+                                        <div className="form-group full-width">
+                                            <label className="form-label">Image URL</label>
+                                            <input
+                                                type="url"
+                                                className="form-input"
+                                                value={form.image}
+                                                onChange={(e) => setForm({ ...form, image: e.target.value })}
+                                                placeholder="https://example.com/image.jpg"
+                                            />
+                                            {form.image && (
+                                                <div className="mt-2 p-2 bg-white border rounded">
+                                                    <img
+                                                        src={form.image}
+                                                        alt="Preview"
+                                                        className="h-20 w-auto object-contain"
+                                                        onError={(e) => e.target.style.display = 'none'}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="form-group full-width">
+                                            <label className="form-label">Card Color Gradient</label>
+                                            <div className="color-grid">
+                                                {colorOptions.map((color) => (
+                                                    <div
+                                                        key={color.value}
+                                                        onClick={() => setForm({ ...form, color: color.value })}
+                                                        className={`color-option bg-gradient-to-r ${color.value} ${form.color === color.value ? 'selected' : ''}`}
+                                                        title={color.label}
+                                                    />
+                                                ))}
                                             </div>
-                                        )}
-                                    </div>
+                                        </div>
 
-                                    {/* Color Selection */}
-                                    <div className="form-group">
-                                        <label className="form-label">
-                                            <FaPalette className="label-icon" />
-                                            Card Color Gradient
-                                        </label>
-                                        <div className="color-grid">
-                                            {colorOptions.map((color) => (
-                                                <div
-                                                    key={color.value}
-                                                    onClick={() => setForm({ ...form, color: color.value })}
-                                                    className={`color-option bg-gradient-to-r ${color.value} ${form.color === color.value ? 'selected' : ''}`}
-                                                    title={color.label}
+                                        <div className="checkbox-group full-width">
+                                            <label className="checkbox-item">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={form.isActive}
+                                                    onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
                                                 />
-                                            ))}
+                                                <span className="checkbox-label">Active (visible to customers)</span>
+                                            </label>
                                         </div>
                                     </div>
+                                </form>
 
-                                    {/* Active Status */}
-                                    <div className="form-group">
-                                        <label className="checkbox-label">
-                                            <input
-                                                type="checkbox"
-                                                checked={form.isActive}
-                                                onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
-                                            />
-                                            Active (visible to customers)
-                                        </label>
-                                    </div>
-
-                                    {/* Submit */}
-                                    <button type="submit" className="btn-submit">
-                                        <FaSave />
+                                <div className="modal-footer">
+                                    <button type="button" onClick={closeModal} className="btn-cancel">Cancel</button>
+                                    <button type="submit" onClick={handleSubmit} className="btn-submit">
                                         {editingCategory ? 'Update Category' : 'Create Category'}
                                     </button>
-                                </form>
+                                </div>
                             </div>
                         </div>
                     )}

@@ -8,7 +8,6 @@ import { getProvinces, getDistricts, getSectors, getCells } from "../utils/locat
 import { FaShoppingCart, FaCreditCard, FaMoneyBillWave, FaLock, FaHeart, FaSearch, FaTruck, FaMobileAlt } from "react-icons/fa";
 import LandingFooter from "../components/LandingFooter";
 import Header from "../components/Header";
-import "./Checkout.css";
 
 export default function CheckoutPage() {
   const { user } = useAuth();
@@ -273,174 +272,181 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="checkout-page font-roboto">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-300">
       <Header />
 
       <main>
-        <section className="checkout-hero">
-          <div className="hero-bg-shapes">
-            <div className="shape shape-green"></div>
-            <div className="shape shape-yellow"></div>
-            <div className="shape shape-blue"></div>
+        <section className="relative py-16 md:py-24 overflow-hidden bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800">
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-10 left-10 w-72 h-72 bg-violet-200 dark:bg-violet-900/20 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+            <div className="absolute top-20 right-20 w-72 h-72 bg-fuchsia-200 dark:bg-fuchsia-900/20 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+            <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-96 h-96 bg-blue-200 dark:bg-blue-900/10 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
           </div>
-          <div className="hero-content">
-            <h1 className="hero-title">
-              <FaLock className="secure-icon" />
-              Secure Checkout
+          <div className="relative mx-auto max-w-7xl px-4 text-center">
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4 flex items-center justify-center gap-4">
+              <FaLock className="text-violet-600" /> Secure Checkout
             </h1>
-            <p className="hero-subtitle">
+            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
               Almost there! Please provide your details to complete the order.
             </p>
           </div>
         </section>
 
-        <section className="checkout-content-wrapper">
-          <div className="checkout-container max-w-3xl mx-auto px-4">
-            <form onSubmit={handlePlaceOrder} className="flex flex-col gap-6">
+        <section className="py-12 md:py-16">
+          <div className="mx-auto max-w-3xl px-4">
+            <form onSubmit={handlePlaceOrder} className="space-y-8">
 
               {/* 1. Billing & Shipping Card */}
-              <div className="card billing-section">
-                <div className="flex items-center gap-3 mb-6 border-b border-slate-700 pb-4">
-                  <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400">
-                    <FaTruck className="text-xl" />
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-slate-800">
+                <div className="flex items-center gap-4 mb-8 border-b border-gray-50 dark:border-slate-800 pb-6">
+                  <div className="p-3 bg-violet-50 dark:bg-violet-900/10 rounded-xl text-violet-600 dark:text-violet-400">
+                    <FaTruck className="text-2xl" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-white">Billing & Shipping</h2>
-                    <p className="text-slate-400 text-sm">Enter your delivery details hierarchy</p>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Billing & Shipping</h2>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">Enter your delivery details</p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-2">
-                    <label htmlFor="firstName" className="text-xs font-bold text-slate-400 uppercase">First Name</label>
-                    <input type="text" id="firstName" name="firstName" value={formData.firstName} onChange={handleInputChange} required className="checkout-input" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1">First Name</label>
+                    <input type="text" name="firstName" value={formData.firstName} onChange={handleInputChange} required className="w-full bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-violet-500 transition-all placeholder:text-gray-400" />
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <label htmlFor="lastName" className="text-xs font-bold text-slate-400 uppercase">Last Name</label>
-                    <input type="text" id="lastName" name="lastName" value={formData.lastName} onChange={handleInputChange} required className="checkout-input" />
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1">Last Name</label>
+                    <input type="text" name="lastName" value={formData.lastName} onChange={handleInputChange} required className="w-full bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-violet-500 transition-all placeholder:text-gray-400" />
                   </div>
-                  <div className="flex flex-col gap-2 md:col-span-2">
-                    <label htmlFor="email" className="text-xs font-bold text-slate-400 uppercase">Email Address</label>
-                    <input type="email" id="email" name="email" value={formData.email} onChange={handleInputChange} required className="checkout-input" />
+                  <div className="md:col-span-2 space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1">Email Address</label>
+                    <input type="email" name="email" value={formData.email} onChange={handleInputChange} required className="w-full bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-violet-500 transition-all placeholder:text-gray-400" />
                   </div>
-                  <div className="flex flex-col gap-2 md:col-span-2">
-                    <label htmlFor="phone" className="text-xs font-bold text-slate-400 uppercase">Phone Number</label>
-                    <input type="tel" id="phone" name="phone" value={formData.phone} onChange={handleInputChange} required className="checkout-input" />
+                  <div className="md:col-span-2 space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1">Phone Number</label>
+                    <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} required className="w-full bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-violet-500 transition-all placeholder:text-gray-400" />
                   </div>
 
-                  {/* Location - Province/District Row */}
-                  <div className="flex flex-col gap-2">
-                    <label htmlFor="province" className="text-xs font-bold text-slate-400 uppercase">Province</label>
-                    <select id="province" name="province" value={formData.province} onChange={handleProvinceChange} required className="checkout-input">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1">Province</label>
+                    <select name="province" value={formData.province} onChange={handleProvinceChange} required className="w-full bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-violet-500 transition-all cursor-pointer">
                       <option value="">Select Province</option>
                       {provinces.map(prov => <option key={prov} value={prov}>{prov}</option>)}
                     </select>
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <label htmlFor="district" className="text-xs font-bold text-slate-400 uppercase">District</label>
-                    <select id="district" name="district" value={formData.district} onChange={handleDistrictChange} required disabled={!formData.province} className={`checkout-input ${!formData.province ? 'read-only' : ''}`}>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1">District</label>
+                    <select name="district" value={formData.district} onChange={handleDistrictChange} required disabled={!formData.province} className="w-full bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-violet-500 transition-all cursor-pointer disabled:opacity-50">
                       <option value="">Select District</option>
                       {availableDistricts.map(d => <option key={d} value={d}>{d}</option>)}
                     </select>
                   </div>
 
-                  {/* Location - Sector/Cell Row */}
-                  <div className="flex flex-col gap-2">
-                    <label htmlFor="sector" className="text-xs font-bold text-slate-400 uppercase">Sector</label>
-                    <select id="sector" name="sector" value={formData.sector} onChange={handleSectorChange} required disabled={!formData.district} className={`checkout-input ${!formData.district ? 'read-only' : ''}`}>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1">Sector</label>
+                    <select name="sector" value={formData.sector} onChange={handleSectorChange} required disabled={!formData.district} className="w-full bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-violet-500 transition-all cursor-pointer disabled:opacity-50">
                       <option value="">Select Sector</option>
                       {availableSectors.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <label htmlFor="cell" className="text-xs font-bold text-slate-400 uppercase">Cell</label>
-                    <select id="cell" name="cell" value={formData.cell} onChange={handleCellChange} required disabled={!formData.sector} className={`checkout-input ${!formData.sector ? 'read-only' : ''}`}>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1">Cell</label>
+                    <select name="cell" value={formData.cell} onChange={handleCellChange} required disabled={!formData.sector} className="w-full bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-violet-500 transition-all cursor-pointer disabled:opacity-50">
                       <option value="">Select Cell</option>
                       {availableCells.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                   </div>
 
-                  {/* Address Full Width */}
-                  <div className="flex flex-col gap-2 md:col-span-2">
-                    <label htmlFor="address" className="text-xs font-bold text-slate-400 uppercase">Street Address / Village</label>
-                    <input type="text" id="address" name="address" value={formData.address} onChange={handleInputChange} required className="checkout-input" placeholder="e.g. KG 123 St, Village name" />
+                  <div className="md:col-span-2 space-y-1.5">
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1">Street Address</label>
+                    <input type="text" name="address" value={formData.address} onChange={handleInputChange} required className="w-full bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-violet-500 transition-all placeholder:text-gray-400" placeholder="e.g. KG 123 St, Village name" />
                   </div>
                 </div>
 
                 {/* Shipping Method Selector inside Billing Card */}
-                <div className="shipping-methods-container mt-8 pt-8 border-t border-slate-700">
-                  <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                    <FaTruck className="text-purple-500" />
-                    Shipping Method
+                <div className="mt-10 pt-10 border-t border-gray-50 dark:border-slate-800">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                    <FaTruck className="text-violet-600" /> Shipping Method
                   </h3>
                   {loadingShipping ? (
-                    <p className="text-slate-400 text-sm">Loading shipping methods...</p>
+                    <div className="flex items-center gap-3 text-gray-500">
+                      <div className="w-4 h-4 border-2 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
+                      <span className="text-sm">Calculating shipping options...</span>
+                    </div>
                   ) : shippingMethods.length > 0 ? (
-                    <div className="grid gap-3">
+                    <div className="space-y-4">
                       {shippingMethods.map((method, idx) => (
                         <div
                           key={idx}
                           onClick={() => handleMethodChange(method)}
-                          className={`p-4 rounded-xl border cursor-pointer flex justify-between items-center transition-all ${selectedMethod?._id === method._id ? 'bg-purple-500/10 border-purple-500 shadow-lg shadow-purple-500/10' : 'bg-slate-900 border-slate-700 hover:border-slate-500'}`}
+                          className={`group p-4 rounded-2xl border-2 cursor-pointer flex justify-between items-center transition-all ${selectedMethod?._id === method._id
+                            ? 'bg-violet-50 dark:bg-violet-900/10 border-violet-600 shadow-lg shadow-violet-500/10'
+                            : 'bg-white dark:bg-slate-800 border-gray-100 dark:border-slate-700 hover:border-violet-400'}`}
                         >
-                          <div className="flex items-center gap-3">
-                            <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${selectedMethod?._id === method._id ? 'border-purple-500' : 'border-slate-500'}`}>
-                              {selectedMethod?._id === method._id && <div className="w-2 h-2 bg-purple-500 rounded-full" />}
+                          <div className="flex items-center gap-4">
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${selectedMethod?._id === method._id ? 'border-violet-600' : 'border-gray-300 dark:border-slate-600 group-hover:border-violet-400'}`}>
+                              {selectedMethod?._id === method._id && <div className="w-2.5 h-2.5 bg-violet-600 rounded-full" />}
                             </div>
-                            <span className="text-slate-200 font-medium">{method.name}</span>
+                            <span className={`font-bold transition-colors ${selectedMethod?._id === method._id ? 'text-violet-900 dark:text-violet-300' : 'text-gray-700 dark:text-gray-300 group-hover:text-violet-600'}`}>{method.name}</span>
                           </div>
-                          <span className="text-white font-bold">{method.cost === 0 ? "Free" : formatRwf(method.cost)}</span>
+                          <span className="text-lg font-black text-violet-600 dark:text-violet-400">{method.cost === 0 ? "Free" : formatRwf(method.cost)}</span>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-slate-500 bg-slate-900/50 p-3 rounded border border-slate-800">Select province and district to see shipping options.</p>
+                    <div className="bg-gray-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-gray-100 dark:border-slate-800 text-sm text-gray-500 text-center italic">
+                      Please complete your location details to see shipping options.
+                    </div>
                   )}
                 </div>
               </div>
 
-              {/* 2. Payment Method Card - Middle */}
-              <div className="card payment-section">
-                <div className="flex items-center gap-3 mb-6 border-b border-slate-700 pb-4">
-                  <div className="p-2 bg-yellow-500/10 rounded-lg text-yellow-400">
-                    <FaCreditCard className="text-xl" />
+              {/* 2. Payment Method Card */}
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-slate-800">
+                <div className="flex items-center gap-4 mb-8 border-b border-gray-50 dark:border-slate-800 pb-6">
+                  <div className="p-3 bg-amber-50 dark:bg-amber-900/10 rounded-xl text-amber-600 dark:text-amber-400">
+                    <FaCreditCard className="text-2xl" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-white">Payment Method</h2>
-                    <p className="text-slate-400 text-sm">Secure checkout with MTN MoMo</p>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Payment Method</h2>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">Choose how you want to pay</p>
                   </div>
                 </div>
 
                 <div className="space-y-4">
                   {/* MoMo Option */}
-                  <div onClick={() => setPaymentMethod("mtn_momo")} className={`border rounded-xl overflow-hidden transition-all ${paymentMethod === 'mtn_momo' ? 'border-yellow-500 ring-1 ring-yellow-500 bg-slate-800/50' : 'border-slate-700 bg-slate-900'}`}>
-                    <div className="p-4 flex items-center justify-between cursor-pointer">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${paymentMethod === 'mtn_momo' ? 'border-yellow-500' : 'border-slate-500'}`}>
-                          {paymentMethod === 'mtn_momo' && <div className="w-2.5 h-2.5 rounded-full bg-yellow-500"></div>}
+                  <div
+                    onClick={() => setPaymentMethod("mtn_momo")}
+                    className={`group rounded-2xl border-2 transition-all overflow-hidden ${paymentMethod === 'mtn_momo'
+                      ? 'bg-amber-50 dark:bg-amber-900/10 border-amber-500 shadow-lg shadow-amber-500/10'
+                      : 'bg-white dark:bg-slate-800 border-gray-100 dark:border-slate-700 hover:border-amber-400'}`}
+                  >
+                    <div className="p-5 flex items-center justify-between cursor-pointer">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${paymentMethod === 'mtn_momo' ? 'border-amber-500' : 'border-gray-300 dark:border-slate-600 group-hover:border-amber-400'}`}>
+                          {paymentMethod === 'mtn_momo' && <div className="w-2.5 h-2.5 bg-amber-500 rounded-full" />}
                         </div>
-                        <span className="font-semibold text-white">MTN Mobile Money</span>
+                        <span className={`font-bold transition-colors ${paymentMethod === 'mtn_momo' ? 'text-amber-900 dark:text-amber-300' : 'text-gray-700 dark:text-gray-300 group-hover:text-amber-600'}`}>MTN Mobile Money</span>
                       </div>
-                      <FaMoneyBillWave className="text-yellow-500 text-xl" />
+                      <FaMoneyBillWave className="text-amber-500 text-2xl" />
                     </div>
 
                     {paymentMethod === "mtn_momo" && (
-                      <div className="px-4 pb-4 pt-0 animate-fadeIn">
-                        <div className="bg-slate-900 p-4 rounded-lg border border-slate-700">
-                          <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">MoMo Phone Number</label>
+                      <div className="px-5 pb-5 pt-0 animate-fade-in">
+                        <div className="bg-white dark:bg-slate-900/50 p-4 rounded-xl border border-amber-100 dark:border-amber-900/30">
+                          <label className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-2 block">Phone Number for payment</label>
                           <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"><FaMobileAlt /></span>
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-500"><FaMobileAlt /></span>
                             <input
                               type="tel"
                               value={momoPhone}
                               onChange={(e) => setMomoPhone(e.target.value)}
-                              placeholder="078..."
-                              className="w-full bg-slate-800 border border-slate-600 rounded-lg py-3 pl-10 pr-4 text-white focus:border-yellow-500 focus:outline-none placeholder:text-slate-600 transition-colors"
+                              placeholder="0781234567"
+                              className="w-full bg-gray-50 dark:bg-slate-800 border border-amber-200 dark:border-amber-800 rounded-xl py-3 pl-10 pr-4 text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none transition-all placeholder:text-amber-200"
                             />
                           </div>
-                          <p className="text-xs text-yellow-500/80 mt-2 italic flex items-center gap-1">
-                            <span className="w-1 h-1 bg-yellow-500 rounded-full"></span>
-                            Prompt will be sent to this number
+                          <p className="text-[10px] text-amber-600/60 mt-3 flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                            You will receive a prompt to enter your PIN on your phone
                           </p>
                         </div>
                       </div>
@@ -448,58 +454,68 @@ export default function CheckoutPage() {
                   </div>
 
                   {/* Credit Card (Disabled) */}
-                  <div onClick={() => setPaymentMethod("credit_card")} className={`border rounded-xl p-4 flex items-center justify-between opacity-50 cursor-not-allowed ${paymentMethod === 'credit_card' ? 'border-purple-500' : 'border-slate-800 bg-slate-900'}`}>
-                    <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 rounded-full border border-slate-600"></div>
-                      <span className="font-semibold text-slate-400">Credit Card (Coming Soon)</span>
+                  <div className="group rounded-2xl border-2 border-gray-100 dark:border-slate-800 p-5 flex items-center justify-between opacity-50 cursor-not-allowed">
+                    <div className="flex items-center gap-4">
+                      <div className="w-5 h-5 rounded-full border-2 border-gray-300 dark:border-slate-600"></div>
+                      <span className="font-bold text-gray-400">Credit Card <span className="text-[10px] uppercase tracking-widest ml-2 bg-gray-100 dark:bg-slate-800 py-0.5 px-2 rounded">Soon</span></span>
                     </div>
-                    <FaCreditCard className="text-slate-600 text-xl" />
+                    <FaCreditCard className="text-gray-300 text-2xl" />
                   </div>
                 </div>
               </div>
 
-              {/* 3. Order Summary & Total Card - Bottom */}
-              <div className="card summary-section">
-                <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                  <FaShoppingCart className="text-green-500" /> Your Order
+              {/* 3. Order Summary Card */}
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-slate-800">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8 flex items-center gap-4">
+                  <span className="p-3 bg-green-50 dark:bg-green-900/10 rounded-xl text-green-600 dark:text-green-400">
+                    <FaShoppingCart className="text-2xl" />
+                  </span>
+                  Your Order
                 </h2>
 
-                <div className="space-y-3 mb-6">
+                <div className="space-y-4 mb-8">
                   {items.map((item, idx) => (
-                    <div key={idx} className="flex gap-4 items-center bg-slate-900/50 p-3 rounded-xl border border-slate-800">
-                      <div className="w-12 h-12 bg-slate-700 rounded-lg overflow-hidden flex-shrink-0 relative">
-                        {item.product?.images?.[0] ? (
-                          <img src={`http://localhost:5000${item.product.images[0]}`} alt={item.name} className="w-full h-full object-cover" onError={(e) => e.target.style.display = 'none'} />
-                        ) : null}
-                        <div className="w-full h-full absolute inset-0 flex items-center justify-center text-slate-600 text-xs font-bold bg-slate-800 -z-10">IMG</div>
+                    <div key={idx} className="flex gap-6 items-center bg-gray-50/50 dark:bg-slate-800/30 p-4 rounded-2xl border border-gray-100 dark:border-slate-800 transition-all hover:bg-white dark:hover:bg-slate-800 shadow-sm hover:shadow-md">
+                      <div className="w-20 h-20 bg-white dark:bg-slate-950 rounded-xl overflow-hidden shadow-inner flex-shrink-0 group">
+                        {item.image ? (
+                          <img src={process.env.REACT_APP_API_URL + item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-200 dark:text-slate-800 bg-gray-100 dark:bg-slate-800 text-xl font-bold">IMP</div>
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-white truncate">{item.name}</p>
-                        <p className="text-xs text-slate-400">Qty: {item.quantity}</p>
+                        <p className="font-bold text-gray-900 dark:text-white group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors mb-1">{item.name}</p>
+                        <p className="text-sm font-bold text-gray-400 dark:text-gray-500">Qty: {item.quantity}</p>
                       </div>
-                      <p className="font-bold text-white whitespace-nowrap">{formatRwf(item.quantity * (item.product.price || 0))}</p>
+                      <p className="text-xl font-black text-gray-900 dark:text-white">{formatRwf(item.quantity * (item.price || item.product.price || 0))}</p>
                     </div>
                   ))}
                 </div>
 
-                <div className="space-y-3 pt-4 border-t border-slate-700">
-                  <div className="flex justify-between text-slate-400 text-sm">
+                <div className="space-y-4 pt-8 border-t border-gray-100 dark:border-slate-800 px-2">
+                  <div className="flex justify-between text-gray-500 dark:text-gray-400 font-medium">
                     <span>Subtotal</span>
-                    <span>{formatRwf(totals.subtotal)}</span>
+                    <span className="font-bold text-gray-900 dark:text-white">{formatRwf(totals.subtotal)}</span>
                   </div>
-                  <div className="flex justify-between text-slate-400 text-sm">
+                  <div className="flex justify-between text-gray-500 dark:text-gray-400 font-medium">
                     <span>Shipping</span>
-                    <span>{selectedMethod ? formatRwf(shippingCost) : "--"}</span>
+                    <span className="font-bold text-gray-900 dark:text-white">{selectedMethod ? formatRwf(shippingCost) : "--"}</span>
                   </div>
                   {taxData.taxes.map((tax, idx) => (
-                    <div key={idx} className="flex justify-between text-slate-400 text-sm">
+                    <div key={idx} className="flex justify-between text-gray-500 dark:text-gray-400 font-medium">
                       <span>{tax.name} ({tax.rate}%)</span>
-                      <span>{formatRwf(tax.amount)}</span>
+                      <span className="font-bold text-gray-900 dark:text-white">{formatRwf(tax.amount)}</span>
                     </div>
                   ))}
-                  <div className="flex justify-between text-white font-bold text-xl pt-4 border-t border-slate-700 mt-2">
-                    <span>Total to Pay</span>
-                    <span className="text-purple-400">{formatRwf(grandTotal)}</span>
+                  {totals.discount > 0 && (
+                    <div className="flex justify-between text-green-600 dark:text-green-400 font-bold bg-green-50 dark:bg-green-900/10 p-4 rounded-2xl animate-fade-in">
+                      <span>Discount (PROMO)</span>
+                      <span>-{formatRwf(totals.discount)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center py-8 pt-10 border-t border-gray-100 dark:border-slate-800 mt-4">
+                    <span className="text-2xl font-bold text-gray-900 dark:text-white">To Pay</span>
+                    <span className="text-4xl font-black text-violet-600 dark:text-violet-400 drop-shadow-sm">{formatRwf(grandTotal)}</span>
                   </div>
                 </div>
 
@@ -507,43 +523,39 @@ export default function CheckoutPage() {
                 <button
                   type="submit"
                   disabled={!selectedMethod || isProcessing}
-                  className={`mt-8 w-full py-4 rounded-full font-bold text-lg flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] ${(!selectedMethod || isProcessing) ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : 'bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white shadow-xl shadow-purple-600/20'}`}
+                  className="mt-8 w-full bg-violet-600 hover:bg-violet-700 disabled:bg-gray-200 dark:disabled:bg-slate-800 text-white py-5 rounded-2xl font-black text-xl flex items-center justify-center gap-4 transition-all shadow-xl shadow-violet-500/25 hover:shadow-violet-500/40 active:scale-[0.98] group"
                 >
                   {isProcessing ? (
                     <>
-                      <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      <span>Processing...</span>
+                      <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Processing Order...</span>
                     </>
                   ) : (
                     <>
-                      <span>Place Order Securely</span>
-                      <FaLock />
+                      <span>Place Secure Order</span>
+                      <FaLock className="group-hover:translate-y-[-2px] transition-transform" />
                     </>
                   )}
                 </button>
 
                 {paymentStatus === "awaiting_payment" && (
-                  <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl text-center animate-pulse">
-                    <p className="font-bold text-yellow-500">Check your phone!</p>
-                    <p className="text-sm text-yellow-100/70 mt-1">Please approve the payment on {momoPhone}.</p>
+                  <div className="mt-6 p-5 bg-amber-50 dark:bg-amber-900/10 border-2 border-amber-500/30 rounded-2xl text-center animate-pulse shadow-lg shadow-amber-500/10">
+                    <p className="font-black text-amber-600 dark:text-amber-400 text-lg uppercase tracking-wider">Check your phone!</p>
+                    <p className="text-sm font-bold text-amber-900/60 dark:text-amber-100/60 mt-1 italic">Please approve the payment on {momoPhone}</p>
                   </div>
                 )}
 
                 {paymentStatus === "success" && (
-                  <div className="mt-4 p-4 bg-green-500/10 border border-green-500/20 rounded-xl text-center">
-                    <p className="font-bold text-green-500">Payment Successful!</p>
-                    <p className="text-sm text-green-100/70 mt-1">Redirecting to order confirmation...</p>
+                  <div className="mt-6 p-5 bg-green-50 dark:bg-green-900/10 border-2 border-green-500/30 rounded-2xl text-center shadow-lg shadow-green-500/10">
+                    <p className="font-black text-green-600 dark:text-green-400 text-lg uppercase tracking-wider">Payment Successful!</p>
+                    <p className="text-sm font-bold text-green-900/60 dark:text-green-100/60 mt-1 italic">Redirecting to order confirmation...</p>
                   </div>
                 )}
 
-                <p className="text-center text-xs text-slate-500 mt-6">
-                  By placing your order, you agree to our <Link to="/terms" className="underline hover:text-purple-400 transition-colors">Terms and Conditions</Link>.
+                <p className="text-center text-[10px] font-bold text-gray-400 dark:text-slate-600 mt-8 uppercase tracking-widest leading-relaxed">
+                  By placing your order, you agree to our <Link to="/terms" className="text-violet-600 dark:text-violet-400 hover:underline">Terms & Conditions</Link>.
                 </p>
               </div>
-
             </form>
           </div>
         </section>

@@ -353,39 +353,43 @@ export default function AdminBanners() {
                         )}
                     </div>
 
-                    {/* Modal */}
                     {showModal && (
-                        <div className="modal-overlay" onClick={closeModal}>
-                            <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-overlay">
+                            <div className="modal-content modal-large">
                                 <div className="modal-header">
                                     <h3 className="modal-title">
                                         {editingBanner ? 'Edit Banner' : 'Create Banner'}
                                     </h3>
-                                    <button onClick={closeModal} className="btn-close">
-                                        <FaTimes />
-                                    </button>
+                                    <button onClick={closeModal} className="btn-close">&times;</button>
                                 </div>
 
-                                {/* Live Preview */}
-                                <div
-                                    className="modal-preview"
-                                    style={{
-                                        background: form.backgroundImage
-                                            ? `url(${form.backgroundImage}) center/cover`
-                                            : `linear-gradient(135deg, ${form.gradientFrom}, ${form.gradientTo})`
-                                    }}
-                                >
-                                    <div className="preview-content">
-                                        <span className="preview-badge">{form.badge || 'Badge'}</span>
-                                        <h3 className="preview-title">{form.title || 'Your Title Here'}</h3>
-                                        {form.subtitle && <p className="preview-subtitle">{form.subtitle}</p>}
-                                        <span className="preview-button">{form.buttonText || 'Button'}</span>
+                                <div className="modal-body overflow-y-auto max-h-[70vh]">
+                                    {/* Live Preview */}
+                                    <div
+                                        className="modal-preview mb-6 rounded-xl overflow-hidden"
+                                        style={{
+                                            height: '240px',
+                                            background: form.backgroundImage
+                                                ? `url(${form.backgroundImage}) center/cover`
+                                                : `linear-gradient(135deg, ${form.gradientFrom}, ${form.gradientTo})`
+                                        }}
+                                    >
+                                        <div className="preview-content p-8 flex flex-col items-center justify-center text-center h-full text-white">
+                                            <span className="preview-badge bg-white/20 px-3 py-1 rounded-full text-xs font-medium mb-3 backdrop-blur-sm self-center">
+                                                {form.badge || 'Badge'}
+                                            </span>
+                                            <h3 className="preview-title text-3xl font-bold mb-2">
+                                                {form.title || 'Your Title Here'}
+                                            </h3>
+                                            {form.subtitle && <p className="preview-subtitle text-lg opacity-90 mb-4">{form.subtitle}</p>}
+                                            <span className="preview-button px-6 py-2 bg-white text-gray-900 rounded-lg font-bold">
+                                                {form.buttonText || 'Button'}
+                                            </span>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <form onSubmit={handleSubmit}>
-                                    <div className="form-grid">
-                                        <div className="form-group span-2">
+                                    <form onSubmit={handleSubmit} className="modal-form-grid">
+                                        <div className="form-group full-width">
                                             <label className="form-label">Title *</label>
                                             <input
                                                 type="text"
@@ -408,64 +412,6 @@ export default function AdminBanners() {
                                             />
                                         </div>
 
-                                        <div className="form-group span-2">
-                                            <label className="form-label">Subtitle</label>
-                                            <input
-                                                type="text"
-                                                className="form-input"
-                                                value={form.subtitle}
-                                                onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
-                                                placeholder="Don't miss out on our biggest sale..."
-                                            />
-                                        </div>
-
-                                        <div className="form-group">
-                                            <label className="form-label">
-                                                <FaImage className="label-icon" />
-                                                Background Image
-                                            </label>
-                                            <div style={{ display: 'flex', gap: '8px' }}>
-                                                <input
-                                                    type="file"
-                                                    accept="image/*"
-                                                    className="form-input"
-                                                    onChange={handleImageUpload}
-                                                    disabled={uploading}
-                                                />
-                                                {form.backgroundImage && (
-                                                    <button
-                                                        type="button"
-                                                        className="btn-icon delete"
-                                                        onClick={() => setForm({ ...form, backgroundImage: '' })}
-                                                        title="Remove Image"
-                                                    >
-                                                        <FaTimes />
-                                                    </button>
-                                                )}
-                                            </div>
-                                            {uploading && <span style={{ fontSize: '0.75rem', color: '#6366f1' }}>Uploading...</span>}
-                                        </div>
-
-                                        <div className="form-group">
-                                            <label className="form-label">Button Text</label>
-                                            <input
-                                                type="text"
-                                                className="form-input"
-                                                value={form.buttonText}
-                                                onChange={(e) => setForm({ ...form, buttonText: e.target.value })}
-                                                placeholder="Shop Now"
-                                            />
-                                        </div>
-                                        <div className="form-group">
-                                            <label className="form-label">Button Link</label>
-                                            <input
-                                                type="text"
-                                                className="form-input"
-                                                value={form.buttonLink}
-                                                onChange={(e) => setForm({ ...form, buttonLink: e.target.value })}
-                                                placeholder="/shop"
-                                            />
-                                        </div>
                                         <div className="form-group">
                                             <label className="form-label">Position</label>
                                             <select
@@ -480,32 +426,61 @@ export default function AdminBanners() {
                                             </select>
                                         </div>
 
-                                        <div className="form-group span-full">
-                                            <label className="form-label">Gradient Colors</label>
-                                            <div className="gradient-presets">
-                                                {presetGradients.map((preset, idx) => (
-                                                    <div
-                                                        key={idx}
-                                                        className={`gradient-preset ${form.gradientFrom === preset.from && form.gradientTo === preset.to ? 'selected' : ''}`}
-                                                        style={{ background: `linear-gradient(135deg, ${preset.from}, ${preset.to})` }}
-                                                        onClick={() => setForm({ ...form, gradientFrom: preset.from, gradientTo: preset.to })}
-                                                        title={preset.label}
-                                                    />
-                                                ))}
-                                            </div>
-                                            <div className="color-pickers">
+                                        <div className="form-group full-width">
+                                            <label className="form-label">Subtitle</label>
+                                            <input
+                                                type="text"
+                                                className="form-input"
+                                                value={form.subtitle}
+                                                onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
+                                                placeholder="Don't miss out on our biggest sale..."
+                                            />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label className="form-label">Background Image</label>
+                                            <div className="flex gap-2">
                                                 <input
-                                                    type="color"
-                                                    value={form.gradientFrom}
-                                                    onChange={(e) => setForm({ ...form, gradientFrom: e.target.value })}
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="form-input"
+                                                    onChange={handleImageUpload}
+                                                    disabled={uploading}
                                                 />
-                                                <span>→</span>
-                                                <input
-                                                    type="color"
-                                                    value={form.gradientTo}
-                                                    onChange={(e) => setForm({ ...form, gradientTo: e.target.value })}
-                                                />
+                                                {form.backgroundImage && (
+                                                    <button
+                                                        type="button"
+                                                        className="p-2 text-red-500 hover:bg-red-50 rounded"
+                                                        onClick={() => setForm({ ...form, backgroundImage: '' })}
+                                                        title="Remove Image"
+                                                    >
+                                                        <FaTimes />
+                                                    </button>
+                                                )}
                                             </div>
+                                            {uploading && <span className="text-xs text-blue-500 mt-1">Uploading...</span>}
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label className="form-label">Button Text</label>
+                                            <input
+                                                type="text"
+                                                className="form-input"
+                                                value={form.buttonText}
+                                                onChange={(e) => setForm({ ...form, buttonText: e.target.value })}
+                                                placeholder="Shop Now"
+                                            />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label className="form-label">Button Link</label>
+                                            <input
+                                                type="text"
+                                                className="form-input"
+                                                value={form.buttonLink}
+                                                onChange={(e) => setForm({ ...form, buttonLink: e.target.value })}
+                                                placeholder="/shop"
+                                            />
                                         </div>
 
                                         <div className="form-group">
@@ -528,25 +503,57 @@ export default function AdminBanners() {
                                             />
                                         </div>
 
-                                        <div className="checkbox-wrapper">
-                                            <label className="checkbox-label">
+                                        <div className="form-group full-width">
+                                            <label className="form-label">Gradient Colors</label>
+                                            <div className="flex flex-wrap gap-2 mb-3">
+                                                {presetGradients.map((preset, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className={`w-8 h-8 rounded-full cursor-pointer border-2 ${form.gradientFrom === preset.from && form.gradientTo === preset.to ? 'border-primary ring-2 ring-primary/20' : 'border-transparent hover:scale-110'}`}
+                                                        style={{ background: `linear-gradient(135deg, ${preset.from}, ${preset.to})` }}
+                                                        onClick={() => setForm({ ...form, gradientFrom: preset.from, gradientTo: preset.to })}
+                                                        title={preset.label}
+                                                    />
+                                                ))}
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <input
+                                                    type="color"
+                                                    className="h-8 w-12 rounded cursor-pointer"
+                                                    value={form.gradientFrom}
+                                                    onChange={(e) => setForm({ ...form, gradientFrom: e.target.value })}
+                                                />
+                                                <span className="text-gray-400">→</span>
+                                                <input
+                                                    type="color"
+                                                    className="h-8 w-12 rounded cursor-pointer"
+                                                    value={form.gradientTo}
+                                                    onChange={(e) => setForm({ ...form, gradientTo: e.target.value })}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="checkbox-group full-width">
+                                            <label className="checkbox-item">
                                                 <input
                                                     type="checkbox"
                                                     checked={form.isActive}
                                                     onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
                                                 />
-                                                Banner is active
+                                                <span className="checkbox-label">Banner is active</span>
                                             </label>
                                         </div>
-                                    </div>
+                                    </form>
+                                </div>
 
-                                    <button type="submit" className="btn-submit">
-                                        <FaSave />
+                                <div className="modal-footer">
+                                    <button type="button" onClick={closeModal} className="btn-cancel">Cancel</button>
+                                    <button type="submit" onClick={handleSubmit} className="btn-submit">
                                         {editingBanner ? 'Update Banner' : 'Create Banner'}
                                     </button>
-                                </form>
-                            </div >
-                        </div >
+                                </div>
+                            </div>
+                        </div>
                     )
                     }
                 </main >

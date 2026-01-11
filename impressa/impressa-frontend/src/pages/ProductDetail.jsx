@@ -13,7 +13,6 @@ import {
   FaSearch, FaHeart, FaShoppingCart, FaStar, FaStarHalfAlt,
   FaTshirt, FaChevronLeft, FaPlus, FaMinus
 } from "react-icons/fa";
-import "./ProductDetail.css";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -161,10 +160,10 @@ export default function ProductDetail() {
   const displayStock = currentVariation ? currentVariation.stock : product?.stock;
 
   return (
-    <div className="product-page-wrapper">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-300">
       <Header />
 
-      <main className="py-8 bg-gray-50 min-h-screen">
+      <main className="py-8 md:py-12">
         <div className="container mx-auto px-4">
           <Breadcrumbs
             items={[
@@ -175,49 +174,58 @@ export default function ProductDetail() {
           />
 
           {loading ? (
-            <div className="product-loading">Loading product details...</div>
+            <div className="flex flex-col items-center justify-center py-20 text-gray-500 dark:text-gray-400">
+              <div className="w-12 h-12 border-4 border-violet-100 border-t-violet-600 rounded-full animate-spin mb-4"></div>
+              <p>Loading product details...</p>
+            </div>
           ) : !product ? (
-            <div className="product-error">
-              <h2 className="product-error-title">Product Not Found</h2>
-              <p>We couldn't find the product you're looking for.</p>
+            <div className="text-center py-20">
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Product Not Found</h2>
+              <p className="text-gray-500 dark:text-gray-400">We couldn't find the product you're looking for.</p>
+              <Link to="/shop" className="mt-6 inline-block text-violet-600 dark:text-violet-400 font-bold hover:underline">Back to Shop</Link>
             </div>
           ) : (
-            <div className="product-detail-grid">
-              <div className="product-image-card">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+              {/* Image Section */}
+              <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-xl border border-gray-100 dark:border-slate-800 transition-all duration-300 hover:shadow-2xl">
                 {product.image ? (
-                  <img src={assetUrl(product.image)} alt={product.name} className="product-image" />
+                  <img src={assetUrl(product.image)} alt={product.name} className="w-full h-auto object-cover" />
                 ) : (
-                  <div className="product-image-placeholder">
-                    <FaTshirt className="text-8xl text-gray-400 opacity-50" />
+                  <div className="aspect-square w-full flex items-center justify-center bg-gray-50 dark:bg-slate-800">
+                    <FaTshirt className="text-8xl text-gray-300 dark:text-gray-600" />
                   </div>
                 )}
               </div>
 
-              <div className="product-info-col">
-                <h1 className="product-title">{product.name}</h1>
-                <p className="product-desc">{product.description || "No description available."}</p>
-                <div className="product-meta-row">
-                  <div className="product-rating">
-                    <div className="product-stars">
+              {/* Info Section */}
+              <div className="flex flex-col gap-6">
+                <div>
+                  <h1 className="text-3xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4 leading-tight">{product.name}</h1>
+                  <p className="text-lg text-gray-600 dark:text-gray-400 leading-relaxed">{product.description || "No description available."}</p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-6 py-4 border-y border-gray-100 dark:border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <div className="flex text-amber-400">
                       {[...Array(5)].map((_, i) => (
-                        <FaStar key={i} className={i < (product.averageRating || 0) ? "star-filled" : "star-empty"} />
+                        <FaStar key={i} className={i < (product.averageRating || 0) ? "text-amber-400" : "text-gray-300 dark:text-gray-600"} />
                       ))}
                     </div>
-                    <span className="product-review-count">({reviews.length} reviews)</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">({reviews.length} reviews)</span>
                   </div>
                   {product.seller && (
-                    <div className="product-seller-badge">
-                      <span className="text-gray-500 text-sm">Sold by: </span>
-                      <Link to={`/shop?seller=${product.seller._id}`} className="seller-link font-semibold hover:underline">
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-gray-500 dark:text-gray-400">Sold by:</span>
+                      <Link to={`/shop?seller=${product.seller._id}`} className="font-semibold text-violet-600 dark:text-violet-400 hover:underline">
                         {product.seller.storeName || product.seller.name}
                       </Link>
                     </div>
                   )}
                 </div>
 
-                <div className="product-price">
+                <div className="text-4xl font-bold text-violet-600 dark:text-violet-400">
                   {product.type === 'variable' && !currentVariation ? (
-                    <span className="product-price-from">From {formatRwf(product.price)}</span>
+                    <span className="text-2xl text-gray-500">From {formatRwf(product.price)}</span>
                   ) : (
                     formatRwf(displayPrice)
                   )}
@@ -225,16 +233,18 @@ export default function ProductDetail() {
 
                 {/* Variable Product Options */}
                 {product.type === 'variable' && product.attributes && (
-                  <div className="product-options-container">
+                  <div className="space-y-6 pt-2">
                     {product.attributes.filter(a => a.variation).map(attr => (
                       <div key={attr.name}>
-                        <label className="option-group-label">{attr.name}</label>
-                        <div className="option-values">
+                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">{attr.name}</label>
+                        <div className="flex flex-wrap gap-3">
                           {attr.values.map(val => (
                             <button
                               key={val}
                               onClick={() => handleAttributeSelect(attr.name, val)}
-                              className={`option-btn ${selectedAttributes[attr.name] === val ? 'selected' : ''}`}
+                              className={`px-6 py-2.5 rounded-xl text-sm font-bold border-2 transition-all ${selectedAttributes[attr.name] === val
+                                ? 'bg-violet-600 border-violet-600 text-white shadow-lg shadow-violet-500/20'
+                                : 'bg-white dark:bg-slate-800 border-gray-100 dark:border-slate-700 text-gray-700 dark:text-gray-300 hover:border-violet-600'}`}
                             >
                               {val}
                             </button>
@@ -243,54 +253,78 @@ export default function ProductDetail() {
                       </div>
                     ))}
                     {currentVariation && (
-                      <div className="stock-status">
+                      <div className="text-sm">
                         {currentVariation.stock > 0 ? (
-                          <span className="text-green-600 font-medium">In Stock ({currentVariation.stock})</span>
+                          <span className="text-green-600 dark:text-green-400 font-bold flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                            In Stock ({currentVariation.stock})
+                          </span>
                         ) : (
-                          <span className="text-red-500 font-medium">Out of Stock</span>
+                          <span className="text-red-500 font-bold">Out of Stock</span>
                         )}
                       </div>
                     )}
                   </div>
                 )}
 
-                <div className="product-qty-row">
-                  <label className="product-qty-label">Quantity</label>
-                  <div className="product-qty-control">
-                    <button onClick={() => handleQuantityChange(-1)} className="qty-btn rounded-l-lg"><FaMinus /></button>
-                    <input type="text" readOnly value={quantity} className="qty-input" />
-                    <button onClick={() => handleQuantityChange(1)} className="qty-btn rounded-r-lg"><FaPlus /></button>
+                <div className="flex items-center gap-6">
+                  <label className="text-lg font-bold text-gray-900 dark:text-white">Quantity</label>
+                  <div className="flex items-center bg-gray-100 dark:bg-slate-800 rounded-xl overflow-hidden border border-gray-200 dark:border-slate-700">
+                    <button onClick={() => handleQuantityChange(-1)} className="w-12 h-12 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors text-gray-600 dark:text-gray-300"><FaMinus /></button>
+                    <input type="text" readOnly value={quantity} className="w-14 text-center bg-transparent font-bold text-gray-900 dark:text-white outline-none" />
+                    <button onClick={() => handleQuantityChange(1)} className="w-12 h-12 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors text-gray-600 dark:text-gray-300"><FaPlus /></button>
                   </div>
                 </div>
 
                 {product.customizable && (
-                  <div className="product-custom-box">
-                    <h3 className="custom-box-title">Add Your Customization</h3>
+                  <div className="bg-violet-50 dark:bg-slate-900 rounded-2xl p-6 border border-violet-100 dark:border-slate-800 flex flex-col gap-4">
+                    <h3 className="text-lg font-bold text-violet-900 dark:text-violet-300">Add Your Customization</h3>
                     {product.customizationOptions?.includes("text") && (
-                      <textarea value={customText} onChange={(e) => setCustomText(e.target.value)} placeholder="Enter custom text (e.g., name, message)" className="custom-input" />
+                      <textarea
+                        value={customText}
+                        onChange={(e) => setCustomText(e.target.value)}
+                        placeholder="Enter custom text (e.g., name, message)"
+                        className="w-full bg-white dark:bg-slate-800 border border-violet-200 dark:border-slate-700 rounded-xl p-4 text-sm outline-none focus:ring-2 focus:ring-violet-500 transition-all dark:text-white"
+                        rows="3"
+                      />
                     )}
                     {product.customizationOptions?.includes("cloud") && (
-                      <div className="custom-input-grid">
-                        <input value={cloudLink} onChange={(e) => setCloudLink(e.target.value)} placeholder="Cloud link (eg. Google Drive)" className="custom-input" />
-                        <input value={cloudPassword} onChange={(e) => setCloudPassword(e.target.value)} placeholder="Password (optional)" className="custom-input" />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <input
+                          value={cloudLink}
+                          onChange={(e) => setCloudLink(e.target.value)}
+                          placeholder="Cloud link (eg. Drive)"
+                          className="bg-white dark:bg-slate-800 border border-violet-200 dark:border-slate-700 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-violet-500 transition-all dark:text-white"
+                        />
+                        <input
+                          value={cloudPassword}
+                          onChange={(e) => setCloudPassword(e.target.value)}
+                          placeholder="Password (optional)"
+                          className="bg-white dark:bg-slate-800 border border-violet-200 dark:border-slate-700 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-violet-500 transition-all dark:text-white"
+                        />
                       </div>
                     )}
                     {!product.customizationOptions?.length && (
-                      <div className="custom-note">This item supports customization. Please provide details in the notes during checkout.</div>
+                      <div className="text-sm text-violet-600 dark:text-violet-400">This item supports customization. Please provide details in the notes during checkout.</div>
                     )}
                   </div>
                 )}
 
-                <div className="product-actions">
+                <div className="flex flex-col sm:flex-row gap-4 mt-4">
                   <button
                     onClick={handleAdd}
                     disabled={product.type === 'variable' && (!currentVariation || currentVariation.stock === 0)}
-                    className="add-cart-btn"
+                    className="flex-[2] bg-violet-600 hover:bg-violet-700 disabled:bg-gray-300 dark:disabled:bg-slate-800 text-white p-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 active:scale-[0.98]"
                   >
                     <FaShoppingCart /> {product.type === 'variable' && !currentVariation ? 'Select Options' : 'Add to Cart'}
                   </button>
-                  <button onClick={() => toggle(product._id)} className={`wishlist-btn ${has(product._id) ? 'active' : ''}`}>
-                    <FaHeart /> {has(product._id) ? 'Wishlisted' : 'Wishlist'}
+                  <button
+                    onClick={() => toggle(product._id)}
+                    className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-2xl font-bold border-2 transition-all ${has(product._id)
+                      ? 'bg-red-50 border-red-200 text-red-600 dark:bg-red-900/10 dark:border-red-900/30'
+                      : 'bg-white dark:bg-slate-900 border-gray-100 dark:border-slate-800 text-gray-700 dark:text-gray-300 hover:border-red-400'}`}
+                  >
+                    <FaHeart className={has(product._id) ? "text-red-500" : ""} /> {has(product._id) ? 'Saved' : 'Wishlist'}
                   </button>
                 </div>
               </div>
@@ -299,16 +333,16 @@ export default function ProductDetail() {
 
           {/* REVIEWS SECTION */}
           {product && (
-            <div className="reviews-section">
-              <h2 className="reviews-title">Customer Reviews</h2>
+            <div className="mt-16 bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-slate-800">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">Customer Reviews</h2>
 
               {/* Add Review Form */}
-              <div className="review-form-card">
-                <h3 className="review-form-title">Write a Review</h3>
-                <div className="review-star-select">
+              <div className="bg-gray-50 dark:bg-slate-800/50 rounded-2xl p-6 mb-12 border border-gray-100 dark:border-slate-800">
+                <h3 className="text-lg font-bold text-gray-800 dark:text-slate-200 mb-4">Write a Review</h3>
+                <div className="flex gap-2 mb-4">
                   {[1, 2, 3, 4, 5].map(star => (
-                    <button key={star} onClick={() => setNewReviewRating(star)} className="star-btn">
-                      <FaStar className={star <= newReviewRating ? "star-filled" : "star-empty"} />
+                    <button key={star} onClick={() => setNewReviewRating(star)} className="p-1 hover:scale-110 transition-transform">
+                      <FaStar className={`text-2xl ${star <= newReviewRating ? "text-amber-400" : "text-gray-300 dark:text-gray-600"}`} />
                     </button>
                   ))}
                 </div>
@@ -316,40 +350,42 @@ export default function ProductDetail() {
                   value={newReviewComment}
                   onChange={(e) => setNewReviewComment(e.target.value)}
                   placeholder="Share your thoughts about this product..."
-                  className="review-textarea"
+                  className="w-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-4 text-sm outline-none focus:ring-2 focus:ring-violet-500 transition-all dark:text-white mb-4"
                   rows="3"
                 />
                 <button
                   onClick={handleSubmitReview}
                   disabled={submittingReview}
-                  className="submit-review-btn"
+                  className="bg-violet-600 hover:bg-violet-700 text-white px-8 py-3 rounded-xl font-bold transition-all disabled:opacity-50"
                 >
                   {submittingReview ? "Submitting..." : "Submit Review"}
                 </button>
               </div>
 
               {/* Reviews List */}
-              <div className="reviews-list">
+              <div className="space-y-8">
                 {reviews.length === 0 ? (
-                  <p className="no-reviews-msg">No reviews yet. Be the first to review!</p>
+                  <p className="text-center py-8 text-gray-500 italic">No reviews yet. Be the first to review!</p>
                 ) : (
                   reviews.map(review => (
-                    <div key={review._id} className="review-card">
-                      <div className="review-header">
-                        <div className="review-author-info">
-                          <div className="review-avatar">
+                    <div key={review._id} className="pb-8 border-b border-gray-50 dark:border-slate-800 last:border-0">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-violet-100 to-fuchsia-100 dark:from-violet-900/40 dark:to-fuchsia-900/40 text-violet-600 dark:text-violet-400 rounded-full flex items-center justify-center font-bold">
                             {review.user?.name?.[0] || 'U'}
                           </div>
-                          <span className="review-author-name">{review.user?.name || "Anonymous"}</span>
+                          <div>
+                            <h4 className="font-bold text-gray-900 dark:text-white leading-tight">{review.user?.name || "Anonymous"}</h4>
+                            <span className="text-xs text-gray-400">{new Date(review.createdAt).toLocaleDateString()}</span>
+                          </div>
                         </div>
-                        <span className="review-date">{new Date(review.createdAt).toLocaleDateString()}</span>
+                        <div className="flex text-amber-400 text-xs mt-1">
+                          {[...Array(5)].map((_, i) => (
+                            <FaStar key={i} className={i < review.rating ? "text-amber-400" : "text-gray-200 dark:text-gray-700"} />
+                          ))}
+                        </div>
                       </div>
-                      <div className="review-stars">
-                        {[...Array(5)].map((_, i) => (
-                          <FaStar key={i} className={i < review.rating ? "star-filled" : "star-empty"} />
-                        ))}
-                      </div>
-                      <p className="review-text">{review.comment}</p>
+                      <p className="text-gray-600 dark:text-gray-400 leading-relaxed italic">"{review.comment}"</p>
                     </div>
                   ))
                 )}
@@ -358,23 +394,23 @@ export default function ProductDetail() {
           )}
 
           {relatedProducts.length > 0 && (
-            <div className="related-section mt-12">
-              <h2 className="related-title">You may also like</h2>
-              <div className="related-grid">
+            <div className="mt-20">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">You may also like</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {relatedProducts.map(p => (
-                  <Link key={p._id} to={`/product/${p.slug || p._id}`} className="related-card group">
-                    <div className="related-img-wrapper">
+                  <Link key={p._id} to={`/product/${p.slug || p._id}`} className="group bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 dark:border-slate-800">
+                    <div className="aspect-square overflow-hidden bg-gray-50 dark:bg-slate-950">
                       {p.image ? (
-                        <img src={assetUrl(p.image)} alt={p.name} className="related-img" />
+                        <img src={assetUrl(p.image)} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                       ) : (
-                        <div className="related-img-placeholder">
+                        <div className="w-full h-full flex items-center justify-center text-gray-300">
                           <FaTshirt className="text-4xl" />
                         </div>
                       )}
                     </div>
-                    <div className="related-content">
-                      <h3 className="related-name">{p.name}</h3>
-                      <div className="related-price">{formatRwf(p.price)}</div>
+                    <div className="p-4">
+                      <h3 className="font-bold text-gray-900 dark:text-white mb-1 truncate">{p.name}</h3>
+                      <div className="text-violet-600 dark:text-violet-400 font-bold">{formatRwf(p.price)}</div>
                     </div>
                   </Link>
                 ))}

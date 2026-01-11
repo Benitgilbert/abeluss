@@ -6,7 +6,6 @@ import { FaShoppingCart, FaTrashAlt, FaArrowRight, FaHeart, FaSearch, FaTimes } 
 import LandingFooter from "../components/LandingFooter";
 import Header from "../components/Header";
 import * as api from "../services/api";
-import "./Cart.css";
 
 export default function CartPage() {
   const { items, updateQty, removeItem, totals, setFile, applyCoupon, removeCoupon, coupon } = useCart();
@@ -52,229 +51,240 @@ export default function CartPage() {
   };
 
   return (
-    <div className="cart-page-wrapper">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-300">
       <Header />
 
       <main>
-        <section className="cart-hero-section">
-          <div className="cart-hero-bg">
-            <div className="cart-hero-blob blob-green animate-blob"></div>
-            <div className="cart-hero-blob blob-yellow animate-blob animation-delay-2000"></div>
-            <div className="cart-hero-blob blob-blue animate-blob animation-delay-4000"></div>
+        <section className="relative py-20 overflow-hidden bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800">
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-10 left-10 w-72 h-72 bg-violet-200 dark:bg-violet-900/20 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+            <div className="absolute top-20 right-20 w-72 h-72 bg-fuchsia-200 dark:bg-fuchsia-900/20 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+            <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-96 h-96 bg-blue-200 dark:bg-blue-900/10 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
           </div>
-          <div className="cart-hero-content">
-            <h1 className="cart-hero-title">
-              <FaShoppingCart className="inline mr-3 text-blue-800" />
-              Your Shopping Cart
+          <div className="relative mx-auto max-w-7xl px-4 text-center">
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4 flex items-center justify-center gap-4">
+              <FaShoppingCart className="text-violet-600" /> Your Shopping Cart
             </h1>
-            <p className="cart-hero-subtitle">
+            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
               Review your items, make any changes, and proceed to checkout.
             </p>
           </div>
         </section>
 
-        <section className="cart-main-content">
-          <div className="cart-container">
+        <section className="py-12 md:py-20">
+          <div className="mx-auto max-w-7xl px-4">
             {items.length === 0 ? (
-              <div className="cart-empty-state">
-                <div className="cart-empty-text">Your cart is empty. Time to find some amazing products!</div>
+              <div className="bg-white dark:bg-slate-900 rounded-3xl p-12 text-center shadow-sm border border-gray-100 dark:border-slate-800 animate-fade-in">
+                <div className="w-24 h-24 bg-gray-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <FaShoppingCart className="text-4xl text-gray-300 dark:text-gray-600" />
+                </div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Your cart is empty</div>
+                <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-sm mx-auto">Time to find some amazing products and fill it up!</p>
                 <Link
                   to="/shop"
-                  className="cart-continue-btn"
+                  className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-violet-500/25 active:scale-[0.98]"
                 >
-                  Continue Shopping <FaArrowRight className="ml-2" />
+                  Start Shopping <FaArrowRight className="text-sm" />
                 </Link>
               </div>
             ) : (
-              <div className="cart-grid">
-                <div className="cart-items-col">
-                  <table className="cart-table">
-                    <thead className="cart-thead">
-                      <tr>
-                        <th className="cart-th">Product</th>
-                        <th className="cart-th hidden-sm">Price</th>
-                        <th className="cart-th">Qty</th>
-                        <th className="cart-th">Subtotal</th>
-                        <th className="cart-th"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {items.map((it, idx) => (
-                        <tr key={idx} className="cart-tr">
-                          <td className="cart-td">
-                            <div className="cart-item-name">{it.name}</div>
-                            {it.customText && <div className="cart-item-meta">Text: <strong>{it.customText}</strong></div>}
-                            {it.cloudLink && <div className="cart-item-meta truncate">Cloud: <strong>{it.cloudLink}</strong></div>}
-                            <div className="cart-file-upload">
-                              <label className="cart-file-label">Customization file (image/PDF)</label>
-                              <input
-                                type="file"
-                                accept="image/*,application/pdf"
-                                onChange={(e) => setFile(idx, e.target.files?.[0] || null)}
-                                className="cart-file-input"
-                              />
-                            </div>
-                          </td>
-                          <td className="cart-td-center cart-price-cell hidden-sm">
-                            {formatRwf(it.product.price)}
-                          </td>
-                          <td className="cart-td-center">
-                            <input
-                              type="number"
-                              min={1}
-                              value={it.quantity}
-                              onChange={(e) => updateQty(idx, parseInt(e.target.value || "1"))}
-                              className="cart-qty-input"
-                            />
-                          </td>
-                          <td className="cart-td-center cart-subtotal-cell">
-                            {formatRwf((it.product.price || 0) * it.quantity)}
-                          </td>
-                          <td className="cart-td-center">
-                            <button
-                              onClick={() => removeItem(idx)}
-                              className="cart-remove-btn"
-                            >
-                              <FaTrashAlt />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 space-y-6">
+                  <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-gray-50/50 dark:bg-slate-800/50 border-b border-gray-100 dark:border-slate-800">
+                            <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Product</th>
+                            <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider hidden sm:table-cell">Price</th>
+                            <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-center">Qty</th>
+                            <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Subtotal</th>
+                            <th className="px-6 py-4 text-right"></th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50 dark:divide-slate-800">
+                          {items.map((it, idx) => (
+                            <tr key={idx} className="group hover:bg-gray-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                              <td className="px-6 py-6">
+                                <div className="font-bold text-gray-900 dark:text-white group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors mb-1">{it.name}</div>
+                                {it.customText && <div className="text-xs text-gray-500 dark:text-gray-400">Text: <span className="text-violet-600 dark:text-violet-400">{it.customText}</span></div>}
+                                {it.cloudLink && <div className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[200px]">Cloud: <span className="text-violet-600 dark:text-violet-400">{it.cloudLink}</span></div>}
+                                <div className="mt-4">
+                                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Customization file</label>
+                                  <input
+                                    type="file"
+                                    accept="image/*,application/pdf"
+                                    onChange={(e) => setFile(idx, e.target.files?.[0] || null)}
+                                    className="block w-full text-[10px] text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-[10px] file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100 cursor-pointer"
+                                  />
+                                </div>
+                              </td>
+                              <td className="px-6 py-6 text-sm font-medium text-gray-600 dark:text-gray-300 hidden sm:table-cell">
+                                {formatRwf(it.product.price)}
+                              </td>
+                              <td className="px-6 py-6 text-center">
+                                <input
+                                  type="number"
+                                  min={1}
+                                  value={it.quantity}
+                                  onChange={(e) => updateQty(idx, parseInt(e.target.value || "1"))}
+                                  className="w-16 px-3 py-1.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-sm text-center font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-violet-500 outline-none"
+                                />
+                              </td>
+                              <td className="px-6 py-6 text-right text-sm font-bold text-violet-600 dark:text-violet-400">
+                                {formatRwf((it.product.price || 0) * it.quantity)}
+                              </td>
+                              <td className="px-6 py-6 text-right">
+                                <button
+                                  onClick={() => removeItem(idx)}
+                                  className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-full transition-all"
+                                >
+                                  <FaTrashAlt />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
-                <div className="cart-summary-col">
-                  <h2 className="cart-summary-title">Order Summary</h2>
-                  <div className="space-y-4">
-                    <div className="cart-summary-row">
-                      <div className="cart-summary-label">Items Count</div>
-                      <div className="cart-summary-value">{totals.itemCount}</div>
-                    </div>
-                    <div className="cart-total-row">
-                      <div className="cart-total-label">Order Total</div>
-                      <div className="cart-total-value">{formatRwf(totals.grandTotal || totals.subtotal)}</div>
-                    </div>
-                    {totals.discount > 0 && (
-                      <div className="cart-summary-row text-green-600 text-sm">
-                        <span>Discount ({coupon})</span>
-                        <span>-{formatRwf(totals.discount)}</span>
+                <aside className="space-y-6 h-fit lg:sticky lg:top-24">
+                  <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-slate-800">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 leading-none">Order Summary</h2>
+                    <div className="space-y-4 mb-6">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-500 dark:text-gray-400">Items Count</span>
+                        <span className="font-bold text-gray-900 dark:text-white">{totals.itemCount}</span>
                       </div>
-                    )}
-                  </div>
-
-                  {/* Coupon Section */}
-                  <div className="cart-coupon-section">
-                    {coupon ? (
-                      <div className="cart-applied-coupon">
-                        <span className="cart-coupon-text">Coupon: {coupon}</span>
-                        <button onClick={handleRemoveCoupon} className="cart-remove-btn text-red-500">
-                          <FaTimes />
-                        </button>
+                      <div className="flex justify-between items-center py-4 border-t border-gray-50 dark:border-slate-800">
+                        <span className="text-lg font-bold text-gray-900 dark:text-white">Order Total</span>
+                        <span className="text-2xl font-black text-violet-600 dark:text-violet-400">{formatRwf(totals.grandTotal || totals.subtotal)}</span>
                       </div>
-                    ) : (
-                      <div className="cart-coupon-input-group">
-                        <input
-                          type="text"
-                          placeholder="Coupon code"
-                          value={couponCode}
-                          onChange={(e) => setCouponCode(e.target.value)}
-                          className="cart-coupon-input"
-                        />
-                        <button
-                          onClick={handleApplyCoupon}
-                          className="cart-coupon-btn"
-                        >
-                          Apply
-                        </button>
-                      </div>
-                    )}
-                    {couponMessage && (
-                      <p className={`text-xs mt-2 ${couponMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
-                        {couponMessage.text}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Shipping Calculator */}
-                  <div className="cart-shipping-section">
-                    <h3 className="cart-shipping-title">Estimate Shipping</h3>
-                    <div className="cart-shipping-form">
-                      <select
-                        value={shippingAddress.country}
-                        onChange={(e) => setShippingAddress({ ...shippingAddress, country: e.target.value })}
-                        className="cart-shipping-input"
-                      >
-                        <option value="Rwanda">Rwanda</option>
-                        <option value="USA">United States</option>
-                        <option value="Other">International</option>
-                      </select>
-                      <input
-                        type="text"
-                        placeholder="City"
-                        value={shippingAddress.city}
-                        onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
-                        className="cart-shipping-input"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Zip Code"
-                        value={shippingAddress.zip}
-                        onChange={(e) => setShippingAddress({ ...shippingAddress, zip: e.target.value })}
-                        className="cart-shipping-input"
-                      />
-                      <button
-                        onClick={handleCalculateShipping}
-                        disabled={calculating}
-                        className="cart-shipping-btn"
-                      >
-                        {calculating ? "Calculating..." : "Calculate Shipping"}
-                      </button>
-                      {shippingEstimate && (
-                        <div className="cart-shipping-result">
-                          <div className="flex justify-between">
-                            <span>Shipping Cost:</span>
-                            <span className="font-bold text-blue-800">{formatRwf(shippingEstimate.cost)}</span>
-                          </div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            Est. Delivery: {shippingEstimate.estimatedDays} days
-                          </div>
+                      {totals.discount > 0 && (
+                        <div className="flex justify-between items-center text-green-600 dark:text-green-400 text-sm font-bold bg-green-50 dark:bg-green-900/10 p-3 rounded-xl">
+                          <span>Discount Applied ({coupon})</span>
+                          <span>-{formatRwf(totals.discount)}</span>
                         </div>
                       )}
                     </div>
-                  </div>
 
-                  <button
-                    onClick={() => nav("/checkout")}
-                    className="cart-checkout-btn"
-                  >
-                    Proceed to Checkout <FaArrowRight className="ml-2" />
-                  </button>
-                  <Link to="/shop" className="cart-continue-link">
-                    Continue Shopping
-                  </Link>
-                </div>
+                    {/* Coupon Section */}
+                    <div className="pt-6 border-t border-gray-50 dark:border-slate-800 mb-8">
+                      {coupon ? (
+                        <div className="flex items-center justify-between bg-violet-50 dark:bg-violet-900/10 border border-violet-100 dark:border-violet-900/30 rounded-xl p-3">
+                          <span className="text-violet-700 dark:text-violet-400 font-bold text-sm">PROMO: {coupon}</span>
+                          <button onClick={handleRemoveCoupon} className="p-1.5 text-violet-400 hover:text-red-500 transition-colors">
+                            <FaTimes />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="Promo code"
+                            value={couponCode}
+                            onChange={(e) => setCouponCode(e.target.value)}
+                            className="flex-1 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-violet-500 transition-all dark:text-white"
+                          />
+                          <button
+                            onClick={handleApplyCoupon}
+                            className="bg-gray-900 dark:bg-slate-800 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-violet-600 transition-colors"
+                          >
+                            Apply
+                          </button>
+                        </div>
+                      )}
+                      {couponMessage && (
+                        <p className={`text-[10px] mt-2 font-bold uppercase tracking-wider ${couponMessage.type === 'success' ? 'text-green-600' : 'text-red-500'}`}>
+                          {couponMessage.text}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Shipping Calculator */}
+                    <div className="space-y-4 mb-8">
+                      <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest">Est. Shipping</h3>
+                      <div className="space-y-2">
+                        <select
+                          value={shippingAddress.country}
+                          onChange={(e) => setShippingAddress({ ...shippingAddress, country: e.target.value })}
+                          className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-violet-500 transition-all dark:text-white cursor-pointer"
+                        >
+                          <option value="Rwanda">Rwanda</option>
+                          <option value="USA">United States</option>
+                          <option value="Other">International</option>
+                        </select>
+                        <div className="grid grid-cols-2 gap-2">
+                          <input
+                            type="text"
+                            placeholder="City"
+                            value={shippingAddress.city}
+                            onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
+                            className="bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-violet-500 transition-all dark:text-white"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Zip"
+                            value={shippingAddress.zip}
+                            onChange={(e) => setShippingAddress({ ...shippingAddress, zip: e.target.value })}
+                            className="bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-violet-500 transition-all dark:text-white"
+                          />
+                        </div>
+                        <button
+                          onClick={handleCalculateShipping}
+                          disabled={calculating}
+                          className="w-full py-2.5 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-900 dark:text-white rounded-xl text-sm font-bold transition-all disabled:opacity-50"
+                        >
+                          {calculating ? "Calculating..." : "Calculate Shipping"}
+                        </button>
+                        {shippingEstimate && (
+                          <div className="bg-violet-50 dark:bg-violet-900/10 rounded-xl p-4 border border-violet-100 dark:border-violet-900/30 animate-fade-in">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="text-sm text-violet-700 dark:text-violet-400">Shipping Cost:</span>
+                              <span className="font-bold text-violet-900 dark:text-violet-200">{formatRwf(shippingEstimate.cost)}</span>
+                            </div>
+                            <div className="text-[10px] text-violet-500 uppercase font-bold">
+                              Est. Delivery: {shippingEstimate.estimatedDays} days
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => nav("/checkout")}
+                      className="w-full bg-violet-600 hover:bg-violet-700 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 active:scale-[0.98] mb-4"
+                    >
+                      Proceed to Checkout <FaArrowRight className="text-sm" />
+                    </button>
+                    <Link to="/shop" className="block text-center text-sm font-bold text-gray-400 hover:text-violet-600 transition-colors">
+                      Continue Shopping
+                    </Link>
+                  </div>
+                </aside>
               </div>
             )}
 
             {/* Cross Sells */}
             {items.some(item => item.product.crossSells?.length > 0) && (
-              <div className="cart-cross-sells-section">
-                <h2 className="cart-cross-sells-title">Complete your order</h2>
-                <div className="contact-grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))" }}>
+              <div className="mt-20">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8 pr-4">Complete your order</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                   {Array.from(new Map(items.flatMap(item => item.product.crossSells || []).map(p => [p._id, p])).values()).map(p => (
-                    <Link key={p._id} to={`/product/${p.slug}`} className="wishlist-card">
-                      <div className="wishlist-card-img-link">
+                    <Link key={p._id} to={`/product/${p.slug || p._id}`} className="group bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 dark:border-slate-800">
+                      <div className="aspect-square overflow-hidden bg-gray-50 dark:bg-slate-950">
                         {p.image ? (
-                          <img src={process.env.REACT_APP_API_URL + p.image} alt={p.name} className="wishlist-card-img" />
+                          <img src={process.env.REACT_APP_API_URL + p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                         ) : (
-                          <div className="wishlist-fallback-img">
+                          <div className="w-full h-full flex items-center justify-center text-gray-300">
                             <FaShoppingCart className="text-4xl" />
                           </div>
                         )}
                       </div>
-                      <div className="wishlist-card-body">
-                        <h3 className="wishlist-card-title">{p.name}</h3>
-                        <div className="wishlist-price">{formatRwf(p.price)}</div>
+                      <div className="p-4">
+                        <h3 className="font-bold text-gray-900 dark:text-white mb-1 truncate">{p.name}</h3>
+                        <div className="text-violet-600 dark:text-violet-400 font-bold">{formatRwf(p.price)}</div>
                       </div>
                     </Link>
                   ))}

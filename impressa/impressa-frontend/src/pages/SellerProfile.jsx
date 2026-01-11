@@ -4,7 +4,6 @@ import api from "../utils/axiosInstance";
 import SellerSidebar from "../components/SellerSidebar";
 import Header from "../components/Header";
 import { useToast } from "../context/ToastContext";
-import "./SellerProducts.css"; // Reuse existing styles
 
 const SellerProfile = () => {
     const { addToast } = useToast();
@@ -31,7 +30,7 @@ const SellerProfile = () => {
 
     const fetchProfile = async () => {
         try {
-            const res = await api.get("/auth/profile");
+            const res = await api.get("/auth/me");
             setUser(res.data);
             setFormData({
                 name: res.data.name || "",
@@ -98,66 +97,95 @@ const SellerProfile = () => {
 
     if (loading) {
         return (
-            <div className="seller-layout">
+            <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
                 <SellerSidebar />
-                <div className="seller-main-content">
+                <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
                     <Header />
-                    <div className="loading-container">Loading profile...</div>
+                    <main className="flex-1 p-8 flex items-center justify-center">
+                        <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mr-3"></div>
+                            Loading profile...
+                        </div>
+                    </main>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="seller-layout">
+        <div className="flex h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200 overflow-hidden">
             <SellerSidebar />
-            <div className="seller-main-content">
+            <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
                 <Header />
-                <div className="seller-page-container">
-                    <div className="page-header">
-                        <div className="header-title">
-                            <h1>My Store Profile</h1>
-                            <p>Manage your account and store information</p>
+                <main className="flex-1 overflow-y-auto p-8">
+                    <div className="max-w-4xl mx-auto">
+                        {/* Page Header */}
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                            <div>
+                                <h1 className="text-2xl font-bold text-gray-800 dark:text-white">My Store Profile</h1>
+                                <p className="text-gray-500 dark:text-gray-400 mt-1">Manage your account and store information</p>
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="add-product-container" style={{ maxWidth: '900px' }}>
-                        <form onSubmit={handleSubmit} className="product-form">
-
+                        <form onSubmit={handleSubmit} className="space-y-6">
                             {/* Personal Info Section */}
-                            <div className="form-section">
-                                <h3><FaUser style={{ marginRight: '0.5rem' }} /> Personal Information</h3>
-                                <div className="form-row">
-                                    <div className="form-group" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                        <div className="image-upload-circle" style={{
-                                            width: '120px', height: '120px', borderRadius: '50%',
-                                            overflow: 'hidden', border: '2px solid #eee', marginBottom: '1rem',
-                                            position: 'relative'
-                                        }}>
-                                            <img src={previews.profileImage || "https://via.placeholder.com/150"} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                            <label htmlFor="profileImage" style={{
-                                                position: 'absolute', bottom: 0, left: 0, right: 0,
-                                                background: 'rgba(0,0,0,0.6)', color: 'white',
-                                                textAlign: 'center', padding: '0.25rem', cursor: 'pointer', fontSize: '0.8rem'
-                                            }}>
-                                                <FaCamera /> Edit
+                            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-colors">
+                                <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2 border-b border-gray-100 dark:border-gray-700 pb-3">
+                                    <FaUser className="text-indigo-600 dark:text-indigo-400" /> Personal Information
+                                </h3>
+
+                                <div className="flex flex-col md:flex-row gap-8 items-start">
+                                    {/* Profile Image Upload */}
+                                    <div className="flex-shrink-0 mx-auto md:mx-0">
+                                        <div className="relative group w-32 h-32 rounded-full overflow-hidden border-4 border-gray-100 dark:border-gray-700 shadow-sm">
+                                            <img
+                                                src={previews.profileImage || "https://via.placeholder.com/150"}
+                                                alt="Profile"
+                                                className="w-full h-full object-cover"
+                                            />
+                                            <label htmlFor="profileImage" className="absolute inset-0 bg-black/50 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                                                <div className="flex flex-col items-center text-xs font-medium">
+                                                    <FaCamera className="mb-1 text-lg" />
+                                                    <span>Change</span>
+                                                </div>
+                                                <input type="file" id="profileImage" name="profileImage" accept="image/*" onChange={handleFileChange} className="hidden" />
                                             </label>
-                                            <input type="file" id="profileImage" name="profileImage" accept="image/*" onChange={handleFileChange} hidden />
                                         </div>
+                                        <p className="text-xs text-center text-gray-400 dark:text-gray-500 mt-2">Personal Photo</p>
                                     </div>
-                                    <div style={{ flex: 1 }}>
-                                        <div className="form-group">
-                                            <label>Full Name</label>
-                                            <div className="input-icon-wrapper">
-                                                <FaUser className="input-icon" />
-                                                <input type="text" name="name" value={formData.name} onChange={handleChange} required />
+
+                                    {/* Inputs */}
+                                    <div className="flex-1 w-full grid grid-cols-1 gap-5">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Full Name</label>
+                                            <div className="relative">
+                                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                    <FaUser className="text-gray-400" />
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    name="name"
+                                                    value={formData.name}
+                                                    onChange={handleChange}
+                                                    required
+                                                    className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 dark:text-white transition-all text-sm shadow-sm"
+                                                />
                                             </div>
                                         </div>
-                                        <div className="form-group">
-                                            <label>Email Address</label>
-                                            <div className="input-icon-wrapper">
-                                                <FaEnvelope className="input-icon" />
-                                                <input type="email" name="email" value={formData.email} onChange={handleChange} required />
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email Address</label>
+                                            <div className="relative">
+                                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                    <FaEnvelope className="text-gray-400" />
+                                                </div>
+                                                <input
+                                                    type="email"
+                                                    name="email"
+                                                    value={formData.email}
+                                                    onChange={handleChange}
+                                                    required
+                                                    className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 dark:text-white transition-all text-sm shadow-sm"
+                                                />
                                             </div>
                                         </div>
                                     </div>
@@ -165,57 +193,95 @@ const SellerProfile = () => {
                             </div>
 
                             {/* Store Info Section */}
-                            <div className="form-section">
-                                <h3><FaStore style={{ marginRight: '0.5rem' }} /> Store Details</h3>
-                                <div className="form-row">
-                                    <div className="form-group" style={{ flex: 1 }}>
-                                        <label>Store Name</label>
-                                        <input type="text" name="storeName" value={formData.storeName} onChange={handleChange} placeholder="My Awesome Store" />
+                            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-colors">
+                                <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2 border-b border-gray-100 dark:border-gray-700 pb-3">
+                                    <FaStore className="text-indigo-600 dark:text-indigo-400" /> Store Details
+                                </h3>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Store Name</label>
+                                        <input
+                                            type="text"
+                                            name="storeName"
+                                            value={formData.storeName}
+                                            onChange={handleChange}
+                                            placeholder="My Awesome Store"
+                                            className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 dark:text-white transition-all text-sm shadow-sm placeholder-gray-400 dark:placeholder-gray-500"
+                                        />
                                     </div>
-                                    <div className="form-group" style={{ flex: 1 }}>
-                                        <label>Store Phone</label>
-                                        <div className="input-icon-wrapper">
-                                            <FaPhone className="input-icon" />
-                                            <input type="text" name="storePhone" value={formData.storePhone} onChange={handleChange} placeholder="+250 7..." />
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Store Phone</label>
+                                        <div className="relative">
+                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <FaPhone className="text-gray-400" />
+                                            </div>
+                                            <input
+                                                type="text"
+                                                name="storePhone"
+                                                value={formData.storePhone}
+                                                onChange={handleChange}
+                                                placeholder="+250 7..."
+                                                className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 dark:text-white transition-all text-sm shadow-sm placeholder-gray-400 dark:placeholder-gray-500"
+                                            />
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="form-group">
-                                    <label>Store Description</label>
-                                    <textarea name="storeDescription" value={formData.storeDescription} onChange={handleChange} rows="4" placeholder="Tell customers about your store..."></textarea>
+                                <div className="mb-6">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Store Description</label>
+                                    <textarea
+                                        name="storeDescription"
+                                        value={formData.storeDescription}
+                                        onChange={handleChange}
+                                        rows="4"
+                                        placeholder="Tell customers about your store..."
+                                        className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 dark:text-white transition-all text-sm shadow-sm resize-y placeholder-gray-400 dark:placeholder-gray-500"
+                                    ></textarea>
                                 </div>
 
-                                <div className="form-group">
-                                    <label>Store Logo</label>
-                                    <div className="image-upload-box" style={{ padding: '1rem' }}>
-                                        <input type="file" id="storeLogo" name="storeLogo" accept="image/*" onChange={handleFileChange} hidden />
-                                        <label htmlFor="storeLogo" className="upload-label" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Store Logo</label>
+                                    <div className="border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-xl p-6 hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors bg-gray-50 dark:bg-gray-700/30">
+                                        <input type="file" id="storeLogo" name="storeLogo" accept="image/*" onChange={handleFileChange} className="hidden" />
+                                        <label htmlFor="storeLogo" className="flex items-center gap-5 cursor-pointer">
                                             {previews.storeLogo ? (
-                                                <img src={previews.storeLogo} alt="Logo Preview" style={{ width: '80px', height: '80px', objectFit: 'contain', border: '1px solid #ddd', borderRadius: '8px' }} />
+                                                <img
+                                                    src={previews.storeLogo}
+                                                    alt="Logo Preview"
+                                                    className="w-24 h-24 object-contain border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 p-1"
+                                                />
                                             ) : (
-                                                <div style={{ width: '80px', height: '80px', background: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', color: '#999' }}>
-                                                    <FaStore size={24} />
+                                                <div className="w-24 h-24 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center text-gray-400 dark:text-gray-500">
+                                                    <FaStore size={32} />
                                                 </div>
                                             )}
-                                            <div>
-                                                <span style={{ display: 'block', fontWeight: '500', color: '#1a1a1a' }}>Upload Store Logo</span>
-                                                <span style={{ fontSize: '0.85rem', color: '#666' }}>Recommended size: 500x500px</span>
+                                            <div className="flex-1">
+                                                <span className="block font-medium text-gray-900 dark:text-white mb-1">Upload Store Logo</span>
+                                                <span className="block text-sm text-gray-500 dark:text-gray-400">Recommended size: 500x500px. JPG, PNG supported.</span>
+                                                <span className="inline-block mt-3 px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                                                    Choose File
+                                                </span>
                                             </div>
                                         </label>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="form-actions">
-                                <button type="submit" className="btn-primary" disabled={saving}>
+                            {/* Actions */}
+                            <div className="flex justify-end pt-4">
+                                <button
+                                    type="submit"
+                                    disabled={saving}
+                                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                                >
                                     <FaSave /> {saving ? "Saving Changes..." : "Save Profile"}
                                 </button>
                             </div>
 
                         </form>
                     </div>
-                </div>
+                </main>
             </div>
         </div>
     );

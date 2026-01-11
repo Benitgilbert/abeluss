@@ -3,6 +3,7 @@ import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import api from "../utils/axiosInstance";
 import { FaTrash, FaEdit, FaPlus } from "react-icons/fa";
+import "../styles/PremiumModal.css";
 import "./AdminCoupons.css";
 
 function AdminCoupons() {
@@ -190,15 +191,18 @@ function AdminCoupons() {
                 </main>
             </div>
 
-            {/* Add/Edit Coupon Modal */}
             {showModal && (
                 <div className="modal-overlay">
                     <div className="modal-content">
-                        <h3 className="modal-title">{isEdit ? 'Edit Coupon' : 'Create Coupon'}</h3>
-                        <form onSubmit={handleSubmit}>
-                            <div className="form-grid">
-                                <div className="form-group span-full">
-                                    <label className="form-label">Code</label>
+                        <div className="modal-header">
+                            <h3 className="modal-title">{isEdit ? 'Edit Coupon' : 'Create Coupon'}</h3>
+                            <button onClick={() => setShowModal(false)} className="btn-close">&times;</button>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="modal-body">
+                            <div className="modal-form-grid">
+                                <div className="form-group full-width">
+                                    <label className="form-label">Coupon Code</label>
                                     <input
                                         type="text"
                                         required
@@ -210,7 +214,7 @@ function AdminCoupons() {
                                 </div>
 
                                 <div className="form-group">
-                                    <label className="form-label">Type</label>
+                                    <label className="form-label">Discount Type</label>
                                     <select
                                         className="form-select"
                                         value={formData.type}
@@ -221,6 +225,7 @@ function AdminCoupons() {
                                         <option value="free_shipping">Free Shipping</option>
                                     </select>
                                 </div>
+
                                 <div className="form-group">
                                     <label className="form-label">Value</label>
                                     <input
@@ -235,7 +240,7 @@ function AdminCoupons() {
                                 </div>
 
                                 <div className="form-group">
-                                    <label className="form-label">Min Spend</label>
+                                    <label className="form-label">Minimum Spend</label>
                                     <input
                                         type="number"
                                         min="0"
@@ -245,20 +250,21 @@ function AdminCoupons() {
                                         onChange={(e) => setFormData({ ...formData, minSpend: e.target.value })}
                                     />
                                 </div>
+
                                 <div className="form-group">
                                     <label className="form-label">Usage Limit</label>
                                     <input
                                         type="number"
                                         min="0"
                                         className="form-input"
-                                        placeholder="Optional"
+                                        placeholder="Unlimited"
                                         value={formData.usageLimit}
                                         onChange={(e) => setFormData({ ...formData, usageLimit: e.target.value })}
                                     />
                                 </div>
 
                                 <div className="form-group">
-                                    <label className="form-label">Expires At</label>
+                                    <label className="form-label">Expiry Date</label>
                                     <input
                                         type="date"
                                         required
@@ -267,34 +273,36 @@ function AdminCoupons() {
                                         onChange={(e) => setFormData({ ...formData, expiresAt: e.target.value })}
                                     />
                                 </div>
-                                <div className="form-group checkbox-wrapper">
-                                    <label className="checkbox-label">
+
+                                <div className="checkbox-group full-width">
+                                    <label className="checkbox-item">
                                         <input
                                             type="checkbox"
                                             checked={formData.isActive}
                                             onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                                         />
-                                        Coupon is active
+                                        <span className="checkbox-label">Coupon is active</span>
                                     </label>
                                 </div>
                             </div>
-
-                            <div className="modal-actions">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowModal(false)}
-                                    className="btn-cancel"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="btn-save"
-                                >
-                                    {isEdit ? 'Save Changes' : 'Create Coupon'}
-                                </button>
-                            </div>
                         </form>
+
+                        <div className="modal-footer">
+                            <button
+                                type="button"
+                                onClick={() => setShowModal(false)}
+                                className="btn-cancel"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                onClick={handleSubmit}
+                                className="btn-submit"
+                            >
+                                {isEdit ? 'Save Changes' : 'Create Coupon'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

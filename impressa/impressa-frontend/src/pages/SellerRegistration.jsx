@@ -6,7 +6,7 @@ import {
     FaFileAlt, FaSignature, FaSpinner, FaExclamationTriangle
 } from 'react-icons/fa';
 import Header from '../components/Header';
-import './SellerRegistration.css';
+import LandingFooter from '../components/LandingFooter';
 
 export default function SellerRegistration() {
     const navigate = useNavigate();
@@ -192,141 +192,190 @@ export default function SellerRegistration() {
 
     if (success) {
         return (
-            <>
+            <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-300">
                 <Header />
-                <div className="seller-reg-container">
-                    <div className="success-card">
-                        <FaCheckCircle className="success-icon" />
-                        <h2>Application Submitted!</h2>
-                        <p>Your seller application has been submitted successfully.</p>
-                        <p>Our team will review your documents and you'll receive an email once your account is approved.</p>
-                        <div className="success-info">
-                            <strong>What happens next?</strong>
-                            <ul>
-                                <li>✅ Documents under review (1-3 business days)</li>
-                                <li>📧 Email notification when approved</li>
-                                <li>🏪 Access to your seller dashboard</li>
+                <div className="max-w-7xl mx-auto px-4 py-16 flex justify-center">
+                    <div className="w-full max-w-xl bg-white dark:bg-slate-900 rounded-[2.5rem] p-12 text-center shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-slate-800">
+                        <div className="w-24 h-24 bg-emerald-100 dark:bg-emerald-900/30 rounded-3xl flex items-center justify-center mx-auto mb-8">
+                            <FaCheckCircle className="text-5xl text-emerald-600 dark:text-emerald-500" />
+                        </div>
+                        <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-4">Application Submitted!</h2>
+                        <p className="text-gray-600 dark:text-gray-400 mb-8 text-lg font-medium">Your seller application has been submitted successfully.</p>
+
+                        <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/20 rounded-2xl p-6 text-left mb-10">
+                            <strong className="block text-emerald-900 dark:text-emerald-400 font-black uppercase tracking-wider text-xs mb-4">What happens next?</strong>
+                            <ul className="space-y-3">
+                                <li className="flex items-center gap-3 text-emerald-800 dark:text-emerald-500/80 font-bold text-sm">
+                                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                                    Documents under review (1-3 business days)
+                                </li>
+                                <li className="flex items-center gap-3 text-emerald-800 dark:text-emerald-500/80 font-bold text-sm">
+                                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                                    Email notification when approved
+                                </li>
+                                <li className="flex items-center gap-3 text-emerald-800 dark:text-emerald-500/80 font-bold text-sm">
+                                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                                    Access to your seller dashboard
+                                </li>
                             </ul>
                         </div>
-                        <button className="btn-primary" onClick={() => navigate('/dashboard')}>
+
+                        <button
+                            className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black text-lg hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 dark:shadow-none active:scale-[0.98]"
+                            onClick={() => navigate('/dashboard')}
+                        >
                             Go to Dashboard
                         </button>
                     </div>
                 </div>
-            </>
+                <LandingFooter />
+            </div>
         );
     }
 
     return (
-        <>
+        <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-300">
             <Header />
-            <div className="seller-reg-container">
-                <div className="seller-reg-card">
-                    <div className="reg-header">
-                        <FaStore className="header-icon" />
-                        <h1>Become a Seller</h1>
-                        <p>Join Impressa marketplace and start selling your products</p>
+
+            <div className="max-w-7xl mx-auto px-4 py-12">
+                <div className="max-w-3xl mx-auto bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-slate-800">
+                    <div className="bg-amber-500 p-10 text-center text-white relative overflow-hidden">
+                        {/* Decorative background */}
+                        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+                        <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/2 w-48 h-48 bg-amber-400/20 rounded-full blur-2xl"></div>
+
+                        <FaStore className="text-6xl mx-auto mb-6 relative z-10" />
+                        <h1 className="text-4xl font-black mb-2 relative z-10">Become a Seller</h1>
+                        <p className="text-amber-50 font-medium relative z-10">Join Impressa marketplace and start selling your products</p>
                     </div>
 
                     {/* Progress Steps */}
-                    <div className="progress-steps">
-                        <div className={`step ${step >= 1 ? 'active' : ''} ${step > 1 ? 'completed' : ''}`}>
-                            <div className="step-circle">1</div>
-                            <span>Store Info</span>
+                    <div className="px-10 py-8 bg-gray-50/50 dark:bg-slate-800/50 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between gap-4">
+                        <div className="flex flex-col items-center gap-2 group">
+                            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm transition-all shadow-sm ${step >= 1 ? 'bg-amber-500 text-white' : 'bg-white dark:bg-slate-900 text-gray-400 border border-gray-100 dark:border-slate-800'}`}>
+                                {step > 1 ? <FaCheckCircle className="text-lg" /> : '1'}
+                            </div>
+                            <span className={`text-[10px] font-black uppercase tracking-widest ${step >= 1 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-400'}`}>Store Info</span>
                         </div>
-                        <div className="step-line" />
-                        <div className={`step ${step >= 2 ? 'active' : ''} ${step > 2 ? 'completed' : ''}`}>
-                            <div className="step-circle">2</div>
-                            <span>RDB Documents</span>
+                        <div className={`flex-1 h-[2px] rounded-full transition-all ${step > 1 ? 'bg-amber-500' : 'bg-gray-200 dark:bg-slate-800'}`}></div>
+                        <div className="flex flex-col items-center gap-2 group">
+                            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm transition-all shadow-sm ${step >= 2 ? 'bg-amber-500 text-white' : 'bg-white dark:bg-slate-900 text-gray-400 border border-gray-100 dark:border-slate-800'}`}>
+                                {step > 2 ? <FaCheckCircle className="text-lg" /> : '2'}
+                            </div>
+                            <span className={`text-[10px] font-black uppercase tracking-widest ${step >= 2 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-400'}`}>Documents</span>
                         </div>
-                        <div className="step-line" />
-                        <div className={`step ${step >= 3 ? 'active' : ''}`}>
-                            <div className="step-circle">3</div>
-                            <span>Terms & Sign</span>
+                        <div className={`flex-1 h-[2px] rounded-full transition-all ${step > 2 ? 'bg-amber-500' : 'bg-gray-200 dark:bg-slate-800'}`}></div>
+                        <div className="flex flex-col items-center gap-2 group">
+                            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm transition-all shadow-sm ${step >= 3 ? 'bg-amber-500 text-white' : 'bg-white dark:bg-slate-900 text-gray-400 border border-gray-100 dark:border-slate-800'}`}>
+                                3
+                            </div>
+                            <span className={`text-[10px] font-black uppercase tracking-widest ${step >= 3 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-400'}`}>Terms</span>
                         </div>
                     </div>
 
                     {error && (
-                        <div className="error-alert">
+                        <div className="mx-10 mt-8 p-4 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 rounded-2xl flex items-center gap-3 text-red-600 dark:text-red-400 font-bold animate-shake">
                             <FaExclamationTriangle /> {error}
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit}>
+                    <form onSubmit={handleSubmit} className="p-10">
                         {/* Step 1: Store Information */}
                         {step === 1 && (
-                            <div className="form-step">
-                                <h3><FaStore /> Store Information</h3>
-
-                                <div className="form-group">
-                                    <label>Store Name *</label>
-                                    <input
-                                        type="text"
-                                        name="storeName"
-                                        value={formData.storeName}
-                                        onChange={handleChange}
-                                        placeholder="Enter your store name"
-                                    />
+                            <div className="space-y-8 animate-fadeIn">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center">
+                                        <FaStore className="text-amber-600 dark:text-amber-500" />
+                                    </div>
+                                    <h3 className="text-xl font-black text-gray-900 dark:text-white">Store Information</h3>
                                 </div>
 
-                                <div className="form-group">
-                                    <label>Store Phone *</label>
-                                    <div className="input-with-icon">
-                                        <FaPhone />
+                                <div className="space-y-6">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Store Name *</label>
                                         <input
-                                            type="tel"
-                                            name="storePhone"
-                                            value={formData.storePhone}
+                                            type="text"
+                                            name="storeName"
+                                            required
+                                            value={formData.storeName}
                                             onChange={handleChange}
-                                            placeholder="+250 7XX XXX XXX"
+                                            placeholder="Enter your store name"
+                                            className="block w-full px-6 py-4 bg-gray-50 dark:bg-slate-800/50 border border-gray-100 dark:border-slate-800 rounded-2xl text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-bold"
                                         />
                                     </div>
-                                </div>
 
-                                <div className="form-group">
-                                    <label>Store Description</label>
-                                    <textarea
-                                        name="storeDescription"
-                                        value={formData.storeDescription}
-                                        onChange={handleChange}
-                                        placeholder="Describe what you sell..."
-                                        rows={4}
-                                    />
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Store Phone *</label>
+                                        <div className="relative group">
+                                            <FaPhone className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-amber-500 transition-colors" />
+                                            <input
+                                                type="tel"
+                                                name="storePhone"
+                                                required
+                                                value={formData.storePhone}
+                                                onChange={handleChange}
+                                                placeholder="+250 7XX XXX XXX"
+                                                className="block w-full pl-14 pr-6 py-4 bg-gray-50 dark:bg-slate-800/50 border border-gray-100 dark:border-slate-800 rounded-2xl text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-bold"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Store Description</label>
+                                        <textarea
+                                            name="storeDescription"
+                                            value={formData.storeDescription}
+                                            onChange={handleChange}
+                                            placeholder="Describe what you sell, your vision, and what makes your store special..."
+                                            rows={4}
+                                            className="block w-full px-6 py-4 bg-gray-50 dark:bg-slate-800/50 border border-gray-100 dark:border-slate-800 rounded-2xl text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-medium"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         )}
 
                         {/* Step 2: RDB Documents */}
                         {step === 2 && (
-                            <div className="form-step">
-                                <h3><FaIdCard /> RDB Business Documents</h3>
-                                <p className="step-description">
-                                    To sell on Impressa, you need a valid TIN number and RDB certificate issued by the Rwanda Development Board.
-                                </p>
+                            <div className="space-y-8 animate-fadeIn">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center">
+                                        <FaIdCard className="text-amber-600 dark:text-amber-500" />
+                                    </div>
+                                    <h3 className="text-xl font-black text-gray-900 dark:text-white">RDB Business Documents</h3>
+                                </div>
 
-                                <div className="form-row">
-                                    <div className="form-group">
-                                        <label>TIN Number *</label>
-                                        <div className="input-with-icon">
-                                            <FaIdCard />
+                                <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30 rounded-2xl p-5 mb-8">
+                                    <p className="text-sm font-bold text-amber-800 dark:text-amber-400 leading-relaxed">
+                                        To sell on Impressa, you need a valid TIN number and RDB certificate issued by the Rwanda Development Board.
+                                    </p>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] ml-1">TIN Number *</label>
+                                        <div className="relative group">
+                                            <FaIdCard className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-amber-500 transition-colors" />
                                             <input
                                                 type="text"
                                                 name="tinNumber"
+                                                required
                                                 value={formData.tinNumber}
                                                 onChange={handleChange}
                                                 placeholder="9-digit TIN"
                                                 maxLength={9}
+                                                className="block w-full pl-14 pr-6 py-4 bg-gray-50 dark:bg-slate-800/50 border border-gray-100 dark:border-slate-800 rounded-2xl text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-black tracking-widest"
                                             />
                                         </div>
-                                        <small>Your Tax Identification Number from RDB</small>
                                     </div>
 
-                                    <div className="form-group">
-                                        <label>Business Type *</label>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Business Type *</label>
                                         <select
                                             name="businessType"
                                             value={formData.businessType}
                                             onChange={handleChange}
+                                            className="block w-full px-6 py-4 bg-gray-50 dark:bg-slate-800/50 border border-gray-100 dark:border-slate-800 rounded-2xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-bold appearance-none cursor-pointer"
                                         >
                                             <option value="sole_proprietor">Sole Proprietor</option>
                                             <option value="company">Company (LTD)</option>
@@ -337,55 +386,64 @@ export default function SellerRegistration() {
                                     </div>
                                 </div>
 
-                                <div className="form-group">
-                                    <label>Registered Business Name *</label>
-                                    <div className="input-with-icon">
-                                        <FaBuilding />
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Registered Business Name *</label>
+                                    <div className="relative group">
+                                        <FaBuilding className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-amber-500 transition-colors" />
                                         <input
                                             type="text"
                                             name="businessName"
+                                            required
                                             value={formData.businessName}
                                             onChange={handleChange}
                                             placeholder="As registered with RDB"
+                                            className="block w-full pl-14 pr-6 py-4 bg-gray-50 dark:bg-slate-800/50 border border-gray-100 dark:border-slate-800 rounded-2xl text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-bold"
                                         />
                                     </div>
                                 </div>
 
-                                <div className="form-row">
-                                    <div className="form-group">
-                                        <label>RDB Certificate *</label>
-                                        <div className="file-upload">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] ml-1">RDB Certificate *</label>
+                                        <div className="relative">
                                             <input
                                                 type="file"
                                                 id="rdbCertificate"
                                                 name="rdbCertificate"
+                                                required
                                                 accept=".pdf,.jpg,.jpeg,.png"
                                                 onChange={handleFileChange}
+                                                className="hidden"
                                             />
-                                            <label htmlFor="rdbCertificate" className="file-label">
-                                                <FaFileUpload />
-                                                <span>{fileNames.rdbCertificate || 'Upload certificate'}</span>
+                                            <label htmlFor="rdbCertificate" className="flex items-center gap-3 px-6 py-4 bg-gray-50 dark:bg-slate-800/50 border-2 border-dashed border-gray-200 dark:border-slate-800 rounded-2xl cursor-pointer hover:border-amber-500 hover:bg-amber-50/50 dark:hover:bg-amber-900/10 transition-all">
+                                                <FaFileUpload className="text-amber-600 dark:text-amber-500 text-xl flex-shrink-0" />
+                                                <span className="text-sm font-bold text-gray-600 dark:text-gray-400 truncate">
+                                                    {fileNames.rdbCertificate || 'Upload Certificate'}
+                                                </span>
                                             </label>
+                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2 ml-1">PDF, JPG, or PNG (max 5MB)</p>
                                         </div>
-                                        <small>PDF, JPG, or PNG (max 5MB)</small>
                                     </div>
 
-                                    <div className="form-group">
-                                        <label>National ID (Optional)</label>
-                                        <div className="file-upload">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] ml-1">National ID (Optional)</label>
+                                        <div className="relative">
                                             <input
                                                 type="file"
                                                 id="nationalId"
                                                 name="nationalId"
                                                 accept=".pdf,.jpg,.jpeg,.png"
                                                 onChange={handleFileChange}
+                                                className="hidden"
                                             />
-                                            <label htmlFor="nationalId" className="file-label">
-                                                <FaFileUpload />
-                                                <span>{fileNames.nationalId || 'Upload ID'}</span>
+                                            <label htmlFor="nationalId" className="flex items-center gap-3 px-6 py-4 bg-gray-50 dark:bg-slate-800/50 border-2 border-dashed border-gray-200 dark:border-slate-800 rounded-2xl cursor-pointer hover:border-amber-500 hover:bg-amber-50/50 dark:hover:bg-amber-900/10 transition-all">
+                                                <FaFileUpload className="text-amber-600 dark:text-amber-500 text-xl flex-shrink-0" />
+                                                <span className="text-sm font-bold text-gray-600 dark:text-gray-400 truncate">
+                                                    {fileNames.nationalId || 'Upload ID'}
+                                                </span>
                                             </label>
+                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2 ml-1">Front side of your ID</p>
                                         </div>
-                                        <small>Front side of your ID</small>
                                     </div>
                                 </div>
                             </div>
@@ -393,69 +451,95 @@ export default function SellerRegistration() {
 
                         {/* Step 3: Terms & Signature */}
                         {step === 3 && (
-                            <div className="form-step">
-                                <h3><FaFileAlt /> Terms & Conditions</h3>
+                            <div className="space-y-8 animate-fadeIn">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center">
+                                        <FaFileAlt className="text-amber-600 dark:text-amber-500" />
+                                    </div>
+                                    <h3 className="text-xl font-black text-gray-900 dark:text-white">Terms & Conditions</h3>
+                                </div>
 
                                 <div
-                                    className="terms-container"
+                                    className="bg-gray-50 dark:bg-slate-950/50 border border-gray-100 dark:border-slate-800 rounded-[2rem] p-8 max-h-[400px] overflow-y-auto prose dark:prose-invert prose-sm max-w-none scrollbar-thin scrollbar-thumb-amber-500/20 scrollbar-track-transparent"
                                     ref={termsRef}
                                     onScroll={handleTermsScroll}
                                 >
-                                    <div className="terms-content" dangerouslySetInnerHTML={{
-                                        __html: termsContent.replace(/\n/g, '<br/>').replace(/#{1,3}\s/g, '')
-                                    }} />
+                                    <div
+                                        className="text-gray-600 dark:text-gray-400 font-medium leading-relaxed"
+                                        dangerouslySetInnerHTML={{
+                                            __html: termsContent.replace(/\n/g, '<br/>').replace(/#{1,3}\s/g, '')
+                                        }}
+                                    />
                                 </div>
 
                                 {!termsScrolled && (
-                                    <p className="scroll-hint">
-                                        ⬇️ Please scroll to read the entire document
-                                    </p>
+                                    <div className="flex items-center justify-center gap-2 text-amber-600 dark:text-amber-400 font-black text-xs uppercase tracking-widest animate-bounce">
+                                        <span>⬇️ Please scroll to the bottom</span>
+                                    </div>
                                 )}
 
-                                <div className="form-group checkbox-group">
-                                    <label className="checkbox-label">
-                                        <input
-                                            type="checkbox"
-                                            name="termsAccepted"
-                                            checked={formData.termsAccepted}
-                                            onChange={handleChange}
-                                            disabled={!termsScrolled}
-                                        />
-                                        <span>I have read and agree to the Terms & Conditions</span>
+                                <div className="flex items-start gap-4 bg-gray-50/50 dark:bg-slate-800/30 p-6 rounded-2xl border border-gray-100 dark:border-slate-800/50">
+                                    <input
+                                        type="checkbox"
+                                        id="termsAccepted"
+                                        name="termsAccepted"
+                                        className="w-6 h-6 text-amber-600 focus:ring-amber-500 border-gray-300 rounded-lg cursor-pointer transition-all mt-1"
+                                        checked={formData.termsAccepted}
+                                        onChange={handleChange}
+                                        disabled={!termsScrolled}
+                                    />
+                                    <label htmlFor="termsAccepted" className="text-sm font-bold text-gray-800 dark:text-gray-300 cursor-pointer leading-tight">
+                                        I have read and agree to the Terms & Conditions and understand that Impressa will verify my RDB documents.
                                     </label>
                                 </div>
 
-                                <div className="form-group">
-                                    <label><FaSignature /> Digital Signature *</label>
+                                <div className="space-y-2">
+                                    <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">
+                                        <FaSignature className="text-amber-600" />
+                                        Digital Signature *
+                                    </label>
                                     <input
-                                        type="text"
                                         name="digitalSignature"
+                                        type="text"
+                                        required
+                                        className="block w-full px-6 py-5 bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl text-amber-900 dark:text-amber-400 italic font-serif text-2xl placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-600/20 focus:border-amber-600 transition-all shadow-inner text-center md:text-left"
+                                        placeholder="Type your full legal name"
                                         value={formData.digitalSignature}
                                         onChange={handleChange}
-                                        placeholder="Type your full legal name"
-                                        className="signature-input"
                                     />
-                                    <small>By typing your name, you are digitally signing this agreement</small>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 text-center">By typing your name, you are digitally signing this agreement</p>
                                 </div>
                             </div>
                         )}
 
                         {/* Navigation Buttons */}
-                        <div className="form-actions">
+                        <div className="flex gap-4 pt-10 mt-10 border-t border-gray-100 dark:border-slate-800">
                             {step > 1 && (
-                                <button type="button" className="btn-secondary" onClick={prevStep}>
-                                    <FaArrowLeft /> Back
+                                <button
+                                    type="button"
+                                    className="flex-1 py-4 px-6 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl text-gray-700 dark:text-gray-300 font-black hover:bg-gray-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2 group"
+                                    onClick={prevStep}
+                                >
+                                    <FaArrowLeft className="group-hover:-translate-x-1 transition-transform" /> Back
                                 </button>
                             )}
 
                             {step < 3 ? (
-                                <button type="button" className="btn-primary" onClick={nextStep}>
-                                    Next <FaArrowRight />
+                                <button
+                                    type="button"
+                                    className="flex-[2] py-4 px-6 bg-amber-500 text-white rounded-2xl font-black text-lg hover:bg-amber-600 transition-all shadow-lg shadow-amber-200 dark:shadow-none active:scale-[0.98] flex items-center justify-center gap-2 group ml-auto"
+                                    onClick={nextStep}
+                                >
+                                    Next Step <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
                                 </button>
                             ) : (
-                                <button type="submit" className="btn-submit" disabled={loading}>
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="flex-[2] py-4 px-6 bg-emerald-600 text-white rounded-2xl font-black text-lg hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 dark:shadow-none active:scale-[0.98] flex items-center justify-center gap-3 group ml-auto"
+                                >
                                     {loading ? (
-                                        <><FaSpinner className="spinner" /> Submitting...</>
+                                        <><FaSpinner className="animate-spin text-2xl" /> Submitting Application...</>
                                     ) : (
                                         <><FaCheckCircle /> Submit Application</>
                                     )}
@@ -465,6 +549,8 @@ export default function SellerRegistration() {
                     </form>
                 </div>
             </div>
-        </>
+
+            <LandingFooter />
+        </div>
     );
 }
