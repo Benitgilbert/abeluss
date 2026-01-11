@@ -2,35 +2,46 @@ import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
-import {
-  FaShoppingCart, FaHeart, FaSearch, FaUser,
-  FaBars, FaTimes, FaTruck, FaChevronDown, FaMoon, FaSun
-} from "react-icons/fa";
 import { useTheme } from "../context/ThemeContext";
-import RoleSwitcher from "./RoleSwitcher";
+import {
+  LuSearch,
+  LuShoppingCart,
+  LuHeart,
+  LuMoon,
+  LuSun,
+  LuTruck,
+  LuChevronDown,
+  LuUser,
+  LuLogOut
+} from "react-icons/lu";
 import api from "../utils/axiosInstance";
-import "./Layout.css";
+import assetUrl from "../utils/assetUrl";
+import { formatRwf } from "../utils/currency";
 
 export default function Header() {
   const { items = [] } = useCart();
   const { user, isAuthenticated, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [categories, setCategories] = useState([]);
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
 
+  const isSellerOrAdminView = location.pathname.startsWith('/seller') || location.pathname.startsWith('/admin');
+
   useEffect(() => {
-    setMobileMenuOpen(false);
     setCategoryDropdownOpen(false);
     setAccountDropdownOpen(false);
+    setShowSuggestions(false);
   }, [location]);
 
-  // Fetch categories from API
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -46,12 +57,41 @@ export default function Header() {
     fetchCategories();
   }, []);
 
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (searchQuery.trim().length < 2) {
+        setSuggestions([]);
+        setShowSuggestions(false);
+        return;
+      }
+      setIsSearching(true);
+      try {
+        const res = await api.get(`/products/suggestions?q=${encodeURIComponent(searchQuery)}`);
+        setSuggestions(res.data);
+        setShowSuggestions(true);
+      } catch (error) {
+        console.error('Error fetching suggestions:', error);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+    const timer = setTimeout(fetchSuggestions, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/shop?q=${encodeURIComponent(searchQuery)}`);
       setSearchQuery("");
+      setShowSuggestions(false);
     }
+  };
+
+  const handleSuggestionClick = (productId) => {
+    navigate(`/product/${productId}`);
+    setSearchQuery("");
+    setShowSuggestions(false);
   };
 
   const handleLogout = () => {
@@ -60,388 +100,193 @@ export default function Header() {
     navigate("/login");
   };
 
-  // Inline styles
-  const headerStyle = {
-    backgroundColor: '#0f172a',
-    color: 'white',
-    position: 'sticky',
-    top: 0,
-    zIndex: 50,
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-  };
-
-  const containerStyle = {
-    maxWidth: '1280px',
-    margin: '0 auto',
-    padding: '0 16px'
-  };
-
-  const navRowStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    height: '64px',
-    gap: '16px'
-  };
-
-  const logoStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    textDecoration: 'none',
-    color: 'white'
-  };
-
-  const logoIconStyle = {
-    width: '36px',
-    height: '36px',
-    background: 'linear-gradient(135deg, #8b5cf6, #d946ef)',
-    borderRadius: '8px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontWeight: 'bold',
-    fontSize: '18px'
-  };
-
-  const linkStyle = {
-    color: '#d1d5db',
-    textDecoration: 'none',
-    fontSize: '14px',
-    fontWeight: '500',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '4px',
-    padding: '8px 12px',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    background: 'none',
-    border: 'none'
-  };
-
-  const searchFormStyle = {
-    flex: 1,
-    maxWidth: '350px'
-  };
-
-  const searchInputStyle = {
-    width: '100%',
-    backgroundColor: '#1e293b',
-    border: '1px solid #334155',
-    borderRadius: '9999px',
-    padding: '8px 40px 8px 16px',
-    color: 'white',
-    fontSize: '14px',
-    outline: 'none'
-  };
-
-  const iconBtnStyle = {
-    padding: '8px',
-    color: '#d1d5db',
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: '8px',
-    textDecoration: 'none'
-  };
-
-  const signInBtnStyle = {
-    backgroundColor: '#7c3aed',
-    color: 'white',
-    padding: '8px 16px',
-    borderRadius: '9999px',
-    fontSize: '14px',
-    fontWeight: '600',
-    textDecoration: 'none',
-    border: 'none',
-    cursor: 'pointer'
-  };
-
-  const dropdownStyle = {
-    position: 'absolute',
-    top: '100%',
-    left: 0,
-    marginTop: '8px',
-    backgroundColor: 'white',
-    borderRadius: '12px',
-    boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
-    minWidth: '220px',
-    maxHeight: '400px',
-    overflowY: 'auto',
-    zIndex: 100
-  };
-
-  const dropdownItemStyle = {
-    display: 'block',
-    padding: '12px 16px',
-    color: '#374151',
-    textDecoration: 'none',
-    fontSize: '14px',
-    borderBottom: '1px solid #f3f4f6',
-    transition: 'background 0.2s'
-  };
-
-  // Determine if we are in a seller or admin view to hide client features
-  const isSellerOrAdminView = location.pathname.startsWith('/seller') || location.pathname.startsWith('/admin');
-
   return (
-    <header style={headerStyle}>
-      <div style={containerStyle}>
-        <div style={navRowStyle}>
+    <header className="sticky top-0 z-50 bg-slate-950 text-white shadow-xl border-b border-slate-800">
+      <div className="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between gap-6">
 
-          {/* Mobile Menu Toggle */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            style={{ ...iconBtnStyle, display: 'none' }}
-            className="mobile-menu-btn"
-          >
-            {mobileMenuOpen ? <FaTimes /> : <FaBars />}
-          </button>
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-purple-600 to-indigo-600 shadow-lg shadow-purple-500/20">
+            <span className="text-xl font-bold text-white">I</span>
+          </div>
+          <span className="text-xl font-bold tracking-tight text-white">Impressa</span>
+        </Link>
 
-          {/* Logo */}
-          <Link to="/" style={logoStyle}>
-            <div style={logoIconStyle}>I</div>
-            <span style={{ fontSize: '20px', fontWeight: 'bold' }}>Impressa</span>
-          </Link>
+        {/* Navigation - ALWAYS VISIBLE */}
+        {!isSellerOrAdminView && (
+          <nav className="flex items-center gap-2">
+            {/* Categories Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
+                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
+              >
+                Categories <LuChevronDown className={`w-4 h-4 transition-transform ${categoryDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
 
-          {/* Client Features: Categories, Nav, Search */}
-          {!isSellerOrAdminView && (
-            <>
-              {/* Categories Dropdown */}
-              <div style={{ position: 'relative' }}>
-                <button
-                  style={linkStyle}
-                  onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
-                  onMouseEnter={() => setCategoryDropdownOpen(true)}
-                >
-                  Categories <FaChevronDown style={{ fontSize: '10px' }} />
-                </button>
-
-                {categoryDropdownOpen && (
-                  <div
-                    style={dropdownStyle}
-                    onMouseLeave={() => setCategoryDropdownOpen(false)}
-                  >
+              {categoryDropdownOpen && (
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setCategoryDropdownOpen(false)} />
+                  <div className="absolute top-full left-0 mt-2 w-60 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-40 overflow-hidden">
                     <Link
                       to="/shop"
-                      style={{ ...dropdownItemStyle, fontWeight: '600', color: '#7c3aed' }}
                       onClick={() => setCategoryDropdownOpen(false)}
+                      className="block px-4 py-3 text-sm text-purple-400 font-semibold hover:bg-slate-800 transition-colors"
                     >
                       All Products
                     </Link>
-                    {categories.length > 0 ? (
-                      categories.map((cat) => (
+                    <div className="h-px bg-slate-800 mx-2" />
+                    <div className="max-h-80 overflow-y-auto p-1">
+                      {categories.map((cat) => (
                         <Link
                           key={cat._id}
-                          to={`/shop?category=${encodeURIComponent(cat.name || cat.slug)}`}
-                          style={dropdownItemStyle}
+                          to={`/shop?category=${encodeURIComponent(cat.name)}`}
                           onClick={() => setCategoryDropdownOpen(false)}
-                          onMouseOver={(e) => e.target.style.backgroundColor = '#f9fafb'}
-                          onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                          className="block px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
                         >
                           {cat.name}
                         </Link>
-                      ))
-                    ) : (
-                      <div style={{ ...dropdownItemStyle, color: '#9ca3af' }}>
-                        No categories yet
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Nav Links */}
-              <Link to="/shop" style={linkStyle}>Shop</Link>
-              <Link to="/daily-deals" style={{ ...linkStyle, color: '#fbbf24' }}>Deals</Link>
-              <Link to="/track" style={linkStyle}>
-                <FaTruck style={{ fontSize: '12px' }} /> Track
-              </Link>
-              <Link to="/blog" style={linkStyle}>Blog</Link>
-
-              {/* Search Bar */}
-              <form onSubmit={handleSearchSubmit} style={searchFormStyle}>
-                <div style={{ position: 'relative' }}>
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search products..."
-                    style={searchInputStyle}
-                  />
-                  <button
-                    type="submit"
-                    style={{
-                      position: 'absolute',
-                      right: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'none',
-                      border: 'none',
-                      color: '#9ca3af',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <FaSearch />
-                  </button>
-                </div>
-              </form>
-            </>
-          )}
-
-          {/* Right Actions */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: 'auto' }}>
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              style={{ ...iconBtnStyle, marginRight: '4px' }}
-              title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-            >
-              {theme === 'light' ? <FaMoon style={{ fontSize: '18px' }} /> : <FaSun style={{ fontSize: '18px', color: '#f59e0b' }} />}
-            </button>
-
-            {/* Admin Role Switcher */}
-            {user?.role === 'admin' && (
-              <div style={{ marginRight: '8px' }}>
-                <RoleSwitcher user={user} theme="dark" />
-              </div>
-            )}
-
-            {/* Client Actions: Wishlist & Cart */}
-            {!isSellerOrAdminView && (
-              <>
-                <Link to="/wishlist" style={iconBtnStyle} title="Wishlist">
-                  <FaHeart style={{ fontSize: '18px' }} />
-                </Link>
-
-                <Link to="/cart" style={{ ...iconBtnStyle, position: 'relative' }} title="Cart">
-                  <FaShoppingCart style={{ fontSize: '18px' }} />
-                  {items.length > 0 && (
-                    <span style={{
-                      position: 'absolute',
-                      top: '0',
-                      right: '0',
-                      backgroundColor: '#8b5cf6',
-                      color: 'white',
-                      fontSize: '11px',
-                      fontWeight: 'bold',
-                      width: '18px',
-                      height: '18px',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}>
-                      {items.length}
-                    </span>
-                  )}
-                </Link>
-              </>
-            )}
-
-            {isAuthenticated ? (
-              <div style={{ position: 'relative' }}>
-                <button
-                  onClick={() => setAccountDropdownOpen(!accountDropdownOpen)}
-                  style={iconBtnStyle}
-                >
-                  <FaUser style={{ fontSize: '18px' }} />
-                  <FaChevronDown style={{ fontSize: '10px', marginLeft: '4px' }} />
-                </button>
-                {accountDropdownOpen && (
-                  <>
-                    <div
-                      style={{ position: 'fixed', inset: 0, zIndex: 40 }}
-                      onClick={() => setAccountDropdownOpen(false)}
-                    />
-                    <div style={{ ...dropdownStyle, right: 0, left: 'auto' }}>
-                      {/* Context-aware Dropdown Items */}
-                      {isSellerOrAdminView ? (
-                        <>
-                          <Link to="/seller/profile" style={dropdownItemStyle} onClick={() => setAccountDropdownOpen(false)}>
-                            Seller Profile
-                          </Link>
-                        </>
-                      ) : (
-                        <>
-                          <Link to="/dashboard" style={dropdownItemStyle} onClick={() => setAccountDropdownOpen(false)}>
-                            My Dashboard
-                          </Link>
-                          <Link to="/orders" style={dropdownItemStyle} onClick={() => setAccountDropdownOpen(false)}>
-                            My Orders
-                          </Link>
-                          <Link to="/wishlist" style={dropdownItemStyle} onClick={() => setAccountDropdownOpen(false)}>
-                            Wishlist
-                          </Link>
-                        </>
-                      )}
-
-                      <button
-                        onClick={handleLogout}
-                        style={{ ...dropdownItemStyle, width: '100%', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer', color: '#ef4444' }}
-                      >
-                        Sign Out
-                      </button>
+                      ))}
                     </div>
-                  </>
-                )}
-              </div>
-            ) : (
-              <Link to="/login" style={signInBtnStyle}>
-                Sign In
-              </Link>
-            )}
-          </div>
-        </div>
+                  </div>
+                </>
+              )}
+            </div>
 
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div style={{ borderTop: '1px solid #334155', padding: '16px 0' }}>
-            {!isSellerOrAdminView && (
-              <form onSubmit={handleSearchSubmit} style={{ marginBottom: '16px' }}>
+            <Link to="/shop" className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors">Shop</Link>
+            <Link to="/daily-deals" className="px-3 py-2 text-sm font-medium text-yellow-400 hover:text-yellow-300 transition-colors">Deals</Link>
+            <Link to="/track" className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors">
+              <LuTruck className="w-4 h-4" /> Track
+            </Link>
+            <Link to="/blog" className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors">Blog</Link>
+          </nav>
+        )}
+
+        {/* Search Bar - ALWAYS VISIBLE */}
+        {!isSellerOrAdminView && (
+          <div className="flex-1 max-w-md px-4">
+            <div className="relative w-full group">
+              <form onSubmit={handleSearchSubmit}>
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => searchQuery.length >= 2 && setShowSuggestions(true)}
                   placeholder="Search products..."
-                  style={{ ...searchInputStyle, width: '100%' }}
+                  className="w-full h-10 pl-4 pr-10 rounded-full bg-slate-900/50 border border-slate-700 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 text-sm text-white placeholder-gray-500 outline-none transition-all"
                 />
+                <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-purple-400 transition-colors">
+                  <LuSearch className="w-5 h-5" />
+                </button>
               </form>
-            )}
-            <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {!isSellerOrAdminView && (
+
+              {showSuggestions && (
                 <>
-                  <Link to="/shop" style={linkStyle}>All Categories</Link>
-                  {categories.slice(0, 5).map((cat) => (
-                    <Link
-                      key={cat._id}
-                      to={`/shop?category=${encodeURIComponent(cat.name)}`}
-                      style={{ ...linkStyle, paddingLeft: '24px' }}
-                    >
-                      {cat.name}
-                    </Link>
-                  ))}
-                  <Link to="/daily-deals" style={{ ...linkStyle, color: '#fbbf24' }}>🔥 Deals</Link>
-                  <Link to="/track" style={linkStyle}><FaTruck /> Track Order</Link>
+                  <div className="fixed inset-0 z-30" onClick={() => setShowSuggestions(false)} />
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-slate-700 rounded-2xl shadow-xl z-40 overflow-hidden">
+                    {isSearching ? (
+                      <div className="p-4 text-center text-sm text-gray-400">Searching...</div>
+                    ) : suggestions.length > 0 ? (
+                      <div className="py-1">
+                        {suggestions.map((item) => (
+                          <div
+                            key={item._id}
+                            onClick={() => handleSuggestionClick(item._id)}
+                            className="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-800 cursor-pointer transition-colors"
+                          >
+                            <img src={assetUrl(item.image)} alt={item.name} className="w-10 h-10 rounded-lg object-cover bg-slate-800" />
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-medium text-gray-200 truncate">{item.name}</div>
+                              <div className="text-xs text-purple-400 font-semibold">{formatRwf(item.price)}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
                 </>
               )}
-              {!isAuthenticated && (
-                <Link to="/login" style={{ ...signInBtnStyle, textAlign: 'center', marginTop: '8px' }}>
-                  Sign In
-                </Link>
-              )}
-            </nav>
+            </div>
           </div>
         )}
-      </div>
 
-      <style>{`
-        @media (max-width: 768px) {
-          .mobile-menu-btn { display: flex !important; }
-        }
-      `}</style>
+        {/* Action Icons & Auth - ALWAYS VISIBLE */}
+        <div className="flex items-center gap-3">
+
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="p-2.5 text-gray-400 hover:text-white transition-colors"
+            title={theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+          >
+            {theme === 'light' ? <LuMoon className="w-5 h-5" /> : <LuSun className="w-5 h-5" />}
+          </button>
+
+          {!isSellerOrAdminView && (
+            <>
+              {/* Wishlist */}
+              <Link to="/wishlist" className="p-2.5 text-gray-400 hover:text-white transition-colors">
+                <LuHeart className="w-5 h-5" />
+              </Link>
+
+              {/* Cart */}
+              <Link to="/cart" className="relative p-2.5 text-gray-400 hover:text-white transition-colors">
+                <LuShoppingCart className="w-5 h-5" />
+                {items.length > 0 && (
+                  <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-purple-600 text-[10px] font-bold text-white border-2 border-slate-950">
+                    {items.length}
+                  </span>
+                )}
+              </Link>
+            </>
+          )}
+
+          {/* User Account / Sign In */}
+          {isAuthenticated ? (
+            <div className="relative ml-2">
+              <button
+                onClick={() => setAccountDropdownOpen(!accountDropdownOpen)}
+                className="flex items-center justify-center w-10 h-10 rounded-full bg-slate-800 border border-slate-700 text-purple-400 hover:border-purple-500 transition-colors"
+              >
+                <LuUser className="w-5 h-5" />
+              </button>
+
+              {accountDropdownOpen && (
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setAccountDropdownOpen(false)} />
+                  <div className="absolute right-0 top-full mt-2 w-56 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-40">
+                    <div className="p-4 border-b border-slate-800">
+                      <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">Signed in as</p>
+                      <p className="text-sm font-medium text-white truncate">{user?.name || user?.email}</p>
+                    </div>
+                    <div className="p-1">
+                      <Link to={isSellerOrAdminView ? "/seller/profile" : "/dashboard"} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
+                        <LuUser className="w-4 h-4" /> {isSellerOrAdminView ? 'Seller Profile' : 'Dashboard'}
+                      </Link>
+                      <Link to="/orders" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
+                        <LuTruck className="w-4 h-4" /> My Orders
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors text-left"
+                      >
+                        <LuLogOut className="w-4 h-4" /> Sign Out
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : (
+            <Link
+              to="/login"
+              className="ml-2 px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-sm font-bold rounded-full shadow-lg shadow-purple-900/20 transition-all"
+            >
+              Sign In
+            </Link>
+          )}
+        </div>
+      </div>
     </header>
   );
 }
