@@ -43,7 +43,7 @@ export default function LandingFooter() {
   ];
 
   return (
-    <footer className="bg-white dark:bg-slate-900 text-gray-600 dark:text-gray-300 border-t border-gray-100 dark:border-slate-800 transition-colors duration-300">
+    <footer className="bg-white dark:bg-charcoal-800 text-charcoal-600 dark:text-cream-300 border-t border-cream-200 dark:border-charcoal-700 transition-colors duration-300">
       {/* Main Footer */}
       <div className="mx-auto max-w-7xl px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
@@ -51,12 +51,12 @@ export default function LandingFooter() {
           {/* Brand Column */}
           <div>
             <Link to="/" className="flex items-center gap-2 mb-6 no-underline">
-              <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-xl flex items-center justify-center font-bold text-xl text-white shadow-lg">
+              <div className="w-10 h-10 bg-gradient-to-br from-terracotta-500 to-terracotta-600 rounded-xl flex items-center justify-center font-bold text-xl text-white shadow-lg">
                 I
               </div>
-              <span className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Impressa</span>
+              <span className="text-2xl font-bold text-charcoal-800 dark:text-white tracking-tight">Impressa</span>
             </Link>
-            <p className="text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">
+            <p className="text-charcoal-500 dark:text-charcoal-400 mb-6 leading-relaxed">
               {footerData.footerTagline}
             </p>
             <div className="flex gap-3">
@@ -67,14 +67,14 @@ export default function LandingFooter() {
                     href={url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-10 h-10 bg-gray-100 dark:bg-slate-800 hover:bg-violet-600 dark:hover:bg-violet-600 rounded-lg flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-white dark:hover:text-white transition-all duration-300"
+                    className="w-10 h-10 bg-cream-200 dark:bg-charcoal-700 hover:bg-terracotta-500 dark:hover:bg-terracotta-500 rounded-lg flex items-center justify-center text-charcoal-500 dark:text-charcoal-400 hover:text-white dark:hover:text-white transition-all duration-300"
                   >
                     <Icon />
                   </a>
                 ) : (
                   <span
                     key={key}
-                    className="w-10 h-10 bg-gray-100 dark:bg-slate-800 rounded-lg flex items-center justify-center text-gray-400 cursor-default"
+                    className="w-10 h-10 bg-cream-200 dark:bg-charcoal-700 rounded-lg flex items-center justify-center text-charcoal-400 cursor-default"
                   >
                     <Icon />
                   </span>
@@ -85,7 +85,7 @@ export default function LandingFooter() {
 
           {/* Shop Column */}
           <div>
-            <h3 className="text-gray-900 dark:text-white font-semibold text-lg mb-6">Shop</h3>
+            <h3 className="text-charcoal-800 dark:text-white font-semibold text-lg mb-6">Shop</h3>
             <ul className="space-y-3 p-0 list-none">
               {[
                 { label: 'All Products', to: '/shop' },
@@ -95,7 +95,7 @@ export default function LandingFooter() {
                 { label: 'Gift Cards', to: '/gift-cards' }
               ].map((link, idx) => (
                 <li key={idx}>
-                  <Link to={link.to} className="hover:text-violet-600 dark:hover:text-violet-400 transition-colors no-underline text-inherit">
+                  <Link to={link.to} className="hover:text-terracotta-500 dark:hover:text-terracotta-400 transition-colors no-underline text-inherit">
                     {link.label}
                   </Link>
                 </li>
@@ -105,7 +105,7 @@ export default function LandingFooter() {
 
           {/* Company Column */}
           <div>
-            <h3 className="text-gray-900 dark:text-white font-semibold text-lg mb-6">Company</h3>
+            <h3 className="text-charcoal-800 dark:text-white font-semibold text-lg mb-6">Company</h3>
             <ul className="space-y-3 p-0 list-none">
               {[
                 { label: 'About Us', to: '/about' },
@@ -115,7 +115,7 @@ export default function LandingFooter() {
                 { label: 'Careers', to: '/careers' }
               ].map((link, idx) => (
                 <li key={idx}>
-                  <Link to={link.to} className="hover:text-violet-600 dark:hover:text-violet-400 transition-colors no-underline text-inherit">
+                  <Link to={link.to} className="hover:text-terracotta-500 dark:hover:text-terracotta-400 transition-colors no-underline text-inherit">
                     {link.label}
                   </Link>
                 </li>
@@ -125,25 +125,25 @@ export default function LandingFooter() {
 
           {/* Contact Column */}
           <div>
-            <h3 className="text-gray-900 dark:text-white font-semibold text-lg mb-6">Get in Touch</h3>
+            <h3 className="text-charcoal-800 dark:text-white font-semibold text-lg mb-6">Get in Touch</h3>
             <ul className="space-y-4 p-0 list-none">
               <li className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gray-100 dark:bg-slate-800 rounded-lg flex items-center justify-center text-violet-600 dark:text-violet-400">
+                <div className="w-10 h-10 bg-cream-200 dark:bg-charcoal-700 rounded-lg flex items-center justify-center text-terracotta-500 dark:text-terracotta-400">
                   <FaEnvelope />
                 </div>
-                <span className="text-gray-600 dark:text-gray-300">{footerData.contactEmail}</span>
+                <span className="text-charcoal-600 dark:text-cream-300">{footerData.contactEmail}</span>
               </li>
               <li className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gray-100 dark:bg-slate-800 rounded-lg flex items-center justify-center text-violet-600 dark:text-violet-400">
+                <div className="w-10 h-10 bg-cream-200 dark:bg-charcoal-700 rounded-lg flex items-center justify-center text-terracotta-500 dark:text-terracotta-400">
                   <FaPhone />
                 </div>
-                <span className="text-gray-600 dark:text-gray-300">{footerData.contactPhone}</span>
+                <span className="text-charcoal-600 dark:text-cream-300">{footerData.contactPhone}</span>
               </li>
               <li className="flex items-start gap-3">
-                <div className="w-10 h-10 bg-gray-100 dark:bg-slate-800 rounded-lg flex items-center justify-center text-violet-600 dark:text-violet-400 shrink-0">
+                <div className="w-10 h-10 bg-cream-200 dark:bg-charcoal-700 rounded-lg flex items-center justify-center text-terracotta-500 dark:text-terracotta-400 shrink-0">
                   <FaMapMarkerAlt />
                 </div>
-                <span className="text-gray-600 dark:text-gray-300">{footerData.contactAddress}</span>
+                <span className="text-charcoal-600 dark:text-cream-300">{footerData.contactAddress}</span>
               </li>
             </ul>
           </div>
@@ -151,20 +151,20 @@ export default function LandingFooter() {
       </div>
 
       {/* Bottom Bar */}
-      <div className="border-t border-gray-100 dark:border-slate-800">
+      <div className="border-t border-cream-200 dark:border-charcoal-700">
         <div className="mx-auto max-w-7xl px-4 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-gray-400 dark:text-gray-500 text-sm">
+            <p className="text-charcoal-400 dark:text-charcoal-500 text-sm">
               © {new Date().getFullYear()} Impressa. All rights reserved.
             </p>
             <div className="flex gap-6 text-sm">
-              <Link to="/privacy" className="text-gray-400 dark:text-gray-500 hover:text-violet-600 dark:hover:text-violet-400 transition-colors no-underline">
+              <Link to="/privacy" className="text-charcoal-400 dark:text-charcoal-500 hover:text-terracotta-500 dark:hover:text-terracotta-400 transition-colors no-underline">
                 Privacy Policy
               </Link>
-              <Link to="/terms" className="text-gray-400 dark:text-gray-500 hover:text-violet-600 dark:hover:text-violet-400 transition-colors no-underline">
+              <Link to="/terms" className="text-charcoal-400 dark:text-charcoal-500 hover:text-terracotta-500 dark:hover:text-terracotta-400 transition-colors no-underline">
                 Terms of Service
               </Link>
-              <Link to="/cookies" className="text-gray-400 dark:text-gray-500 hover:text-violet-600 dark:hover:text-violet-400 transition-colors no-underline">
+              <Link to="/cookies" className="text-charcoal-400 dark:text-charcoal-500 hover:text-terracotta-500 dark:hover:text-terracotta-400 transition-colors no-underline">
                 Cookies
               </Link>
             </div>

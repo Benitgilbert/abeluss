@@ -79,7 +79,7 @@ export default function DailyDeals() {
     );
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-300">
+        <div className="min-h-screen bg-cream-100 dark:bg-charcoal-900 transition-colors duration-300">
             <Header />
 
             {/* Hero Section with Countdown */}
@@ -116,11 +116,11 @@ export default function DailyDeals() {
                                     { label: 'Mins', value: timeLeft.minutes },
                                     { label: 'Secs', value: timeLeft.seconds }
                                 ].map((box, i) => (
-                                    <div key={i} className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 min-w-[100px] md:min-w-[140px] shadow-2xl transform hover:scale-105 transition-transform duration-300 border border-white/50 dark:border-slate-800">
-                                        <div className="text-4xl md:text-6xl font-black text-red-600 dark:text-red-500 leading-none mb-2">
+                                    <div key={i} className="bg-white dark:bg-charcoal-800 rounded-3xl p-6 md:p-8 min-w-[100px] md:min-w-[140px] shadow-2xl transform hover:scale-105 transition-transform duration-300 border border-white/50 dark:border-charcoal-700">
+                                        <div className="text-4xl md:text-6xl font-black text-terracotta-500 dark:text-terracotta-400 leading-none mb-2">
                                             {String(box.value).padStart(2, '0')}
                                         </div>
-                                        <div className="text-xs md:text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">{box.label}</div>
+                                        <div className="text-xs md:text-sm font-bold text-charcoal-400 dark:text-charcoal-500 uppercase tracking-widest">{box.label}</div>
                                     </div>
                                 ))}
                             </div>
@@ -138,8 +138,8 @@ export default function DailyDeals() {
             <section className="mx-auto max-w-7xl px-4 py-20">
                 {loading ? (
                     <div className="py-20 text-center">
-                        <div className="w-20 h-20 border-4 border-red-600 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-                        <p className="text-xl font-bold text-gray-500 dark:text-gray-400">Loading daily deals...</p>
+                        <div className="w-20 h-20 border-4 border-terracotta-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+                        <p className="text-xl font-bold text-charcoal-500 dark:text-charcoal-400">Loading daily deals...</p>
                     </div>
                 ) : allProducts.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -148,7 +148,7 @@ export default function DailyDeals() {
                             const imageUrl = product.images?.[0] || 'https://via.placeholder.com/300';
 
                             return (
-                                <div key={`${product._id}-${index}`} className="group bg-white dark:bg-slate-900 rounded-3xl shadow-sm hover:shadow-2xl border border-gray-100 dark:border-slate-800 transition-all duration-500 overflow-hidden flex flex-col h-full transform hover:-translate-y-2">
+                                <div key={`${product._id}-${index}`} className="group bg-white dark:bg-charcoal-800 rounded-3xl shadow-sm hover:shadow-2xl border border-cream-200 dark:border-charcoal-700 transition-all duration-500 overflow-hidden flex flex-col h-full transform hover:-translate-y-2">
                                     <div className="relative">
                                         {product.discount > 0 && (
                                             <div className="absolute top-4 left-4 z-10 bg-red-600 text-white px-4 py-2 rounded-xl text-sm font-black flex items-center gap-1 shadow-lg shadow-red-500/20">
@@ -165,11 +165,11 @@ export default function DailyDeals() {
 
                                         {!isAvailable && (
                                             <div className="absolute inset-0 z-20 bg-gray-900/40 backdrop-blur-[2px] flex items-center justify-center p-6">
-                                                <span className="bg-white/90 dark:bg-slate-900/90 text-gray-900 dark:text-white px-10 py-4 rounded-2xl font-black text-2xl uppercase tracking-widest shadow-2xl rotate-[-10deg]">Sold Out</span>
+                                                <span className="bg-white/90 dark:bg-charcoal-800/90 text-charcoal-800 dark:text-white px-10 py-4 rounded-2xl font-black text-2xl uppercase tracking-widest shadow-2xl rotate-[-10deg]">Sold Out</span>
                                             </div>
                                         )}
 
-                                        <Link to={`/product/${product._id}`} className="block aspect-square overflow-hidden bg-gray-50 dark:bg-slate-950">
+                                        <Link to={`/product/${product._id}`} className="block aspect-square overflow-hidden bg-cream-100 dark:bg-charcoal-900">
                                             <img
                                                 src={imageUrl}
                                                 alt={product.name}
@@ -185,21 +185,21 @@ export default function DailyDeals() {
                                         </Link>
 
                                         <div className="flex items-center gap-3 mb-6">
-                                            <span className="text-3xl font-black text-red-600 dark:text-red-500">{formatRwf(product.flashSalePrice)}</span>
+                                            <span className="text-3xl font-black text-terracotta-500 dark:text-terracotta-400">{formatRwf(product.flashSalePrice)}</span>
                                             {product.originalPrice && product.originalPrice > product.flashSalePrice && (
-                                                <span className="text-lg text-gray-400 dark:text-slate-600 line-through font-bold">{formatRwf(product.originalPrice)}</span>
+                                                <span className="text-lg text-charcoal-400 dark:text-charcoal-500 line-through font-bold">{formatRwf(product.originalPrice)}</span>
                                             )}
                                         </div>
 
                                         {product.remaining !== null && (
                                             <div className="space-y-2 mb-8">
-                                                <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-slate-600">
+                                                <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-charcoal-400 dark:text-charcoal-500">
                                                     <span>{product.soldCount} Sold</span>
                                                     <span>{product.remaining} Left</span>
                                                 </div>
-                                                <div className="h-2 w-full bg-gray-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                                <div className="h-2 w-full bg-cream-200 dark:bg-charcoal-700 rounded-full overflow-hidden">
                                                     <div
-                                                        className="h-full bg-gradient-to-r from-red-600 to-orange-500"
+                                                        className="h-full bg-gradient-to-r from-terracotta-500 to-sand-400"
                                                         style={{ width: `${(product.soldCount / (product.soldCount + product.remaining)) * 100}%` }}
                                                     ></div>
                                                 </div>
@@ -210,13 +210,13 @@ export default function DailyDeals() {
                                             {isAvailable ? (
                                                 <button
                                                     onClick={() => handleAddToCart(product)}
-                                                    className="w-full py-5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-black flex items-center justify-center gap-3 transition-all hover:bg-red-600 dark:hover:bg-red-500 hover:text-white shadow-xl group/btn active:scale-95"
+                                                    className="w-full py-5 bg-charcoal-800 dark:bg-white text-white dark:text-charcoal-800 rounded-2xl font-black flex items-center justify-center gap-3 transition-all hover:bg-terracotta-500 dark:hover:bg-terracotta-500 hover:text-white shadow-xl group/btn active:scale-95"
                                                 >
                                                     <FaShoppingCart className="transition-transform group-hover/btn:-translate-y-1" />
                                                     Add to Cart
                                                 </button>
                                             ) : (
-                                                <button className="w-full py-5 bg-gray-100 dark:bg-slate-800 text-gray-400 dark:text-slate-600 rounded-2xl font-black cursor-not-allowed" disabled>
+                                                <button className="w-full py-5 bg-cream-200 dark:bg-charcoal-700 text-charcoal-400 dark:text-charcoal-500 rounded-2xl font-black cursor-not-allowed" disabled>
                                                     Sold Out
                                                 </button>
                                             )}
@@ -227,17 +227,17 @@ export default function DailyDeals() {
                         })}
                     </div>
                 ) : (
-                    <div className="max-w-xl mx-auto text-center py-20 px-6 bg-white dark:bg-slate-900 rounded-[40px] shadow-2xl border border-gray-100 dark:border-slate-800">
-                        <div className="w-24 h-24 bg-red-50 dark:bg-red-900/10 rounded-3xl flex items-center justify-center mx-auto mb-8 text-red-500 shadow-inner">
+                    <div className="max-w-xl mx-auto text-center py-20 px-6 bg-white dark:bg-charcoal-800 rounded-[40px] shadow-2xl border border-cream-200 dark:border-charcoal-700">
+                        <div className="w-24 h-24 bg-terracotta-50 dark:bg-terracotta-900/10 rounded-3xl flex items-center justify-center mx-auto mb-8 text-terracotta-500 shadow-inner">
                             <FaFire className="text-4xl" />
                         </div>
-                        <h2 className="text-4xl font-black text-gray-900 dark:text-white mb-4">No Active Flash Sales</h2>
-                        <p className="text-gray-500 dark:text-gray-400 mb-10 text-lg leading-relaxed">
+                        <h2 className="text-4xl font-black text-charcoal-800 dark:text-white mb-4">No Active Flash Sales</h2>
+                        <p className="text-charcoal-500 dark:text-charcoal-400 mb-10 text-lg leading-relaxed">
                             Check back soon! New flash sales are added regularly. Join our newsletter to get notified first!
                         </p>
                         <Link
                             to="/shop"
-                            className="inline-flex items-center gap-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-10 py-5 rounded-2xl font-black text-lg transition-all hover:bg-red-600 dark:hover:bg-red-500 hover:text-white shadow-2xl"
+                            className="inline-flex items-center gap-4 bg-charcoal-800 dark:bg-white text-white dark:text-charcoal-800 px-10 py-5 rounded-2xl font-black text-lg transition-all hover:bg-terracotta-500 dark:hover:bg-terracotta-500 hover:text-white shadow-2xl"
                         >
                             Browse All Products
                         </Link>

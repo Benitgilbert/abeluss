@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../utils/axiosInstance";
 import { FaExclamationTriangle, FaBox } from "react-icons/fa";
-import "../styles/AdminLayout.css";
 
 function LowStockWidget() {
     const [products, setProducts] = useState([]);
@@ -24,62 +23,70 @@ function LowStockWidget() {
     }, []);
 
     const getStockClass = (stock) => {
-        if (stock <= 3) return 'stock-critical';
-        if (stock <= 5) return 'stock-warning';
-        return 'stock-low';
+        if (stock <= 3) return 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400';
+        if (stock <= 5) return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400';
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400';
     };
 
     if (loading) {
         return (
-            <div className="card">
-                <h3 className="card-title">Inventory Alerts</h3>
-                <div className="skeleton skeleton-card"></div>
+            <div className="bg-white dark:bg-charcoal-800 rounded-xl shadow-sm border border-cream-100 dark:border-charcoal-700 p-6 h-full">
+                <h3 className="text-lg font-bold text-charcoal-800 dark:text-white mb-4">Inventory Alerts</h3>
+                <div className="animate-pulse h-40 bg-gray-100 dark:bg-charcoal-700 rounded-xl"></div>
             </div>
         );
     }
 
     return (
-        <div className="card">
-            <div className="table-header" style={{ padding: 0, marginBottom: '1rem', border: 'none' }}>
-                <h3 className="table-title">
-                    <FaExclamationTriangle style={{ marginRight: '0.5rem', color: 'var(--warning)' }} />
+        <div className="bg-white dark:bg-charcoal-800 rounded-xl shadow-sm border border-cream-100 dark:border-charcoal-700 p-6 h-full flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-charcoal-800 dark:text-white flex items-center gap-2">
+                    <FaExclamationTriangle className="text-terracotta-500" />
                     Inventory Alerts
                 </h3>
                 {outOfStock > 0 && (
-                    <span className="badge badge-danger">
+                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400">
                         {outOfStock} out of stock
                     </span>
                 )}
             </div>
 
             {products.length === 0 && outOfStock === 0 ? (
-                <div className="empty-state" style={{ padding: '1.5rem' }}>
-                    <FaBox className="empty-state-icon" style={{ color: 'var(--success)' }} />
-                    <p className="empty-state-title">All stocked up!</p>
-                    <p className="empty-state-text">No low stock items</p>
+                <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+                    <div className="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mb-3">
+                        <FaBox className="text-green-600 dark:text-green-400 text-xl" />
+                    </div>
+                    <p className="font-medium text-charcoal-800 dark:text-white">All stocked up!</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">No low stock items</p>
                 </div>
             ) : (
-                <div className="low-stock-list">
+                <div className="space-y-3 overflow-y-auto pr-1 max-h-[300px] scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-charcoal-600">
                     {products.map((product) => (
-                        <div key={product._id} className="low-stock-item">
-                            <div className="low-stock-product">
-                                {product.image ? (
-                                    <img
-                                        src={`http://localhost:5000${product.image}`}
-                                        alt={product.name}
-                                        className="low-stock-img"
-                                    />
-                                ) : (
-                                    <div className="low-stock-img-placeholder">
-                                        <FaBox />
-                                    </div>
-                                )}
-                                <div className="low-stock-info">
-                                    <span className="low-stock-name">{product.name}</span>
-                                    <span className="low-stock-seller">{product.seller?.storeName || 'Unknown seller'}</span>
+                        <div key={product._id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-charcoal-700/50 hover:bg-gray-100 dark:hover:bg-charcoal-700 transition-colors">
+                            <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-10 h-10 rounded-lg bg-white dark:bg-charcoal-600 border border-gray-100 dark:border-charcoal-500 overflow-hidden flex-shrink-0">
+                                    {product.image ? (
+                                        <img
+                                            src={`http://localhost:5000${product.image}`}
+                                            alt={product.name}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                            <FaBox />
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-sm font-semibold text-charcoal-800 dark:text-white truncate max-w-[120px] sm:max-w-[150px]">
+                                        {product.name}
+                                    </p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                        {product.seller?.storeName || 'Unknown seller'}
+                                    </p>
                                 </div>
                             </div>
-                            <span className={`low-stock-badge ${getStockClass(product.stock)}`}>
+                            <span className={`px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap ${getStockClass(product.stock)}`}>
                                 {product.stock} left
                             </span>
                         </div>

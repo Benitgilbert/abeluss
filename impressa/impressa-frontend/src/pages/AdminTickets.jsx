@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import {
-    FaTicketAlt, FaSearch, FaEye, FaReply, FaTrash,
+    FaTicketAlt, FaEye, FaReply, FaTrash,
     FaClock, FaCheckCircle, FaSpinner, FaExclamationTriangle,
     FaChevronLeft, FaChevronRight, FaTimes, FaUser
 } from 'react-icons/fa';
 import Sidebar from '../components/Sidebar';
 import Topbar from '../components/Topbar';
-import './AdminTickets.css';
 
 export default function AdminTickets() {
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [tickets, setTickets] = useState([]);
     const [stats, setStats] = useState({ total: 0, open: 0, inProgress: 0, waiting: 0, resolved: 0 });
     const [loading, setLoading] = useState(true);
@@ -24,52 +24,27 @@ export default function AdminTickets() {
 
     const API_URL = 'http://localhost:5000/api';
 
-    useEffect(() => {
-        fetchTickets();
-    }, [currentPage, statusFilter]);
+    useEffect(() => { fetchTickets(); }, [currentPage, statusFilter]);
 
     const fetchTickets = async () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('authToken');
-            const params = new URLSearchParams({
-                page: currentPage,
-                limit: 15,
-                ...(statusFilter !== 'all' && { status: statusFilter })
-            });
-
-            const res = await fetch(`${API_URL}/tickets/admin?${params}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const params = new URLSearchParams({ page: currentPage, limit: 15, ...(statusFilter !== 'all' && { status: statusFilter }) });
+            const res = await fetch(`${API_URL}/tickets/admin?${params}`, { headers: { Authorization: `Bearer ${token}` } });
             const data = await res.json();
-
-            if (data.success) {
-                setTickets(data.data);
-                setStats(data.stats);
-                setTotalPages(data.pagination.pages);
-            }
-        } catch (err) {
-            setError('Failed to fetch tickets');
-        } finally {
-            setLoading(false);
-        }
+            if (data.success) { setTickets(data.data); setStats(data.stats); setTotalPages(data.pagination.pages); }
+        } catch (err) { setError('Failed to fetch tickets'); }
+        finally { setLoading(false); }
     };
 
     const viewTicketDetails = async (id) => {
         try {
             const token = localStorage.getItem('authToken');
-            const res = await fetch(`${API_URL}/tickets/admin/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const res = await fetch(`${API_URL}/tickets/admin/${id}`, { headers: { Authorization: `Bearer ${token}` } });
             const data = await res.json();
-
-            if (data.success) {
-                setSelectedTicket(data.data);
-                setShowModal(true);
-            }
-        } catch (err) {
-            setError('Failed to fetch details');
-        }
+            if (data.success) { setSelectedTicket(data.data); setShowModal(true); }
+        } catch (err) { setError('Failed to fetch details'); }
     };
 
     const sendReply = async () => {
@@ -78,204 +53,220 @@ export default function AdminTickets() {
         try {
             const token = localStorage.getItem('authToken');
             const res = await fetch(`${API_URL}/tickets/admin/${selectedTicket._id}/message`, {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ message: replyText })
+                method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: replyText })
             });
             const data = await res.json();
-
-            if (data.success) {
-                setSelectedTicket(data.data);
-                setReplyText('');
-                setSuccess('Reply sent');
-            }
-        } catch (err) {
-            setError('Failed to send reply');
-        } finally {
-            setProcessing(false);
-        }
+            if (data.success) { setSelectedTicket(data.data); setReplyText(''); setSuccess('Reply sent'); }
+        } catch (err) { setError('Failed to send reply'); }
+        finally { setProcessing(false); }
     };
 
     const updateStatus = async (id, status) => {
         try {
             const token = localStorage.getItem('authToken');
             const res = await fetch(`${API_URL}/tickets/admin/${id}/status`, {
-                method: 'PUT',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ status })
+                method: 'PUT', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ status })
             });
             const data = await res.json();
-
-            if (data.success) {
-                setSuccess(`Ticket ${status.replace('_', ' ')}`);
-                fetchTickets();
-                if (showModal && selectedTicket?._id === id) {
-                    setSelectedTicket({ ...selectedTicket, status });
-                }
-            }
-        } catch (err) {
-            setError('Failed to update status');
-        }
+            if (data.success) { setSuccess(`Ticket ${status.replace('_', ' ')}`); fetchTickets(); if (showModal && selectedTicket?._id === id) setSelectedTicket({ ...selectedTicket, status }); }
+        } catch (err) { setError('Failed to update status'); }
     };
 
     const deleteTicket = async (id) => {
         if (!window.confirm('Delete this ticket?')) return;
         try {
             const token = localStorage.getItem('authToken');
-            const res = await fetch(`${API_URL}/tickets/admin/${id}`, {
-                method: 'DELETE',
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const res = await fetch(`${API_URL}/tickets/admin/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
             const data = await res.json();
-
-            if (data.success) {
-                setSuccess('Ticket deleted');
-                fetchTickets();
-                if (showModal) setShowModal(false);
-            }
-        } catch (err) {
-            setError('Failed to delete');
-        }
+            if (data.success) { setSuccess('Ticket deleted'); fetchTickets(); if (showModal) setShowModal(false); }
+        } catch (err) { setError('Failed to delete'); }
     };
 
-    const formatDate = (date) => new Date(date).toLocaleDateString('en-US', {
-        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-    });
+    const formatDate = (date) => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
     const getStatusBadge = (status) => {
         const badges = {
-            open: { class: 'open', icon: <FaClock />, text: 'Open' },
-            in_progress: { class: 'progress', icon: <FaSpinner />, text: 'In Progress' },
-            waiting: { class: 'waiting', icon: <FaExclamationTriangle />, text: 'Waiting' },
-            resolved: { class: 'resolved', icon: <FaCheckCircle />, text: 'Resolved' },
-            closed: { class: 'closed', icon: <FaCheckCircle />, text: 'Closed' }
+            open: { icon: <FaClock />, text: 'Open', classes: 'bg-sand-100 text-sand-700 dark:bg-sand-900/20 dark:text-sand-400' },
+            in_progress: { icon: <FaSpinner />, text: 'In Progress', classes: 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400' },
+            waiting: { icon: <FaExclamationTriangle />, text: 'Waiting', classes: 'bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400' },
+            resolved: { icon: <FaCheckCircle />, text: 'Resolved', classes: 'bg-sage-100 text-sage-700 dark:bg-sage-900/20 dark:text-sage-400' },
+            closed: { icon: <FaCheckCircle />, text: 'Closed', classes: 'bg-charcoal-100 text-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-300' }
         };
         const badge = badges[status] || badges.open;
-        return <span className={`status-badge ${badge.class}`}>{badge.icon} {badge.text}</span>;
+        return <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${badge.classes}`}>{badge.icon} {badge.text}</span>;
     };
 
     const getPriorityBadge = (priority) => {
-        const colors = { urgent: '#dc2626', high: '#f59e0b', medium: '#3b82f6', low: '#6b7280' };
-        return <span className="priority-badge" style={{ background: colors[priority] || colors.medium }}>{priority}</span>;
+        const colors = {
+            urgent: 'bg-red-500 text-white',
+            high: 'bg-orange-500 text-white',
+            medium: 'bg-blue-500 text-white',
+            low: 'bg-charcoal-400 text-white'
+        };
+        return <span className={`px-2.5 py-1 rounded-full text-xs font-semibold capitalize ${colors[priority] || colors.medium}`}>{priority}</span>;
     };
 
-    useEffect(() => {
-        if (error || success) {
-            const timer = setTimeout(() => { setError(''); setSuccess(''); }, 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [error, success]);
+    useEffect(() => { if (error || success) { const timer = setTimeout(() => { setError(''); setSuccess(''); }, 3000); return () => clearTimeout(timer); } }, [error, success]);
 
     return (
-        <div className="admin-tickets-layout">
-            <Sidebar />
-            <div className="admin-tickets-main">
-                <Topbar title="Support Tickets" />
-                <main className="admin-tickets-content">
-                    {error && <div className="alert alert-error">{error}</div>}
-                    {success && <div className="alert alert-success">{success}</div>}
+        <div className="min-h-screen bg-cream-100 dark:bg-charcoal-900 transition-colors duration-300">
+            <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+            <div className="lg:ml-64 min-h-screen flex flex-col transition-all duration-300">
+                <Topbar onMenuClick={() => setSidebarOpen(true)} title="Support Tickets" />
+                <main className="flex-1 p-4 lg:p-6 max-w-[1600px] w-full mx-auto">
+                    {/* Header */}
+                    <div className="mb-6">
+                        <h1 className="text-2xl font-bold text-charcoal-800 dark:text-white">Support Tickets</h1>
+                        <p className="text-charcoal-500 dark:text-charcoal-400 text-sm mt-1">Manage customer support requests</p>
+                    </div>
 
-                    {/* Stats */}
-                    <div className="stats-grid">
-                        <div className="stat-card total" onClick={() => setStatusFilter('all')}><span className="stat-value">{stats.total}</span><span className="stat-label">Total</span></div>
-                        <div className="stat-card open" onClick={() => setStatusFilter('open')}><span className="stat-value">{stats.open}</span><span className="stat-label">Open</span></div>
-                        <div className="stat-card progress" onClick={() => setStatusFilter('in_progress')}><span className="stat-value">{stats.inProgress}</span><span className="stat-label">In Progress</span></div>
-                        <div className="stat-card waiting" onClick={() => setStatusFilter('waiting')}><span className="stat-value">{stats.waiting}</span><span className="stat-label">Waiting</span></div>
-                        <div className="stat-card resolved" onClick={() => setStatusFilter('resolved')}><span className="stat-value">{stats.resolved}</span><span className="stat-label">Resolved</span></div>
+                    {/* Alerts */}
+                    {error && <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-xl text-sm">{error}</div>}
+                    {success && <div className="mb-4 p-4 bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 text-sage-700 dark:text-sage-400 rounded-xl text-sm">{success}</div>}
+
+                    {/* Stats Cards */}
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+                        <button onClick={() => { setStatusFilter('all'); setCurrentPage(1); }} className={`p-4 rounded-2xl border transition-all text-left ${statusFilter === 'all' ? 'bg-terracotta-50 dark:bg-terracotta-900/20 border-terracotta-200 dark:border-terracotta-800' : 'bg-white dark:bg-charcoal-800 border-cream-200 dark:border-charcoal-700 hover:border-terracotta-200'}`}>
+                            <span className="text-2xl font-bold text-charcoal-800 dark:text-white">{stats.total}</span>
+                            <p className="text-sm font-medium text-charcoal-500 dark:text-charcoal-400 mt-1">Total</p>
+                        </button>
+                        <button onClick={() => { setStatusFilter('open'); setCurrentPage(1); }} className={`p-4 rounded-2xl border transition-all text-left ${statusFilter === 'open' ? 'bg-sand-50 dark:bg-sand-900/20 border-sand-200 dark:border-sand-800' : 'bg-white dark:bg-charcoal-800 border-cream-200 dark:border-charcoal-700 hover:border-sand-200'}`}>
+                            <span className="text-2xl font-bold text-charcoal-800 dark:text-white">{stats.open}</span>
+                            <p className="text-sm font-medium text-charcoal-500 dark:text-charcoal-400 mt-1">Open</p>
+                        </button>
+                        <button onClick={() => { setStatusFilter('in_progress'); setCurrentPage(1); }} className={`p-4 rounded-2xl border transition-all text-left ${statusFilter === 'in_progress' ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' : 'bg-white dark:bg-charcoal-800 border-cream-200 dark:border-charcoal-700 hover:border-blue-200'}`}>
+                            <span className="text-2xl font-bold text-charcoal-800 dark:text-white">{stats.inProgress}</span>
+                            <p className="text-sm font-medium text-charcoal-500 dark:text-charcoal-400 mt-1">In Progress</p>
+                        </button>
+                        <button onClick={() => { setStatusFilter('waiting'); setCurrentPage(1); }} className={`p-4 rounded-2xl border transition-all text-left ${statusFilter === 'waiting' ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800' : 'bg-white dark:bg-charcoal-800 border-cream-200 dark:border-charcoal-700 hover:border-orange-200'}`}>
+                            <span className="text-2xl font-bold text-charcoal-800 dark:text-white">{stats.waiting}</span>
+                            <p className="text-sm font-medium text-charcoal-500 dark:text-charcoal-400 mt-1">Waiting</p>
+                        </button>
+                        <button onClick={() => { setStatusFilter('resolved'); setCurrentPage(1); }} className={`p-4 rounded-2xl border transition-all text-left ${statusFilter === 'resolved' ? 'bg-sage-50 dark:bg-sage-900/20 border-sage-200 dark:border-sage-800' : 'bg-white dark:bg-charcoal-800 border-cream-200 dark:border-charcoal-700 hover:border-sage-200'}`}>
+                            <span className="text-2xl font-bold text-charcoal-800 dark:text-white">{stats.resolved}</span>
+                            <p className="text-sm font-medium text-charcoal-500 dark:text-charcoal-400 mt-1">Resolved</p>
+                        </button>
                     </div>
 
                     {/* Filter Buttons */}
-                    <div className="tickets-filters">
+                    <div className="flex flex-wrap gap-2 mb-6">
                         {['open', 'in_progress', 'waiting', 'resolved', 'all'].map(s => (
-                            <button key={s} className={`filter-btn ${statusFilter === s ? 'active' : ''}`} onClick={() => { setStatusFilter(s); setCurrentPage(1); }}>
+                            <button key={s} onClick={() => { setStatusFilter(s); setCurrentPage(1); }}
+                                className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${statusFilter === s ? 'bg-terracotta-500 text-white' : 'bg-white dark:bg-charcoal-800 border border-cream-200 dark:border-charcoal-700 text-charcoal-600 dark:text-charcoal-400 hover:border-terracotta-500'}`}>
                                 {s.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                             </button>
                         ))}
                     </div>
 
                     {/* Table */}
-                    <div className="tickets-table-wrapper">
-                        {loading ? <div className="loading-state">Loading...</div> : tickets.length === 0 ? (
-                            <div className="empty-state"><FaTicketAlt className="empty-icon" /><h3>No Tickets</h3></div>
+                    <div className="bg-white dark:bg-charcoal-800 rounded-2xl shadow-sm border border-cream-200 dark:border-charcoal-700 overflow-hidden">
+                        {loading ? (
+                            <div className="p-12 text-center">
+                                <div className="w-8 h-8 border-2 border-terracotta-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                                <p className="text-charcoal-500 dark:text-charcoal-400">Loading tickets...</p>
+                            </div>
+                        ) : tickets.length === 0 ? (
+                            <div className="p-12 text-center">
+                                <FaTicketAlt className="text-5xl text-charcoal-300 dark:text-charcoal-600 mx-auto mb-4" />
+                                <h3 className="text-lg font-bold text-charcoal-800 dark:text-white mb-2">No Tickets</h3>
+                                <p className="text-charcoal-500 dark:text-charcoal-400">No tickets match your filter</p>
+                            </div>
                         ) : (
-                            <table className="tickets-table">
-                                <thead>
-                                    <tr>
-                                        <th>Ticket ID</th>
-                                        <th>Subject</th>
-                                        <th>From</th>
-                                        <th>Category</th>
-                                        <th>Priority</th>
-                                        <th>Status</th>
-                                        <th>Created</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {tickets.map(ticket => (
-                                        <tr key={ticket._id}>
-                                            <td className="id-cell">{ticket.ticketId}</td>
-                                            <td className="subject-cell">{ticket.subject.substring(0, 40)}...</td>
-                                            <td className="from-cell">{ticket.createdBy?.name || 'Unknown'}</td>
-                                            <td className="category-cell">{ticket.category}</td>
-                                            <td>{getPriorityBadge(ticket.priority)}</td>
-                                            <td>{getStatusBadge(ticket.status)}</td>
-                                            <td className="date-cell">{formatDate(ticket.createdAt)}</td>
-                                            <td className="actions-cell">
-                                                <button className="btn-action view" onClick={() => viewTicketDetails(ticket._id)}><FaEye /></button>
-                                                <button className="btn-action delete" onClick={() => deleteTicket(ticket._id)}><FaTrash /></button>
-                                            </td>
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead className="bg-cream-50 dark:bg-charcoal-900">
+                                        <tr>
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-charcoal-500 dark:text-charcoal-400 uppercase tracking-wider">ID</th>
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-charcoal-500 dark:text-charcoal-400 uppercase tracking-wider">Subject</th>
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-charcoal-500 dark:text-charcoal-400 uppercase tracking-wider hidden md:table-cell">From</th>
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-charcoal-500 dark:text-charcoal-400 uppercase tracking-wider hidden lg:table-cell">Category</th>
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-charcoal-500 dark:text-charcoal-400 uppercase tracking-wider">Priority</th>
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-charcoal-500 dark:text-charcoal-400 uppercase tracking-wider">Status</th>
+                                            <th className="px-6 py-4 text-center text-xs font-bold text-charcoal-500 dark:text-charcoal-400 uppercase tracking-wider">Actions</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="divide-y divide-cream-100 dark:divide-charcoal-700">
+                                        {tickets.map(ticket => (
+                                            <tr key={ticket._id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
+                                                <td className="px-6 py-4">
+                                                    <span className="font-mono text-sm text-terracotta-600 dark:text-terracotta-400">{ticket.ticketId}</span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className="font-medium text-charcoal-800 dark:text-white">{ticket.subject?.substring(0, 40)}...</span>
+                                                </td>
+                                                <td className="px-6 py-4 hidden md:table-cell">
+                                                    <span className="text-charcoal-600 dark:text-charcoal-400">{ticket.createdBy?.name || 'Unknown'}</span>
+                                                </td>
+                                                <td className="px-6 py-4 hidden lg:table-cell">
+                                                    <span className="px-2 py-0.5 bg-charcoal-100 dark:bg-charcoal-700 text-charcoal-600 dark:text-charcoal-300 rounded text-xs capitalize">{ticket.category}</span>
+                                                </td>
+                                                <td className="px-6 py-4">{getPriorityBadge(ticket.priority)}</td>
+                                                <td className="px-6 py-4">{getStatusBadge(ticket.status)}</td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center justify-center gap-1">
+                                                        <button onClick={() => viewTicketDetails(ticket._id)} className="p-2 rounded-lg text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" title="View"><FaEye /></button>
+                                                        <button onClick={() => deleteTicket(ticket._id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Delete"><FaTrash /></button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         )}
                     </div>
 
                     {/* Pagination */}
                     {totalPages > 1 && (
-                        <div className="pagination">
-                            <button className="pagination-btn" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}><FaChevronLeft /></button>
-                            <span>Page {currentPage} of {totalPages}</span>
-                            <button className="pagination-btn" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}><FaChevronRight /></button>
+                        <div className="flex items-center justify-between mt-6 pt-4 border-t border-cream-200 dark:border-charcoal-700">
+                            <p className="text-sm text-charcoal-500 dark:text-charcoal-400">Page {currentPage} of {totalPages}</p>
+                            <div className="flex gap-2">
+                                <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}
+                                    className={`flex items-center gap-1 px-4 py-2 rounded-lg font-medium text-sm transition-all ${currentPage === 1 ? 'bg-cream-100 dark:bg-charcoal-700 text-charcoal-400 cursor-not-allowed' : 'bg-white dark:bg-charcoal-700 border border-cream-200 dark:border-charcoal-600 text-charcoal-700 dark:text-white hover:border-terracotta-500'}`}>
+                                    <FaChevronLeft />
+                                </button>
+                                <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}
+                                    className={`flex items-center gap-1 px-4 py-2 rounded-lg font-medium text-sm transition-all ${currentPage === totalPages ? 'bg-cream-100 dark:bg-charcoal-700 text-charcoal-400 cursor-not-allowed' : 'bg-terracotta-500 hover:bg-terracotta-600 text-white'}`}>
+                                    <FaChevronRight />
+                                </button>
+                            </div>
                         </div>
                     )}
 
                     {/* Ticket Modal */}
                     {showModal && selectedTicket && (
-                        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-                            <div className="modal-content large" onClick={e => e.stopPropagation()}>
-                                <div className="modal-header">
-                                    <h3>{selectedTicket.ticketId} - {selectedTicket.subject}</h3>
-                                    <button className="btn-close" onClick={() => setShowModal(false)}><FaTimes /></button>
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowModal(false)}>
+                            <div className="bg-white dark:bg-charcoal-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
+                                <div className="flex items-center justify-between px-6 py-4 border-b border-cream-200 dark:border-charcoal-700">
+                                    <div>
+                                        <span className="font-mono text-sm text-terracotta-600 dark:text-terracotta-400">{selectedTicket.ticketId}</span>
+                                        <h3 className="text-lg font-bold text-charcoal-800 dark:text-white">{selectedTicket.subject}</h3>
+                                    </div>
+                                    <button onClick={() => setShowModal(false)} className="p-2 rounded-lg text-charcoal-400 hover:text-charcoal-600 hover:bg-cream-100 dark:hover:bg-charcoal-700 transition-colors"><FaTimes /></button>
                                 </div>
-                                <div className="modal-body">
-                                    {/* Ticket Info */}
-                                    <div className="ticket-meta">
-                                        <div className="meta-item"><label>From</label><span>{selectedTicket.createdBy?.name} ({selectedTicket.createdByRole})</span></div>
-                                        <div className="meta-item"><label>Category</label><span>{selectedTicket.category}</span></div>
-                                        <div className="meta-item"><label>Priority</label>{getPriorityBadge(selectedTicket.priority)}</div>
-                                        <div className="meta-item"><label>Status</label>{getStatusBadge(selectedTicket.status)}</div>
+
+                                <div className="p-6 overflow-y-auto max-h-[70vh] space-y-6">
+                                    {/* Meta Info */}
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-cream-50 dark:bg-charcoal-700 rounded-xl">
+                                        <div><label className="text-xs font-semibold text-charcoal-500 dark:text-charcoal-400 uppercase">From</label><p className="font-medium text-charcoal-800 dark:text-white text-sm">{selectedTicket.createdBy?.name}</p></div>
+                                        <div><label className="text-xs font-semibold text-charcoal-500 dark:text-charcoal-400 uppercase">Role</label><p className="font-medium text-charcoal-800 dark:text-white text-sm capitalize">{selectedTicket.createdByRole}</p></div>
+                                        <div><label className="text-xs font-semibold text-charcoal-500 dark:text-charcoal-400 uppercase">Priority</label><div className="mt-1">{getPriorityBadge(selectedTicket.priority)}</div></div>
+                                        <div><label className="text-xs font-semibold text-charcoal-500 dark:text-charcoal-400 uppercase">Status</label><div className="mt-1">{getStatusBadge(selectedTicket.status)}</div></div>
                                     </div>
 
                                     {/* Messages */}
-                                    <div className="messages-section">
-                                        <h5>Conversation</h5>
-                                        <div className="messages-list">
+                                    <div>
+                                        <h5 className="text-sm font-bold text-charcoal-700 dark:text-charcoal-300 mb-3">Conversation</h5>
+                                        <div className="space-y-3 max-h-60 overflow-y-auto">
                                             {selectedTicket.messages?.map((msg, i) => (
-                                                <div key={i} className={`message ${msg.senderRole}`}>
-                                                    <div className="message-header">
-                                                        <FaUser /> <span>{msg.sender?.name || 'Unknown'}</span>
-                                                        <span className="message-role">{msg.senderRole}</span>
-                                                        <span className="message-time">{formatDate(msg.createdAt)}</span>
+                                                <div key={i} className={`p-3 rounded-xl ${msg.senderRole === 'admin' ? 'bg-terracotta-50 dark:bg-terracotta-900/20 ml-4' : 'bg-cream-100 dark:bg-charcoal-700 mr-4'}`}>
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <FaUser className="text-xs text-charcoal-400" />
+                                                        <span className="font-medium text-sm text-charcoal-800 dark:text-white">{msg.sender?.name || 'Unknown'}</span>
+                                                        <span className="px-1.5 py-0.5 bg-charcoal-200 dark:bg-charcoal-600 text-charcoal-600 dark:text-charcoal-300 rounded text-xs capitalize">{msg.senderRole}</span>
+                                                        <span className="text-xs text-charcoal-400 ml-auto">{formatDate(msg.createdAt)}</span>
                                                     </div>
-                                                    <p className="message-text">{msg.message}</p>
+                                                    <p className="text-sm text-charcoal-600 dark:text-charcoal-400">{msg.message}</p>
                                                 </div>
                                             ))}
                                         </div>
@@ -283,21 +274,28 @@ export default function AdminTickets() {
 
                                     {/* Reply */}
                                     {selectedTicket.status !== 'closed' && selectedTicket.status !== 'resolved' && (
-                                        <div className="reply-section">
-                                            <h5>Reply</h5>
-                                            <textarea className="form-input" value={replyText} onChange={e => setReplyText(e.target.value)} placeholder="Type your reply..." rows={3} />
-                                            <button className="btn-send" onClick={sendReply} disabled={processing || !replyText.trim()}>
+                                        <div>
+                                            <h5 className="text-sm font-bold text-charcoal-700 dark:text-charcoal-300 mb-2">Reply</h5>
+                                            <textarea value={replyText} onChange={e => setReplyText(e.target.value)} placeholder="Type your reply..."
+                                                rows={3} className="w-full px-4 py-2.5 bg-cream-100 dark:bg-charcoal-700 border border-transparent focus:border-terracotta-500 rounded-xl text-charcoal-800 dark:text-white outline-none transition-colors resize-none" />
+                                            <button onClick={sendReply} disabled={processing || !replyText.trim()}
+                                                className="flex items-center gap-2 mt-2 px-4 py-2 bg-terracotta-500 hover:bg-terracotta-600 disabled:opacity-50 text-white rounded-xl font-medium transition-all">
                                                 <FaReply /> {processing ? 'Sending...' : 'Send Reply'}
                                             </button>
                                         </div>
                                     )}
 
                                     {/* Status Actions */}
-                                    <div className="status-actions">
-                                        <h5>Update Status</h5>
-                                        <div className="status-buttons">
+                                    <div>
+                                        <h5 className="text-sm font-bold text-charcoal-700 dark:text-charcoal-300 mb-2">Update Status</h5>
+                                        <div className="flex flex-wrap gap-2">
                                             {['in_progress', 'waiting', 'resolved', 'closed'].map(s => (
-                                                <button key={s} className={`status-btn ${s}`} onClick={() => updateStatus(selectedTicket._id, s)} disabled={selectedTicket.status === s}>
+                                                <button key={s} onClick={() => updateStatus(selectedTicket._id, s)} disabled={selectedTicket.status === s}
+                                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed capitalize ${s === 'in_progress' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/20 dark:text-blue-400' :
+                                                            s === 'waiting' ? 'bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-orange-900/20 dark:text-orange-400' :
+                                                                s === 'resolved' ? 'bg-sage-100 text-sage-700 hover:bg-sage-200 dark:bg-sage-900/20 dark:text-sage-400' :
+                                                                    'bg-charcoal-100 text-charcoal-600 hover:bg-charcoal-200 dark:bg-charcoal-700 dark:text-charcoal-300'
+                                                        }`}>
                                                     {s.replace('_', ' ')}
                                                 </button>
                                             ))}

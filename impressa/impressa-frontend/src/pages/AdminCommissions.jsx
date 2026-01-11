@@ -5,21 +5,11 @@ import {
 } from 'react-icons/fa';
 import Sidebar from '../components/Sidebar';
 import Topbar from '../components/Topbar';
-import './AdminCommissions.css';
 
 export default function AdminCommissions() {
-    const [settings, setSettings] = useState({
-        defaultRate: 10,
-        minimumPayoutAmount: 10000,
-        payoutSchedule: 'manual',
-        payoutMethods: ['mobile_money', 'bank_transfer']
-    });
-    const [dashboard, setDashboard] = useState({
-        platformEarnings: 0,
-        pendingPayouts: { amount: 0, count: 0 },
-        completedPayouts: { amount: 0, count: 0 },
-        activeSellers: 0
-    });
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [settings, setSettings] = useState({ defaultRate: 10, posRate: 5, minimumPayoutAmount: 10000, payoutSchedule: 'manual', payoutMethods: ['mobile_money', 'bank_transfer'] });
+    const [dashboard, setDashboard] = useState({ platformEarnings: 0, pendingPayouts: { amount: 0, count: 0 }, completedPayouts: { amount: 0, count: 0 }, activeSellers: 0 });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
@@ -27,37 +17,22 @@ export default function AdminCommissions() {
 
     const API_URL = 'http://localhost:5000/api';
 
-    useEffect(() => {
-        fetchData();
-    }, []);
+    useEffect(() => { fetchData(); }, []);
+    useEffect(() => { if (error || success) { const t = setTimeout(() => { setError(''); setSuccess(''); }, 3000); return () => clearTimeout(t); } }, [error, success]);
 
     const fetchData = async () => {
-        setLoading(true);
         try {
             const token = localStorage.getItem('authToken');
-
-            // Fetch settings
-            const settingsRes = await fetch(`${API_URL}/commissions/settings`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const [settingsRes, dashRes] = await Promise.all([
+                fetch(`${API_URL}/commissions/settings`, { headers: { Authorization: `Bearer ${token}` } }),
+                fetch(`${API_URL}/commissions/dashboard`, { headers: { Authorization: `Bearer ${token}` } })
+            ]);
             const settingsData = await settingsRes.json();
-            if (settingsData.success) {
-                setSettings(settingsData.data);
-            }
-
-            // Fetch dashboard
-            const dashRes = await fetch(`${API_URL}/commissions/dashboard`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
             const dashData = await dashRes.json();
-            if (dashData.success) {
-                setDashboard(dashData.data);
-            }
-        } catch (err) {
-            setError('Failed to load commission data');
-        } finally {
-            setLoading(false);
-        }
+            if (settingsData.success) setSettings(settingsData.data);
+            if (dashData.success) setDashboard(dashData.data);
+        } catch (err) { setError('Failed to load commission data'); }
+        finally { setLoading(false); }
     };
 
     const handleSaveSettings = async (e) => {
@@ -66,200 +41,145 @@ export default function AdminCommissions() {
         try {
             const token = localStorage.getItem('authToken');
             const res = await fetch(`${API_URL}/commissions/settings`, {
-                method: 'PUT',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
+                method: 'PUT', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify(settings)
             });
             const data = await res.json();
-            if (data.success) {
-                setSuccess('Settings saved successfully');
-            } else {
-                setError(data.message || 'Failed to save settings');
-            }
-        } catch (err) {
-            setError('Failed to save settings');
-        } finally {
-            setSaving(false);
-        }
+            if (data.success) setSuccess('Settings saved successfully');
+            else setError(data.message || 'Failed to save');
+        } catch (err) { setError('Failed to save settings'); }
+        finally { setSaving(false); }
     };
 
-    // Clear alerts after 3 seconds
-    useEffect(() => {
-        if (error || success) {
-            const timer = setTimeout(() => {
-                setError('');
-                setSuccess('');
-            }, 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [error, success]);
+    const formatCurrency = (amount) => `RWF ${amount?.toLocaleString() || 0}`;
 
-    const formatCurrency = (amount) => {
-        return `RWF ${amount?.toLocaleString() || 0}`;
-    };
-
-    if (loading) {
-        return (
-            <div className="admin-commissions-layout">
-                <Sidebar />
-                <div className="admin-commissions-main">
-                    <Topbar title="Commissions" />
-                    <main className="admin-commissions-content">
-                        <div className="loading-state">Loading commission data...</div>
-                    </main>
-                </div>
-            </div>
-        );
-    }
+    const stats = [
+        { label: 'Platform Earnings', value: formatCurrency(dashboard.platformEarnings), icon: <FaChartLine />, color: 'from-sage-500 to-sage-600' },
+        { label: `Pending Payouts (${dashboard.pendingPayouts?.count || 0})`, value: formatCurrency(dashboard.pendingPayouts?.amount), icon: <FaDollarSign />, color: 'from-sand-500 to-sand-600' },
+        { label: `Completed Payouts (${dashboard.completedPayouts?.count || 0})`, value: formatCurrency(dashboard.completedPayouts?.amount), icon: <FaMoneyBillWave />, color: 'from-terracotta-500 to-terracotta-600' },
+        { label: 'Active Sellers', value: dashboard.activeSellers || 0, icon: <FaUsers />, color: 'from-blue-500 to-blue-600' },
+    ];
 
     return (
-        <div className="admin-commissions-layout">
-            <Sidebar />
-            <div className="admin-commissions-main">
-                <Topbar title="Commissions" />
-                <main className="admin-commissions-content">
+        <div className="min-h-screen bg-cream-100 dark:bg-charcoal-900 transition-colors duration-300">
+            <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+            <div className="lg:ml-64 min-h-screen flex flex-col transition-all duration-300">
+                <Topbar onMenuClick={() => setSidebarOpen(true)} title="Commissions" />
+                <main className="flex-1 p-4 lg:p-6 max-w-[1600px] w-full mx-auto">
+                    {/* Header */}
+                    <div className="mb-6">
+                        <h1 className="text-2xl font-bold text-charcoal-800 dark:text-white">Commission Management</h1>
+                        <p className="text-charcoal-500 dark:text-charcoal-400 text-sm mt-1">Configure commission rates and payout settings</p>
+                    </div>
+
                     {/* Alerts */}
-                    {error && <div className="alert alert-error">{error}</div>}
-                    {success && <div className="alert alert-success">{success}</div>}
+                    {error && <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-xl text-sm">{error}</div>}
+                    {success && <div className="mb-4 p-4 bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 text-sage-700 dark:text-sage-400 rounded-xl text-sm">{success}</div>}
 
-                    {/* Dashboard Stats */}
-                    <div className="stats-grid">
-                        <div className="stat-card earnings">
-                            <div className="stat-icon"><FaChartLine /></div>
-                            <div className="stat-info">
-                                <span className="stat-value">{formatCurrency(dashboard.platformEarnings)}</span>
-                                <span className="stat-label">Platform Earnings</span>
-                            </div>
+                    {loading ? (
+                        <div className="p-12 text-center">
+                            <div className="w-8 h-8 border-2 border-terracotta-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                            <p className="text-charcoal-500">Loading commission data...</p>
                         </div>
-                        <div className="stat-card pending">
-                            <div className="stat-icon"><FaDollarSign /></div>
-                            <div className="stat-info">
-                                <span className="stat-value">{formatCurrency(dashboard.pendingPayouts.amount)}</span>
-                                <span className="stat-label">Pending Payouts ({dashboard.pendingPayouts.count})</span>
-                            </div>
-                        </div>
-                        <div className="stat-card completed">
-                            <div className="stat-icon"><FaMoneyBillWave /></div>
-                            <div className="stat-info">
-                                <span className="stat-value">{formatCurrency(dashboard.completedPayouts.amount)}</span>
-                                <span className="stat-label">Completed Payouts ({dashboard.completedPayouts.count})</span>
-                            </div>
-                        </div>
-                        <div className="stat-card sellers">
-                            <div className="stat-icon"><FaUsers /></div>
-                            <div className="stat-info">
-                                <span className="stat-value">{dashboard.activeSellers}</span>
-                                <span className="stat-label">Active Sellers</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Settings Form */}
-                    <div className="settings-card">
-                        <div className="card-header">
-                            <h3><FaCog /> Commission Configuration</h3>
-                        </div>
-                        <form onSubmit={handleSaveSettings} className="settings-form">
-                            <div className="form-grid">
-                                <div className="form-group">
-                                    <label>Online Commission Rate (%)</label>
-                                    <div className="input-with-icon">
-                                        <FaPercent className="input-icon" />
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            max="100"
-                                            step="0.5"
-                                            value={settings.defaultRate}
-                                            onChange={(e) => setSettings({ ...settings, defaultRate: parseFloat(e.target.value) })}
-                                            className="form-input"
-                                        />
+                    ) : (
+                        <>
+                            {/* Stats Cards */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                                {stats.map((stat, i) => (
+                                    <div key={i} className={`bg-gradient-to-br ${stat.color} rounded-2xl p-5 text-white shadow-lg`}>
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">{stat.icon}</div>
+                                        </div>
+                                        <p className="text-2xl font-bold">{stat.value}</p>
+                                        <p className="text-sm opacity-80 mt-1">{stat.label}</p>
                                     </div>
-                                    <small>Commission for Online Orders</small>
-                                </div>
-
-                                <div className="form-group">
-                                    <label>POS Commission Rate (%)</label>
-                                    <div className="input-with-icon">
-                                        <FaPercent className="input-icon" />
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            max="100"
-                                            step="0.5"
-                                            value={settings.posRate ?? 5}
-                                            onChange={(e) => setSettings({ ...settings, posRate: parseFloat(e.target.value) })}
-                                            className="form-input"
-                                        />
-                                    </div>
-                                    <small>Commission for Seller POS Sales</small>
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Minimum Payout Amount (RWF)</label>
-                                    <div className="input-with-icon">
-                                        <FaDollarSign className="input-icon" />
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            step="1000"
-                                            value={settings.minimumPayoutAmount}
-                                            onChange={(e) => setSettings({ ...settings, minimumPayoutAmount: parseInt(e.target.value) })}
-                                            className="form-input"
-                                        />
-                                    </div>
-                                    <small>Sellers must earn at least this amount to request payout</small>
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Payout Schedule</label>
-                                    <div className="input-with-icon">
-                                        <FaCalendarAlt className="input-icon" />
-                                        <select
-                                            value={settings.payoutSchedule}
-                                            onChange={(e) => setSettings({ ...settings, payoutSchedule: e.target.value })}
-                                            className="form-input"
-                                        >
-                                            <option value="manual">Manual (On Request)</option>
-                                            <option value="weekly">Weekly</option>
-                                            <option value="biweekly">Bi-weekly</option>
-                                            <option value="monthly">Monthly</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Payout Methods</label>
-                                    <div className="checkbox-group">
-                                        {['mobile_money', 'bank_transfer', 'paypal'].map((method) => (
-                                            <label key={method} className="checkbox-label">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={settings.payoutMethods?.includes(method)}
-                                                    onChange={(e) => {
-                                                        const methods = settings.payoutMethods || [];
-                                                        if (e.target.checked) {
-                                                            setSettings({ ...settings, payoutMethods: [...methods, method] });
-                                                        } else {
-                                                            setSettings({ ...settings, payoutMethods: methods.filter(m => m !== method) });
-                                                        }
-                                                    }}
-                                                />
-                                                <span>{method.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
-                                            </label>
-                                        ))}
-                                    </div>
-                                </div>
+                                ))}
                             </div>
 
-                            <button type="submit" className="btn-save" disabled={saving}>
-                                <FaSave /> {saving ? 'Saving...' : 'Save Settings'}
-                            </button>
-                        </form>
-                    </div>
+                            {/* Settings Card */}
+                            <div className="bg-white dark:bg-charcoal-800 rounded-2xl border border-cream-200 dark:border-charcoal-700 overflow-hidden">
+                                <div className="flex items-center gap-3 px-6 py-4 border-b border-cream-200 dark:border-charcoal-700">
+                                    <div className="w-10 h-10 bg-terracotta-100 dark:bg-terracotta-900/20 rounded-xl flex items-center justify-center text-terracotta-600 dark:text-terracotta-400">
+                                        <FaCog />
+                                    </div>
+                                    <h3 className="text-lg font-bold text-charcoal-800 dark:text-white">Commission Configuration</h3>
+                                </div>
+
+                                <form onSubmit={handleSaveSettings} className="p-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="block text-sm font-medium text-charcoal-700 dark:text-charcoal-300 mb-2">Online Commission Rate (%)</label>
+                                            <div className="relative">
+                                                <FaPercent className="absolute left-4 top-1/2 -translate-y-1/2 text-charcoal-400" />
+                                                <input type="number" min="0" max="100" step="0.5" value={settings.defaultRate} onChange={e => setSettings({ ...settings, defaultRate: parseFloat(e.target.value) })}
+                                                    className="w-full pl-10 pr-4 py-2.5 bg-cream-100 dark:bg-charcoal-700 border border-transparent focus:border-terracotta-500 rounded-xl text-charcoal-800 dark:text-white outline-none" />
+                                            </div>
+                                            <p className="text-xs text-charcoal-500 mt-1.5">Commission for Online Orders</p>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-charcoal-700 dark:text-charcoal-300 mb-2">POS Commission Rate (%)</label>
+                                            <div className="relative">
+                                                <FaPercent className="absolute left-4 top-1/2 -translate-y-1/2 text-charcoal-400" />
+                                                <input type="number" min="0" max="100" step="0.5" value={settings.posRate ?? 5} onChange={e => setSettings({ ...settings, posRate: parseFloat(e.target.value) })}
+                                                    className="w-full pl-10 pr-4 py-2.5 bg-cream-100 dark:bg-charcoal-700 border border-transparent focus:border-terracotta-500 rounded-xl text-charcoal-800 dark:text-white outline-none" />
+                                            </div>
+                                            <p className="text-xs text-charcoal-500 mt-1.5">Commission for Seller POS Sales</p>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-charcoal-700 dark:text-charcoal-300 mb-2">Minimum Payout Amount (RWF)</label>
+                                            <div className="relative">
+                                                <FaDollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-charcoal-400" />
+                                                <input type="number" min="0" step="1000" value={settings.minimumPayoutAmount} onChange={e => setSettings({ ...settings, minimumPayoutAmount: parseInt(e.target.value) })}
+                                                    className="w-full pl-10 pr-4 py-2.5 bg-cream-100 dark:bg-charcoal-700 border border-transparent focus:border-terracotta-500 rounded-xl text-charcoal-800 dark:text-white outline-none" />
+                                            </div>
+                                            <p className="text-xs text-charcoal-500 mt-1.5">Sellers must earn at least this amount to request payout</p>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-charcoal-700 dark:text-charcoal-300 mb-2">Payout Schedule</label>
+                                            <div className="relative">
+                                                <FaCalendarAlt className="absolute left-4 top-1/2 -translate-y-1/2 text-charcoal-400" />
+                                                <select value={settings.payoutSchedule} onChange={e => setSettings({ ...settings, payoutSchedule: e.target.value })}
+                                                    className="w-full pl-10 pr-4 py-2.5 bg-cream-100 dark:bg-charcoal-700 border border-transparent focus:border-terracotta-500 rounded-xl text-charcoal-800 dark:text-white outline-none appearance-none">
+                                                    <option value="manual">Manual (On Request)</option>
+                                                    <option value="weekly">Weekly</option>
+                                                    <option value="biweekly">Bi-weekly</option>
+                                                    <option value="monthly">Monthly</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div className="md:col-span-2">
+                                            <label className="block text-sm font-medium text-charcoal-700 dark:text-charcoal-300 mb-3">Payout Methods</label>
+                                            <div className="flex flex-wrap gap-4">
+                                                {['mobile_money', 'bank_transfer', 'paypal'].map(method => (
+                                                    <label key={method} className="flex items-center gap-2 cursor-pointer">
+                                                        <input type="checkbox" checked={settings.payoutMethods?.includes(method)}
+                                                            onChange={e => {
+                                                                const methods = settings.payoutMethods || [];
+                                                                if (e.target.checked) setSettings({ ...settings, payoutMethods: [...methods, method] });
+                                                                else setSettings({ ...settings, payoutMethods: methods.filter(m => m !== method) });
+                                                            }}
+                                                            className="w-5 h-5 rounded border-charcoal-300 text-terracotta-500 focus:ring-terracotta-500" />
+                                                        <span className="text-charcoal-700 dark:text-charcoal-300 font-medium">{method.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-6 pt-6 border-t border-cream-200 dark:border-charcoal-700 flex justify-end">
+                                        <button type="submit" disabled={saving}
+                                            className="flex items-center gap-2 px-6 py-2.5 bg-terracotta-500 hover:bg-terracotta-600 disabled:opacity-50 text-white rounded-xl font-medium transition-all">
+                                            <FaSave /> {saving ? 'Saving...' : 'Save Settings'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </>
+                    )}
                 </main>
             </div>
         </div>

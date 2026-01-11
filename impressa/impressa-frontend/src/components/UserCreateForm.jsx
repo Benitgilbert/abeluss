@@ -1,7 +1,8 @@
 import { useState } from "react";
-import axios from "../utils/axiosInstance"; // ✅ adjust path to match your actual axios config file
+import axios from "../utils/axiosInstance";
+import { FaUserPlus } from "react-icons/fa";
 
-function UserCreateForm({ onSuccess }) {
+function UserCreateForm({ onSuccess, onCancel }) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -21,7 +22,7 @@ function UserCreateForm({ onSuccess }) {
     setError("");
 
     try {
-      await axios.post("/admin/users", formData); // ✅ baseURL already includes /api
+      await axios.post("/admin/users", formData);
       onSuccess?.();
       setFormData({ name: "", email: "", password: "", role: "customer" });
     } catch (err) {
@@ -32,52 +33,52 @@ function UserCreateForm({ onSuccess }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="modal-form-grid">
-      <div className="form-group full-width">
-        <label className="form-label">Full Name</label>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-charcoal-700 dark:text-charcoal-300 mb-1.5">Full Name</label>
         <input
           name="name"
           value={formData.name}
           onChange={handleChange}
           required
-          className="form-input"
+          className="w-full px-4 py-2.5 bg-cream-100 dark:bg-charcoal-700 border border-transparent focus:border-terracotta-500 rounded-xl text-charcoal-800 dark:text-white outline-none transition-colors"
           placeholder="e.g. John Doe"
         />
       </div>
 
-      <div className="form-group">
-        <label className="form-label">Email Address</label>
+      <div>
+        <label className="block text-sm font-medium text-charcoal-700 dark:text-charcoal-300 mb-1.5">Email Address</label>
         <input
           name="email"
           value={formData.email}
           onChange={handleChange}
           required
           type="email"
-          className="form-input"
+          className="w-full px-4 py-2.5 bg-cream-100 dark:bg-charcoal-700 border border-transparent focus:border-terracotta-500 rounded-xl text-charcoal-800 dark:text-white outline-none transition-colors"
           placeholder="john@example.com"
         />
       </div>
 
-      <div className="form-group">
-        <label className="form-label">Password</label>
+      <div>
+        <label className="block text-sm font-medium text-charcoal-700 dark:text-charcoal-300 mb-1.5">Password</label>
         <input
           name="password"
           value={formData.password}
           onChange={handleChange}
           required
           type="password"
-          className="form-input"
+          className="w-full px-4 py-2.5 bg-cream-100 dark:bg-charcoal-700 border border-transparent focus:border-terracotta-500 rounded-xl text-charcoal-800 dark:text-white outline-none transition-colors"
           placeholder="••••••••"
         />
       </div>
 
-      <div className="form-group full-width">
-        <label className="form-label">User Role</label>
+      <div>
+        <label className="block text-sm font-medium text-charcoal-700 dark:text-charcoal-300 mb-1.5">User Role</label>
         <select
           name="role"
           value={formData.role}
           onChange={handleChange}
-          className="form-select"
+          className="w-full px-4 py-2.5 bg-cream-100 dark:bg-charcoal-700 border border-transparent focus:border-terracotta-500 rounded-xl text-charcoal-800 dark:text-white outline-none transition-colors"
         >
           {["customer", "cashier", "inventory", "delivery", "admin"].map(role => (
             <option key={role} value={role}>
@@ -87,16 +88,16 @@ function UserCreateForm({ onSuccess }) {
         </select>
       </div>
 
-      {error && <div className="p-3 bg-red-50 text-red-500 text-sm rounded-lg full-width">{error}</div>}
+      {error && <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm rounded-xl">{error}</div>}
 
-      <div className="modal-footer full-width -mx-6 -mb-6 mt-8">
-        <button type="button" onClick={onSuccess} className="btn-cancel">Cancel</button>
+      <div className="flex justify-end gap-3 pt-4">
+        <button type="button" onClick={onCancel} className="px-4 py-2 text-charcoal-600 dark:text-charcoal-400 hover:bg-cream-100 dark:hover:bg-charcoal-700 rounded-xl font-medium transition-colors">Cancel</button>
         <button
           type="submit"
           disabled={loading}
-          className="btn-submit"
+          className="flex items-center gap-2 px-4 py-2 bg-terracotta-500 hover:bg-terracotta-600 disabled:opacity-50 text-white rounded-xl font-medium transition-all shadow-lg shadow-terracotta-500/20"
         >
-          {loading ? "Creating..." : "Create User"}
+          <FaUserPlus /> {loading ? "Creating..." : "Create User"}
         </button>
       </div>
     </form>

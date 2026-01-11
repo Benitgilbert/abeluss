@@ -29,19 +29,19 @@ export default function Blog() {
   const categories = ["Design Tips", "Marketing", "Branding", "Inspiration"];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-300">
+    <div className="min-h-screen bg-cream-100 dark:bg-charcoal-900 transition-colors duration-300">
       <Header />
 
       <main>
         {/* Hero Section */}
-        <section className="relative py-20 bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 overflow-hidden">
+        <section className="relative py-20 bg-white dark:bg-charcoal-800 border-b border-cream-200 dark:border-charcoal-700 overflow-hidden">
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-10 left-10 w-72 h-72 bg-violet-200 dark:bg-violet-900/20 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
-            <div className="absolute top-20 right-20 w-72 h-72 bg-indigo-200 dark:bg-indigo-900/20 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+            <div className="absolute top-10 left-10 w-72 h-72 bg-terracotta-200 dark:bg-terracotta-900/20 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+            <div className="absolute top-20 right-20 w-72 h-72 bg-sand-200 dark:bg-sand-900/20 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
           </div>
           <div className="relative mx-auto max-w-7xl px-4 text-center">
-            <h1 className="text-5xl md:text-6xl font-black text-gray-900 dark:text-white mb-6">Impressa <span className="text-violet-600 dark:text-violet-400">Blog</span></h1>
-            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
+            <h1 className="text-5xl md:text-6xl font-black text-charcoal-800 dark:text-white mb-6">Impressa <span className="text-terracotta-500 dark:text-terracotta-400">Blog</span></h1>
+            <p className="text-xl text-charcoal-600 dark:text-charcoal-400 max-w-2xl mx-auto leading-relaxed">
               Insights, tips, and inspiration for your printing projects and creative vision.
             </p>
           </div>
@@ -54,27 +54,27 @@ export default function Blog() {
               {loading ? (
                 <div className="space-y-12">
                   {[1, 2, 3].map(i => (
-                    <div key={i} className="animate-pulse bg-white dark:bg-slate-900 rounded-[40px] p-8 border border-gray-100 dark:border-slate-800">
-                      <div className="w-full h-64 bg-gray-100 dark:bg-slate-800 rounded-3xl mb-8"></div>
-                      <div className="h-4 bg-gray-100 dark:bg-slate-800 rounded w-1/4 mb-4"></div>
-                      <div className="h-8 bg-gray-100 dark:bg-slate-800 rounded w-3/4 mb-6"></div>
-                      <div className="h-4 bg-gray-100 dark:bg-slate-800 rounded w-full mb-2"></div>
-                      <div className="h-4 bg-gray-100 dark:bg-slate-800 rounded w-2/3"></div>
+                    <div key={i} className="animate-pulse bg-white dark:bg-charcoal-800 rounded-[40px] p-8 border border-cream-200 dark:border-charcoal-700">
+                      <div className="w-full h-64 bg-cream-200 dark:bg-charcoal-700 rounded-3xl mb-8"></div>
+                      <div className="h-4 bg-cream-200 dark:bg-charcoal-700 rounded w-1/4 mb-4"></div>
+                      <div className="h-8 bg-cream-200 dark:bg-charcoal-700 rounded w-3/4 mb-6"></div>
+                      <div className="h-4 bg-cream-200 dark:bg-charcoal-700 rounded w-full mb-2"></div>
+                      <div className="h-4 bg-cream-200 dark:bg-charcoal-700 rounded w-2/3"></div>
                     </div>
                   ))}
                 </div>
               ) : error ? (
-                <div className="p-12 bg-red-50 dark:bg-red-900/10 border-2 border-red-500/20 rounded-[40px] text-center">
-                  <p className="text-xl font-bold text-red-600 dark:text-red-400">{error}</p>
+                <div className="p-12 bg-terracotta-50 dark:bg-terracotta-900/10 border-2 border-terracotta-500/20 rounded-[40px] text-center">
+                  <p className="text-xl font-bold text-terracotta-600 dark:text-terracotta-400">{error}</p>
                 </div>
               ) : blogPosts.length === 0 ? (
-                <div className="p-20 bg-white dark:bg-slate-900 rounded-[40px] border-2 border-dashed border-gray-200 dark:border-slate-800 text-center text-gray-400 font-bold text-xl">
+                <div className="p-20 bg-white dark:bg-charcoal-800 rounded-[40px] border-2 border-dashed border-cream-300 dark:border-charcoal-700 text-center text-charcoal-400 font-bold text-xl">
                   No blog posts found.
                 </div>
               ) : (
                 <div className="space-y-16">
                   {blogPosts.map((post) => (
-                    <article key={post._id} className="group bg-white dark:bg-slate-900 rounded-[40px] shadow-sm hover:shadow-2xl border border-gray-100 dark:border-slate-800 transition-all duration-500 overflow-hidden transform hover:-translate-y-2">
+                    <article key={post._id} className="group bg-white dark:bg-charcoal-800 rounded-[40px] shadow-sm hover:shadow-2xl border border-cream-200 dark:border-charcoal-700 transition-all duration-500 overflow-hidden transform hover:-translate-y-2">
                       {post.image && (
                         <div className="aspect-[21/9] overflow-hidden">
                           <img
@@ -85,26 +85,26 @@ export default function Blog() {
                         </div>
                       )}
                       <div className="p-8 md:p-12">
-                        <div className="flex flex-wrap items-center gap-6 text-sm font-bold text-gray-400 dark:text-slate-600 uppercase tracking-widest mb-6">
+                        <div className="flex flex-wrap items-center gap-6 text-sm font-bold text-charcoal-400 dark:text-charcoal-500 uppercase tracking-widest mb-6">
                           <div className="flex items-center gap-2">
-                            <FaUser className="text-violet-600 dark:text-violet-400" />
+                            <FaUser className="text-terracotta-500 dark:text-terracotta-400" />
                             <span>{post.author}</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <FaCalendarAlt className="text-violet-600 dark:text-violet-400" />
+                            <FaCalendarAlt className="text-terracotta-500 dark:text-terracotta-400" />
                             <span>{new Date(post.createdAt).toLocaleDateString()}</span>
                           </div>
-                          <Link to="#" className="px-4 py-1.5 bg-violet-50 dark:bg-violet-900/10 text-violet-600 dark:text-violet-400 rounded-full hover:bg-violet-600 hover:text-white transition-all">
+                          <Link to="#" className="px-4 py-1.5 bg-terracotta-50 dark:bg-terracotta-900/10 text-terracotta-500 dark:text-terracotta-400 rounded-full hover:bg-terracotta-500 hover:text-white transition-all">
                             {post.category}
                           </Link>
                         </div>
-                        <h2 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-6 leading-tight group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">
+                        <h2 className="text-3xl md:text-4xl font-black text-charcoal-800 dark:text-white mb-6 leading-tight group-hover:text-terracotta-500 dark:group-hover:text-terracotta-400 transition-colors">
                           <Link to={`/blog/${post._id}`}>{post.title}</Link>
                         </h2>
-                        <p className="text-lg text-gray-500 dark:text-gray-400 mb-8 leading-relaxed line-clamp-3">{post.excerpt}</p>
+                        <p className="text-lg text-charcoal-500 dark:text-charcoal-400 mb-8 leading-relaxed line-clamp-3">{post.excerpt}</p>
                         <Link
                           to={`/blog/${post._id}`}
-                          className="inline-flex items-center gap-2 text-violet-600 dark:text-violet-400 font-black text-lg group/link"
+                          className="inline-flex items-center gap-2 text-terracotta-500 dark:text-terracotta-400 font-black text-lg group/link"
                         >
                           Read More <span className="group-hover:translate-x-2 transition-transform duration-300">&rarr;</span>
                         </Link>
@@ -118,30 +118,30 @@ export default function Blog() {
             {/* Sidebar Column */}
             <aside className="lg:col-span-4 space-y-12">
               {/* Search */}
-              <div className="bg-white dark:bg-slate-900 p-8 rounded-[40px] shadow-sm border border-gray-100 dark:border-slate-800">
-                <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-6">Search</h3>
+              <div className="bg-white dark:bg-charcoal-800 p-8 rounded-[40px] shadow-sm border border-cream-200 dark:border-charcoal-700">
+                <h3 className="text-2xl font-black text-charcoal-800 dark:text-white mb-6">Search</h3>
                 <div className="relative">
                   <input
                     type="text"
                     placeholder="Search blogs..."
-                    className="w-full bg-gray-50 dark:bg-slate-800 border border-transparent focus:border-violet-500 rounded-3xl py-4 pl-6 pr-14 text-gray-900 dark:text-white outline-none transition-all shadow-inner"
+                    className="w-full bg-cream-100 dark:bg-charcoal-700 border border-transparent focus:border-terracotta-500 rounded-3xl py-4 pl-6 pr-14 text-charcoal-800 dark:text-white outline-none transition-all shadow-inner"
                   />
-                  <FaSearch className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <FaSearch className="absolute right-6 top-1/2 -translate-y-1/2 text-charcoal-400" />
                 </div>
               </div>
 
               {/* Categories */}
-              <div className="bg-white dark:bg-slate-900 p-8 rounded-[40px] shadow-sm border border-gray-100 dark:border-slate-800">
-                <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-6">Categories</h3>
+              <div className="bg-white dark:bg-charcoal-800 p-8 rounded-[40px] shadow-sm border border-cream-200 dark:border-charcoal-700">
+                <h3 className="text-2xl font-black text-charcoal-800 dark:text-white mb-6">Categories</h3>
                 <ul className="space-y-4">
                   {categories.map((category) => (
                     <li key={category}>
                       <Link
                         to="#"
-                        className="flex items-center justify-between group p-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-all border border-transparent hover:border-gray-100 dark:hover:border-slate-700"
+                        className="flex items-center justify-between group p-4 rounded-2xl hover:bg-cream-100 dark:hover:bg-charcoal-700 transition-all border border-transparent hover:border-cream-200 dark:hover:border-charcoal-600"
                       >
-                        <span className="font-bold text-gray-600 dark:text-gray-400 group-hover:text-violet-600 dark:group-hover:text-violet-400">{category}</span>
-                        <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-slate-800 flex items-center justify-center text-xs font-bold text-gray-400 transition-all group-hover:bg-violet-600 group-hover:text-white">
+                        <span className="font-bold text-charcoal-600 dark:text-charcoal-400 group-hover:text-terracotta-500 dark:group-hover:text-terracotta-400">{category}</span>
+                        <div className="w-8 h-8 rounded-full bg-cream-200 dark:bg-charcoal-700 flex items-center justify-center text-xs font-bold text-charcoal-400 transition-all group-hover:bg-terracotta-500 group-hover:text-white">
                           <FaSearch className="text-[10px]" />
                         </div>
                       </Link>
@@ -151,17 +151,17 @@ export default function Blog() {
               </div>
 
               {/* Newsletter Placeholder */}
-              <div className="bg-violet-600 p-10 rounded-[40px] text-white overflow-hidden relative group">
+              <div className="bg-terracotta-500 p-10 rounded-[40px] text-white overflow-hidden relative group">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full translate-x-1/2 -translate-y-1/2 transform group-hover:scale-150 transition-transform duration-1000"></div>
                 <h3 className="text-2xl font-black mb-4">Never Miss a Post</h3>
-                <p className="text-violet-100 mb-8 font-medium">Get the latest printing tips and design inspiration delivered to your inbox.</p>
+                <p className="text-terracotta-100 mb-8 font-medium">Get the latest printing tips and design inspiration delivered to your inbox.</p>
                 <div className="space-y-4">
                   <input
                     type="email"
                     placeholder="your@email.com"
-                    className="w-full bg-white/20 border border-white/30 rounded-2xl py-4 px-6 text-white placeholder:text-violet-200 outline-none focus:bg-white/30 transition-all"
+                    className="w-full bg-white/20 border border-white/30 rounded-2xl py-4 px-6 text-white placeholder:text-terracotta-200 outline-none focus:bg-white/30 transition-all"
                   />
-                  <button className="w-full bg-white text-violet-600 py-4 rounded-2xl font-black hover:bg-gray-100 transition-all active:scale-95 shadow-2xl">
+                  <button className="w-full bg-white text-terracotta-500 py-4 rounded-2xl font-black hover:bg-cream-100 transition-all active:scale-95 shadow-2xl">
                     Subscribe
                   </button>
                 </div>

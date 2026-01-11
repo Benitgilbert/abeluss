@@ -2,11 +2,10 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from "../../utils/axiosInstance";
 import {
-    FaSearch, FaFilter, FaEye, FaChevronLeft, FaChevronRight
+    FaSearch, FaFilter, FaEye, FaChevronLeft, FaChevronRight, FaBox
 } from "react-icons/fa";
 import Sidebar from "../../components/Sidebar";
 import Topbar from "../../components/Topbar";
-import "../../styles/AdminLayout.css";
 
 const AdminOrders = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -22,7 +21,7 @@ const AdminOrders = () => {
     useEffect(() => {
         const timer = setTimeout(() => {
             setDebouncedSearch(search);
-            setPage(1); // Reset to page 1 on search
+            setPage(1);
         }, 500);
         return () => clearTimeout(timer);
     }, [search]);
@@ -50,54 +49,66 @@ const AdminOrders = () => {
         }
     };
 
-    const getStatusColor = (status) => {
+    const getStatusBadge = (status) => {
+        const baseClasses = "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold capitalize";
         switch (status) {
-            case "pending": return "status-pill status-pending";
-            case "processing": return "status-pill status-processing";
-            case "shipped": return "status-pill status-shipped";
-            case "delivered": return "status-pill status-delivered";
-            case "cancelled": return "status-pill status-cancelled";
-            case "refunded": return "status-pill badge-gray";
-            default: return "status-pill badge-gray";
+            case "pending":
+                return `${baseClasses} bg-sand-100 text-sand-700 dark:bg-sand-900/20 dark:text-sand-400`;
+            case "processing":
+                return `${baseClasses} bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400`;
+            case "shipped":
+                return `${baseClasses} bg-indigo-100 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400`;
+            case "delivered":
+                return `${baseClasses} bg-sage-100 text-sage-700 dark:bg-sage-900/20 dark:text-sage-400`;
+            case "cancelled":
+                return `${baseClasses} bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400`;
+            case "refunded":
+                return `${baseClasses} bg-charcoal-100 text-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-300`;
+            default:
+                return `${baseClasses} bg-charcoal-100 text-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-300`;
         }
     };
 
     return (
-        <div className="admin-container">
+        <div className="min-h-screen bg-cream-100 dark:bg-charcoal-900 transition-colors duration-300">
             <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-            <div className="admin-main">
-                <Topbar onMenuClick={() => setSidebarOpen(true)} />
-                <main className="dashboard-content">
-                    <div className="page-header">
-                        <h1 className="page-title">Order Management</h1>
-                        <p className="page-subtitle">Track and manage customer orders.</p>
+
+            <div className="lg:ml-64 min-h-screen flex flex-col transition-all duration-300">
+                <Topbar onMenuClick={() => setSidebarOpen(true)} title="Order Management" />
+
+                <main className="flex-1 p-4 lg:p-6 max-w-[1600px] w-full mx-auto">
+                    {/* Page Header */}
+                    <div className="mb-6">
+                        <h1 className="text-2xl font-bold text-charcoal-800 dark:text-white">
+                            Order Management
+                        </h1>
+                        <p className="text-charcoal-500 dark:text-charcoal-400 text-sm mt-1">
+                            Track and manage customer orders
+                        </p>
                     </div>
 
-                    <div className="card">
+                    {/* Main Card */}
+                    <div className="bg-white dark:bg-charcoal-800 rounded-2xl shadow-sm border border-cream-200 dark:border-charcoal-700 overflow-hidden">
                         {/* Filters & Search */}
-                        <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem", flexWrap: "wrap", justifyContent: "space-between" }}>
-                            <div style={{ position: "relative", flex: 1, minWidth: "250px" }}>
-                                <FaSearch style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-gray)" }} />
-                                <input
-                                    type="text"
-                                    placeholder="Search by ID, Customer Name/Email..."
-                                    style={{
-                                        width: "100%",
-                                        padding: "0.625rem 1rem 0.625rem 2.5rem",
-                                        borderRadius: "0.5rem",
-                                        border: "1px solid var(--color-border)",
-                                        fontSize: "0.875rem"
-                                    }}
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                />
-                            </div>
+                        <div className="p-4 lg:p-6 border-b border-cream-200 dark:border-charcoal-700">
+                            <div className="flex flex-col sm:flex-row gap-4 justify-between">
+                                {/* Search */}
+                                <div className="relative flex-1 max-w-md">
+                                    <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-charcoal-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search by ID, Customer Name/Email..."
+                                        className="w-full pl-11 pr-4 py-2.5 bg-cream-100 dark:bg-charcoal-700 border border-transparent focus:border-terracotta-500 rounded-xl text-sm text-charcoal-800 dark:text-white placeholder:text-charcoal-400 outline-none transition-colors"
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                    />
+                                </div>
 
-                            <div style={{ display: "flex", items: "center", gap: "0.5rem" }}>
-                                <div style={{ display: "flex", alignItems: "center", border: "1px solid var(--color-border)", borderRadius: "0.5rem", padding: "0 0.5rem", height: "42px" }}>
-                                    <FaFilter style={{ color: "var(--color-text-gray)", marginRight: "0.5rem" }} />
+                                {/* Status Filter */}
+                                <div className="flex items-center gap-2 px-4 py-2.5 bg-cream-100 dark:bg-charcoal-700 rounded-xl border border-cream-200 dark:border-charcoal-600">
+                                    <FaFilter className="text-charcoal-400 text-sm" />
                                     <select
-                                        style={{ border: "none", outline: "none", fontSize: "0.875rem", background: "transparent", color: "var(--color-text-primary)" }}
+                                        className="bg-transparent text-sm text-charcoal-800 dark:text-white outline-none cursor-pointer"
                                         value={statusFilter}
                                         onChange={(e) => {
                                             setStatusFilter(e.target.value);
@@ -116,72 +127,71 @@ const AdminOrders = () => {
                             </div>
                         </div>
 
-                        {/* Orders Table */}
-                        <div style={{ overflowX: "auto" }}>
-                            <table className="data-table">
-                                <thead>
+                        {/* Orders Table - Desktop */}
+                        <div className="hidden md:block overflow-x-auto">
+                            <table className="w-full">
+                                <thead className="bg-cream-50 dark:bg-charcoal-900">
                                     <tr>
-                                        <th>Order ID</th>
-                                        <th>Date</th>
-                                        <th>Customer</th>
-                                        <th>Total</th>
-                                        <th>Payment</th>
-                                        <th>Status</th>
-                                        <th style={{ textAlign: "center" }}>Actions</th>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-charcoal-500 dark:text-charcoal-400 uppercase tracking-wider">Order ID</th>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-charcoal-500 dark:text-charcoal-400 uppercase tracking-wider">Date</th>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-charcoal-500 dark:text-charcoal-400 uppercase tracking-wider">Customer</th>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-charcoal-500 dark:text-charcoal-400 uppercase tracking-wider">Total</th>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-charcoal-500 dark:text-charcoal-400 uppercase tracking-wider">Payment</th>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-charcoal-500 dark:text-charcoal-400 uppercase tracking-wider">Status</th>
+                                        <th className="px-6 py-4 text-center text-xs font-bold text-charcoal-500 dark:text-charcoal-400 uppercase tracking-wider">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody className="divide-y divide-cream-100 dark:divide-charcoal-700">
                                     {loading ? (
                                         <tr>
-                                            <td colSpan="7" style={{ padding: "2rem", textAlign: "center", color: "var(--color-text-gray)" }}>
-                                                Loading orders...
+                                            <td colSpan="7" className="px-6 py-12 text-center text-charcoal-500 dark:text-charcoal-400">
+                                                <div className="flex flex-col items-center gap-3">
+                                                    <div className="w-8 h-8 border-2 border-terracotta-500 border-t-transparent rounded-full animate-spin"></div>
+                                                    <span>Loading orders...</span>
+                                                </div>
                                             </td>
                                         </tr>
                                     ) : orders.length === 0 ? (
                                         <tr>
-                                            <td colSpan="7" style={{ padding: "2rem", textAlign: "center", color: "var(--color-text-gray)" }}>
-                                                No orders found.
+                                            <td colSpan="7" className="px-6 py-12 text-center">
+                                                <FaBox className="text-4xl text-charcoal-300 dark:text-charcoal-600 mx-auto mb-3" />
+                                                <p className="text-charcoal-500 dark:text-charcoal-400">No orders found</p>
                                             </td>
                                         </tr>
                                     ) : (
                                         orders.map((order) => (
-                                            <tr key={order._id}>
-                                                <td style={{ fontFamily: "monospace", fontSize: "0.85rem", color: "var(--color-text-gray)" }}>
-                                                    #{order.publicId}
+                                            <tr key={order._id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
+                                                <td className="px-6 py-4">
+                                                    <span className="font-mono text-sm text-charcoal-600 dark:text-charcoal-300">
+                                                        #{order.publicId}
+                                                    </span>
                                                 </td>
-                                                <td>
+                                                <td className="px-6 py-4 text-sm text-charcoal-600 dark:text-charcoal-300">
                                                     {new Date(order.createdAt).toLocaleDateString()}
                                                 </td>
-                                                <td>
-                                                    <div style={{ fontWeight: 500, color: "var(--color-text-primary)" }}>
+                                                <td className="px-6 py-4">
+                                                    <div className="font-medium text-charcoal-800 dark:text-white">
                                                         {order.customer?.name || order.guestInfo?.name || "Guest"}
                                                     </div>
-                                                    <div style={{ fontSize: "0.75rem", color: "var(--color-text-gray)" }}>
+                                                    <div className="text-xs text-charcoal-500 dark:text-charcoal-400">
                                                         {order.customer?.email || order.guestInfo?.email}
                                                     </div>
                                                 </td>
-                                                <td style={{ fontWeight: 500 }}>
+                                                <td className="px-6 py-4 font-semibold text-charcoal-800 dark:text-white">
                                                     {order.totals?.grandTotal?.toLocaleString()} Rwf
                                                 </td>
-                                                <td style={{ textTransform: "capitalize" }}>
-                                                    <span style={{ fontSize: "0.85rem", color: "var(--color-text-gray)" }}>
-                                                        {order.payment?.method?.replace("_", " ")}
-                                                    </span>
+                                                <td className="px-6 py-4 text-sm text-charcoal-500 dark:text-charcoal-400 capitalize">
+                                                    {order.payment?.method?.replace("_", " ")}
                                                 </td>
-                                                <td>
-                                                    <span className={getStatusColor(order.status)}>
+                                                <td className="px-6 py-4">
+                                                    <span className={getStatusBadge(order.status)}>
                                                         {order.status}
                                                     </span>
                                                 </td>
-                                                <td style={{ textAlign: "center" }}>
+                                                <td className="px-6 py-4 text-center">
                                                     <Link
                                                         to={`/admin/orders/${order._id}`}
-                                                        style={{
-                                                            color: "var(--color-primary)",
-                                                            fontSize: "1.1rem",
-                                                            padding: "0.25rem",
-                                                            display: "inline-block"
-                                                        }}
+                                                        className="inline-flex items-center justify-center w-9 h-9 rounded-lg text-terracotta-500 hover:bg-terracotta-50 dark:hover:bg-terracotta-900/20 transition-colors"
                                                         title="View Details"
                                                     >
                                                         <FaEye />
@@ -194,35 +204,87 @@ const AdminOrders = () => {
                             </table>
                         </div>
 
+                        {/* Orders Card List - Mobile */}
+                        <div className="md:hidden divide-y divide-cream-100 dark:divide-charcoal-700">
+                            {loading ? (
+                                <div className="p-8 text-center text-charcoal-500">
+                                    <div className="w-8 h-8 border-2 border-terracotta-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                                    Loading orders...
+                                </div>
+                            ) : orders.length === 0 ? (
+                                <div className="p-8 text-center">
+                                    <FaBox className="text-4xl text-charcoal-300 mx-auto mb-3" />
+                                    <p className="text-charcoal-500">No orders found</p>
+                                </div>
+                            ) : (
+                                orders.map((order) => (
+                                    <div key={order._id} className="p-4 hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
+                                        <div className="flex justify-between items-start mb-3">
+                                            <div>
+                                                <span className="font-mono text-sm text-charcoal-600 dark:text-charcoal-300">
+                                                    #{order.publicId}
+                                                </span>
+                                                <p className="font-medium text-charcoal-800 dark:text-white mt-1">
+                                                    {order.customer?.name || order.guestInfo?.name || "Guest"}
+                                                </p>
+                                            </div>
+                                            <span className={getStatusBadge(order.status)}>
+                                                {order.status}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-sm">
+                                            <div>
+                                                <span className="text-charcoal-500 dark:text-charcoal-400">
+                                                    {new Date(order.createdAt).toLocaleDateString()}
+                                                </span>
+                                                <span className="mx-2 text-charcoal-300">•</span>
+                                                <span className="font-semibold text-charcoal-800 dark:text-white">
+                                                    {order.totals?.grandTotal?.toLocaleString()} Rwf
+                                                </span>
+                                            </div>
+                                            <Link
+                                                to={`/admin/orders/${order._id}`}
+                                                className="p-2 rounded-lg text-terracotta-500 hover:bg-terracotta-50 dark:hover:bg-terracotta-900/20"
+                                            >
+                                                <FaEye />
+                                            </Link>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
                         {/* Pagination */}
                         {!loading && orders.length > 0 && (
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "1.5rem", paddingTop: "1rem", borderTop: "1px solid var(--color-border)" }}>
+                            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 p-4 lg:p-6 border-t border-cream-200 dark:border-charcoal-700">
                                 <button
                                     disabled={page === 1}
                                     onClick={() => setPage(p => p - 1)}
-                                    style={{
-                                        display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem", borderRadius: "0.5rem", border: "1px solid var(--color-border)",
-                                        backgroundColor: page === 1 ? "var(--color-bg-light)" : "white",
-                                        color: page === 1 ? "var(--color-text-gray)" : "var(--color-text-primary)",
-                                        cursor: page === 1 ? "not-allowed" : "pointer"
-                                    }}
+                                    className={`
+                                        flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-medium transition-all
+                                        ${page === 1
+                                            ? 'border-cream-200 dark:border-charcoal-700 bg-cream-100 dark:bg-charcoal-700 text-charcoal-400 cursor-not-allowed'
+                                            : 'border-cream-200 dark:border-charcoal-600 bg-white dark:bg-charcoal-700 text-charcoal-700 dark:text-white hover:border-terracotta-500 hover:text-terracotta-500'
+                                        }
+                                    `}
                                 >
-                                    <FaChevronLeft size={12} /> Previous
+                                    <FaChevronLeft className="text-xs" /> Previous
                                 </button>
-                                <span style={{ fontSize: "0.875rem", color: "var(--color-text-gray)" }}>
+                                <span className="text-sm text-charcoal-500 dark:text-charcoal-400">
                                     Page {page} of {totalPages}
-                                </span >
+                                </span>
                                 <button
                                     disabled={page === totalPages}
                                     onClick={() => setPage(p => p + 1)}
-                                    style={{
-                                        display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem", borderRadius: "0.5rem", border: "1px solid var(--color-border)",
-                                        backgroundColor: page === totalPages ? "var(--color-bg-light)" : "white",
-                                        color: page === totalPages ? "var(--color-text-gray)" : "var(--color-text-primary)",
-                                        cursor: page === totalPages ? "not-allowed" : "pointer"
-                                    }}
+                                    className={`
+                                        flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-medium transition-all
+                                        ${page === totalPages
+                                            ? 'border-cream-200 dark:border-charcoal-700 bg-cream-100 dark:bg-charcoal-700 text-charcoal-400 cursor-not-allowed'
+                                            : 'border-cream-200 dark:border-charcoal-600 bg-white dark:bg-charcoal-700 text-charcoal-700 dark:text-white hover:border-terracotta-500 hover:text-terracotta-500'
+                                        }
+                                    `}
                                 >
-                                    Next <FaChevronRight size={12} />
+                                    Next <FaChevronRight className="text-xs" />
                                 </button>
                             </div>
                         )}

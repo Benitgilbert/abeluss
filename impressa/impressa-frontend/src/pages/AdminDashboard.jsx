@@ -11,64 +11,85 @@ import TopSellersWidget from "../components/TopSellersWidget";
 import LowStockWidget from "../components/LowStockWidget";
 import PendingApprovalsWidget from "../components/PendingApprovalsWidget";
 import OrderStatusChart from "../components/OrderStatusChart";
-import "../styles/AdminLayout.css";
 
 function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="admin-container">
+    <div className="min-h-screen bg-cream-100 dark:bg-charcoal-900 transition-colors duration-300">
+      {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <div className="admin-main">
+
+      {/* Main Content Area */}
+      <div className="lg:ml-64 min-h-screen flex flex-col transition-all duration-300">
+        {/* Topbar */}
         <Topbar onMenuClick={() => setSidebarOpen(true)} title="Dashboard Overview" />
 
-        <main className="dashboard-content">
+        {/* Dashboard Content */}
+        <main className="flex-1 p-4 lg:p-6 max-w-[1600px] w-full mx-auto">
 
           {/* Metrics Cards */}
-          <div className="section-mb">
+          <section className="mb-8">
             <DashboardCards />
-          </div>
+          </section>
 
-          {/* Charts Section - Row 1 */}
-          <div className="section-mb">
-            <div className="page-header">
-              <h2 className="card-title">Performance Analytics</h2>
-            </div>
-            <div className="two-col-grid">
-              <div className="card">
+          {/* Performance Analytics */}
+          <section className="mb-8">
+            <h2 className="text-lg font-bold text-charcoal-800 dark:text-white mb-4">
+              Performance Analytics
+            </h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white dark:bg-charcoal-800 rounded-2xl p-6 shadow-sm border border-cream-200 dark:border-charcoal-700 hover:shadow-lg transition-shadow">
                 <RevenueChart />
               </div>
-              <div className="card">
+              <div className="bg-white dark:bg-charcoal-800 rounded-2xl p-6 shadow-sm border border-cream-200 dark:border-charcoal-700 hover:shadow-lg transition-shadow">
                 <WeeklyProfitChart />
               </div>
             </div>
-          </div>
+          </section>
 
-          {/* Multi-Vendor Insights - Row 2 */}
-          <div className="section-mb">
-            <div className="page-header">
-              <h2 className="card-title">Marketplace Insights</h2>
+          {/* Marketplace Insights */}
+          <section className="mb-8">
+            <h2 className="text-lg font-bold text-charcoal-800 dark:text-white mb-4">
+              Marketplace Insights
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="bg-white dark:bg-charcoal-800 rounded-2xl p-6 shadow-sm border border-cream-200 dark:border-charcoal-700 hover:shadow-lg transition-shadow">
+                <TopSellersWidget />
+              </div>
+              <div className="bg-white dark:bg-charcoal-800 rounded-2xl p-6 shadow-sm border border-cream-200 dark:border-charcoal-700 hover:shadow-lg transition-shadow">
+                <PendingApprovalsWidget />
+              </div>
+              <div className="bg-white dark:bg-charcoal-800 rounded-2xl p-6 shadow-sm border border-cream-200 dark:border-charcoal-700 hover:shadow-lg transition-shadow md:col-span-2 lg:col-span-1">
+                <OrderStatusChart />
+              </div>
             </div>
-            <div className="three-col-grid">
-              <TopSellersWidget />
-              <PendingApprovalsWidget />
-              <OrderStatusChart />
-            </div>
-          </div>
+          </section>
 
-          {/* Inventory & Orders - Row 3 */}
-          <div className="section-mb">
-            <div className="two-col-grid">
-              <LowStockWidget />
-              <RecentOrderTable />
+          {/* Inventory & Orders */}
+          <section className="mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white dark:bg-charcoal-800 rounded-2xl p-6 shadow-sm border border-cream-200 dark:border-charcoal-700 hover:shadow-lg transition-shadow">
+                <LowStockWidget />
+              </div>
+              <div className="bg-white dark:bg-charcoal-800 rounded-2xl p-6 shadow-sm border border-cream-200 dark:border-charcoal-700 hover:shadow-lg transition-shadow">
+                <RecentOrderTable />
+              </div>
             </div>
-          </div>
+          </section>
 
-          {/* Products Analysis - Row 4 */}
-          <div className="two-col-grid">
-            <TopOrderedProductsTable />
-            <CustomizationDemandTable />
-          </div>
+          {/* Products Analysis */}
+          <section>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white dark:bg-charcoal-800 rounded-2xl p-6 shadow-sm border border-cream-200 dark:border-charcoal-700 hover:shadow-lg transition-shadow">
+                <TopOrderedProductsTable />
+              </div>
+              <div className="bg-white dark:bg-charcoal-800 rounded-2xl p-6 shadow-sm border border-cream-200 dark:border-charcoal-700 hover:shadow-lg transition-shadow">
+                <CustomizationDemandTable />
+              </div>
+            </div>
+          </section>
+
         </main>
       </div>
     </div>

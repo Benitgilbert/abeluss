@@ -1,11 +1,7 @@
-import { FaChartBar, FaUser, FaBox, FaFileAlt, FaSignOutAlt, FaTags, FaTicketAlt, FaTruck, FaPercentage, FaCog, FaCashRegister, FaMoneyBillWave, FaFolder, FaFire, FaDesktop, FaQuoteLeft, FaHandshake, FaGlobe, FaEnvelope, FaStore, FaPercent, FaDollarSign, FaClipboardCheck, FaStar, FaHeadset, FaMoon, FaSun, FaExclamationTriangle, FaChartLine } from "react-icons/fa";
+import { FaChartBar, FaUser, FaBox, FaFileAlt, FaSignOutAlt, FaTags, FaTicketAlt, FaTruck, FaPercentage, FaCog, FaMoneyBillWave, FaFolder, FaFire, FaDesktop, FaQuoteLeft, FaHandshake, FaGlobe, FaEnvelope, FaStore, FaPercent, FaDollarSign, FaClipboardCheck, FaStar, FaHeadset, FaExclamationTriangle, FaChartLine, FaTimes } from "react-icons/fa";
 import { Link, useLocation } from "react-router-dom";
-import { useRef, useEffect, useLayoutEffect } from "react";
-
+import { useRef, useLayoutEffect } from "react";
 import AdminChatbot from "./AdminChatBot";
-// import '../styles/AdminLayout.css'; // Removed as per instruction, assuming this was the intended target for removal
-// The instruction specifically mentioned 'import './Layout.css';' which was not present.
-// If the intention was to remove '../styles/AdminLayout.css', this line is commented out.
 
 function Sidebar({ isOpen, onClose }) {
   const location = useLocation();
@@ -15,7 +11,6 @@ function Sidebar({ isOpen, onClose }) {
   useLayoutEffect(() => {
     const savedPos = sessionStorage.getItem('sidebarScrollPos');
     if (sidebarRef.current && savedPos) {
-      // Use requestAnimationFrame to ensure DOM is ready
       requestAnimationFrame(() => {
         if (sidebarRef.current) {
           sidebarRef.current.scrollTop = parseInt(savedPos, 10);
@@ -34,157 +29,143 @@ function Sidebar({ isOpen, onClose }) {
     }
   };
 
-  const isActive = (path) => {
-    return location.pathname === path ? "nav-link active" : "nav-link";
-  };
+  const isActive = (path) => location.pathname === path;
+
+  const NavLink = ({ to, icon: Icon, iconColor, children }) => (
+    <Link
+      to={to}
+      onClick={handleLinkClick}
+      className={`
+        flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium
+        transition-all duration-200 group
+        ${isActive(to)
+          ? 'bg-terracotta-500/20 text-white font-semibold shadow-inner'
+          : 'text-charcoal-300 hover:bg-white/5 hover:text-white hover:translate-x-1'
+        }
+      `}
+    >
+      <Icon className={`text-base flex-shrink-0 ${isActive(to) ? 'text-terracotta-400' : iconColor || 'text-charcoal-400'}`} />
+      <span>{children}</span>
+    </Link>
+  );
+
+  const NavSection = ({ label, children }) => (
+    <div className="px-3 pt-6 pb-2">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-charcoal-500 mb-3 px-4">
+        {label}
+      </p>
+      <div className="space-y-1">
+        {children}
+      </div>
+    </div>
+  );
 
   return (
     <>
       {/* Mobile Overlay */}
       <div
-        className={`sidebar-overlay ${isOpen ? 'active' : ''}`}
+        className={`
+          fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden
+          transition-opacity duration-300
+          ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
+        `}
         onClick={onClose}
       />
 
-      <aside ref={sidebarRef} className={`admin-sidebar ${isOpen ? 'open' : ''}`}>
-        <div className="sidebar-header">
-          <h1 className="brand">IMPRESSA</h1>
-          <p className="brand-sub">Admin Portal</p>
+      {/* Sidebar */}
+      <aside
+        ref={sidebarRef}
+        className={`
+          fixed top-0 left-0 h-screen w-64 z-50
+          bg-gradient-to-b from-charcoal-800 to-charcoal-900
+          border-r border-charcoal-700/50
+          flex flex-col
+          overflow-y-auto overflow-x-hidden
+          scrollbar-thin scrollbar-thumb-charcoal-600 scrollbar-track-transparent
+          transition-transform duration-300 ease-out
+          lg:translate-x-0
+          ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}
+      >
+        {/* Header */}
+        <div className="sticky top-0 z-10 px-6 py-5 border-b border-charcoal-700/50 bg-charcoal-800/95 backdrop-blur-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-black bg-gradient-to-r from-terracotta-400 to-sand-400 bg-clip-text text-transparent">
+                IMPRESSA
+              </h1>
+              <p className="text-[10px] text-charcoal-400 uppercase tracking-[0.2em] mt-0.5">
+                Admin Portal
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="lg:hidden p-2 rounded-lg text-charcoal-400 hover:text-white hover:bg-charcoal-700 transition-colors"
+            >
+              <FaTimes />
+            </button>
+          </div>
         </div>
 
-        <div className="nav-section">
-          <div className="nav-label">Overview</div>
-          <Link to="/admin" className={isActive('/admin')} onClick={handleLinkClick}>
-            <FaChartBar className="nav-icon" />
-            <span>Dashboard</span>
-          </Link>
-        </div>
+        {/* Navigation */}
+        <nav className="flex-1 pb-4">
+          <NavSection label="Overview">
+            <NavLink to="/admin" icon={FaChartBar} iconColor="text-terracotta-400">
+              Dashboard
+            </NavLink>
+          </NavSection>
 
-        <div className="nav-section">
-          <div className="nav-label">Management</div>
-          <Link to="/admin/users" className={isActive('/admin/users')} onClick={handleLinkClick}>
-            <FaUser className="nav-icon" />
-            <span>Users</span>
-          </Link>
-          <Link to="/admin/sellers" className={isActive('/admin/sellers')} onClick={handleLinkClick}>
-            <FaStore className="nav-icon" style={{ color: '#f59e0b' }} />
-            <span>Sellers</span>
-          </Link>
-          <Link to="/admin/violations" className={isActive('/admin/violations')} onClick={handleLinkClick}>
-            <FaExclamationTriangle className="nav-icon" style={{ color: '#ef4444' }} />
-            <span>Violations</span>
-          </Link>
-          <Link to="/admin/seller-reports" className={isActive('/admin/seller-reports')} onClick={handleLinkClick}>
-            <FaChartLine className="nav-icon" style={{ color: '#6366f1' }} />
-            <span>Seller Reports</span>
-          </Link>
-          <Link to="/admin/orders" className={isActive('/admin/orders')} onClick={handleLinkClick}>
-            <FaBox className="nav-icon" />
-            <span>Orders</span>
-          </Link>
-          <Link to="/admin/products" className={isActive('/admin/products')} onClick={handleLinkClick}>
-            <FaBox className="nav-icon" />
-            <span>Products</span>
-          </Link>
-          <Link to="/admin/product-approval" className={isActive('/admin/product-approval')} onClick={handleLinkClick}>
-            <FaClipboardCheck className="nav-icon" style={{ color: '#f97316' }} />
-            <span>Product Approval</span>
-          </Link>
-          <Link to="/admin/categories" className={isActive('/admin/categories')} onClick={handleLinkClick}>
-            <FaFolder className="nav-icon" />
-            <span>Categories</span>
-          </Link>
-          <Link to="/admin/attributes" className={isActive('/admin/attributes')} onClick={handleLinkClick}>
-            <FaTags className="nav-icon" />
-            <span>Attributes</span>
-          </Link>
-          <Link to="/admin/reviews" className={isActive('/admin/reviews')} onClick={handleLinkClick}>
-            <FaStar className="nav-icon" style={{ color: '#eab308' }} />
-            <span>Reviews</span>
-          </Link>
-          <Link to="/admin/tickets" className={isActive('/admin/tickets')} onClick={handleLinkClick}>
-            <FaHeadset className="nav-icon" style={{ color: '#6366f1' }} />
-            <span>Support Tickets</span>
-          </Link>
-        </div>
+          <NavSection label="Management">
+            <NavLink to="/admin/users" icon={FaUser}>Users</NavLink>
+            <NavLink to="/admin/sellers" icon={FaStore} iconColor="text-amber-400">Sellers</NavLink>
+            <NavLink to="/admin/violations" icon={FaExclamationTriangle} iconColor="text-red-400">Violations</NavLink>
+            <NavLink to="/admin/seller-reports" icon={FaChartLine} iconColor="text-indigo-400">Seller Reports</NavLink>
+            <NavLink to="/admin/orders" icon={FaBox} iconColor="text-blue-400">Orders</NavLink>
+            <NavLink to="/admin/products" icon={FaBox} iconColor="text-sage-400">Products</NavLink>
+            <NavLink to="/admin/product-approval" icon={FaClipboardCheck} iconColor="text-orange-400">Product Approval</NavLink>
+            <NavLink to="/admin/categories" icon={FaFolder} iconColor="text-sand-400">Categories</NavLink>
+            <NavLink to="/admin/attributes" icon={FaTags} iconColor="text-purple-400">Attributes</NavLink>
+            <NavLink to="/admin/reviews" icon={FaStar} iconColor="text-yellow-400">Reviews</NavLink>
+            <NavLink to="/admin/tickets" icon={FaHeadset} iconColor="text-indigo-400">Support Tickets</NavLink>
+          </NavSection>
 
-        <div className="nav-section">
-          <div className="nav-label">Marketing</div>
-          <Link to="/admin/coupons" className={isActive('/admin/coupons')} onClick={handleLinkClick}>
-            <FaTicketAlt className="nav-icon" />
-            <span>Coupons</span>
-          </Link>
-          <Link to="/admin/flash-sales" className={isActive('/admin/flash-sales')} onClick={handleLinkClick}>
-            <FaFire className="nav-icon" style={{ color: '#ef4444' }} />
-            <span>Flash Sales</span>
-          </Link>
-          <Link to="/admin/banners" className={isActive('/admin/banners')} onClick={handleLinkClick}>
-            <FaDesktop className="nav-icon" style={{ color: '#8b5cf6' }} />
-            <span>Banners</span>
-          </Link>
-          <Link to="/admin/testimonials" className={isActive('/admin/testimonials')} onClick={handleLinkClick}>
-            <FaQuoteLeft className="nav-icon" style={{ color: '#06b6d4' }} />
-            <span>Testimonials</span>
-          </Link>
-          <Link to="/admin/brand-partners" className={isActive('/admin/brand-partners')} onClick={handleLinkClick}>
-            <FaHandshake className="nav-icon" style={{ color: '#f59e0b' }} />
-            <span>Brand Partners</span>
-          </Link>
-        </div>
+          <NavSection label="Marketing">
+            <NavLink to="/admin/coupons" icon={FaTicketAlt} iconColor="text-pink-400">Coupons</NavLink>
+            <NavLink to="/admin/flash-sales" icon={FaFire} iconColor="text-red-500">Flash Sales</NavLink>
+            <NavLink to="/admin/banners" icon={FaDesktop} iconColor="text-violet-400">Banners</NavLink>
+            <NavLink to="/admin/testimonials" icon={FaQuoteLeft} iconColor="text-cyan-400">Testimonials</NavLink>
+            <NavLink to="/admin/brand-partners" icon={FaHandshake} iconColor="text-amber-400">Brand Partners</NavLink>
+          </NavSection>
 
-        <div className="nav-section">
-          <div className="nav-label">Finance</div>
-          <Link to="/admin/finance" className={isActive('/admin/finance')} onClick={handleLinkClick}>
-            <FaMoneyBillWave className="nav-icon" />
-            <span>Finance</span>
-          </Link>
-          <Link to="/admin/commissions" className={isActive('/admin/commissions')} onClick={handleLinkClick}>
-            <FaPercent className="nav-icon" style={{ color: '#10b981' }} />
-            <span>Commissions</span>
-          </Link>
-          <Link to="/admin/payouts" className={isActive('/admin/payouts')} onClick={handleLinkClick}>
-            <FaDollarSign className="nav-icon" style={{ color: '#8b5cf6' }} />
-            <span>Payouts</span>
-          </Link>
-        </div>
+          <NavSection label="Finance">
+            <NavLink to="/admin/finance" icon={FaMoneyBillWave} iconColor="text-sage-400">Finance</NavLink>
+            <NavLink to="/admin/commissions" icon={FaPercent} iconColor="text-emerald-400">Commissions</NavLink>
+            <NavLink to="/admin/payouts" icon={FaDollarSign} iconColor="text-violet-400">Payouts</NavLink>
+          </NavSection>
 
-        <div className="nav-section">
-          <div className="nav-label">Configuration</div>
-          <Link to="/admin/site-settings" className={isActive('/admin/site-settings')} onClick={handleLinkClick}>
-            <FaGlobe className="nav-icon" style={{ color: '#10b981' }} />
-            <span>Site Settings</span>
-          </Link>
-          <Link to="/admin/subscribers" className={isActive('/admin/subscribers')} onClick={handleLinkClick}>
-            <FaEnvelope className="nav-icon" style={{ color: '#ec4899' }} />
-            <span>Subscribers</span>
-          </Link>
-          <Link to="/admin/shipping" className={isActive('/admin/shipping')} onClick={handleLinkClick}>
-            <FaTruck className="nav-icon" />
-            <span>Shipping</span>
-          </Link>
-          <Link to="/admin/taxes" className={isActive('/admin/taxes')} onClick={handleLinkClick}>
-            <FaPercentage className="nav-icon" />
-            <span>Taxes</span>
-          </Link>
-          <Link to="/admin/reports" className={isActive('/admin/reports')} onClick={handleLinkClick}>
-            <FaFileAlt className="nav-icon" />
-            <span>Reports</span>
-          </Link>
-          <Link to="/admin/settings" className={isActive('/admin/settings')} onClick={handleLinkClick}>
-            <FaCog className="nav-icon" />
-            <span>Settings</span>
-          </Link>
-        </div>
+          <NavSection label="Configuration">
+            <NavLink to="/admin/site-settings" icon={FaGlobe} iconColor="text-sage-400">Site Settings</NavLink>
+            <NavLink to="/admin/subscribers" icon={FaEnvelope} iconColor="text-pink-400">Subscribers</NavLink>
+            <NavLink to="/admin/shipping" icon={FaTruck} iconColor="text-blue-400">Shipping</NavLink>
+            <NavLink to="/admin/taxes" icon={FaPercentage} iconColor="text-orange-400">Taxes</NavLink>
+            <NavLink to="/admin/reports" icon={FaFileAlt} iconColor="text-charcoal-400">Reports</NavLink>
+            <NavLink to="/admin/settings" icon={FaCog} iconColor="text-charcoal-400">Settings</NavLink>
+          </NavSection>
+        </nav>
 
-        <div className="logout-div">
-
-
-          <Link to="/logout" className="logout-btn" onClick={handleLinkClick}>
-            <FaSignOutAlt className="nav-icon" />
+        {/* Logout */}
+        <div className="sticky bottom-0 p-4 border-t border-charcoal-700/50 bg-charcoal-800/95 backdrop-blur-sm">
+          <Link
+            to="/logout"
+            onClick={handleLinkClick}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-200"
+          >
+            <FaSignOutAlt className="text-base" />
             <span>Logout</span>
           </Link>
         </div>
       </aside>
+
       <AdminChatbot />
     </>
   );

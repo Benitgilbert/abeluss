@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import "../styles/Toast.css";
 
 const ToastContext = createContext();
 
@@ -34,14 +33,41 @@ export const ToastProvider = ({ children }) => {
     const showInfo = (msg) => addToast(msg, 'info');
     const showWarning = (msg) => addToast(msg, 'warning');
 
+    const getTypeStyles = (type) => {
+        switch (type) {
+            case 'success':
+                return 'bg-green-500 text-white shadow-green-500/20';
+            case 'error':
+                return 'bg-red-500 text-white shadow-red-500/20';
+            case 'warning':
+                return 'bg-yellow-500 text-white shadow-yellow-500/20';
+            case 'info':
+            default:
+                return 'bg-charcoal-700 text-white shadow-charcoal-500/20';
+        }
+    };
+
     return (
         <ToastContext.Provider value={{ addToast, removeToast, showSuccess, showError, showInfo, showWarning }}>
             {children}
-            <div className="toast-container" role="alert" aria-live="aggressive">
+            <div className="fixed bottom-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none">
                 {toasts.map(toast => (
-                    <div key={toast.id} className={`toast-item ${toast.type}`}>
-                        <div className="toast-content">{toast.message}</div>
-                        <button onClick={() => removeToast(toast.id)} className="toast-close">×</button>
+                    <div
+                        key={toast.id}
+                        className={`
+                            pointer-events-auto min-w-[300px] max-w-sm p-4 rounded-xl shadow-lg border border-white/10 flex items-center justify-between gap-4 animate-in slide-in-from-bottom-2 fade-in duration-300
+                            ${getTypeStyles(toast.type)}
+                        `}
+                        role="alert"
+                    >
+                        <div className="text-sm font-medium">{toast.message}</div>
+                        <button
+                            onClick={() => removeToast(toast.id)}
+                            className="text-white/60 hover:text-white transition-colors text-lg leading-none"
+                            aria-label="Close"
+                        >
+                            ×
+                        </button>
                     </div>
                 ))}
             </div>

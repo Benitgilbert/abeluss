@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import api from "../utils/axiosInstance";
 import { FaUserPlus, FaCheck, FaTimes, FaEye } from "react-icons/fa";
 import { Link } from "react-router-dom";
-import "../styles/AdminLayout.css";
 
 function PendingApprovalsWidget() {
     const [approvals, setApprovals] = useState([]);
@@ -33,67 +32,71 @@ function PendingApprovalsWidget() {
 
     if (loading) {
         return (
-            <div className="card">
-                <h3 className="card-title">Pending Approvals</h3>
-                <div className="skeleton skeleton-card"></div>
+            <div className="bg-white dark:bg-charcoal-800 rounded-xl shadow-sm border border-cream-100 dark:border-charcoal-700 p-6 h-full">
+                <h3 className="text-lg font-bold text-charcoal-800 dark:text-white mb-4">Pending Approvals</h3>
+                <div className="animate-pulse h-40 bg-gray-100 dark:bg-charcoal-700 rounded-xl"></div>
             </div>
         );
     }
 
     return (
-        <div className="card">
-            <div className="table-header" style={{ padding: 0, marginBottom: '1rem', border: 'none' }}>
-                <h3 className="table-title">
-                    <FaUserPlus style={{ marginRight: '0.5rem', color: 'var(--warning)' }} />
+        <div className="bg-white dark:bg-charcoal-800 rounded-xl shadow-sm border border-cream-100 dark:border-charcoal-700 p-6 h-full flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-charcoal-800 dark:text-white flex items-center gap-2">
+                    <FaUserPlus className="text-terracotta-500" />
                     Pending Seller Approvals
                 </h3>
                 {stats.pending > 0 && (
-                    <span className="badge badge-warning">
+                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">
                         {stats.pending} pending
                     </span>
                 )}
             </div>
 
             {/* Quick Stats */}
-            <div className="seller-quick-stats">
-                <div className="quick-stat">
-                    <span className="quick-stat-value">{stats.total}</span>
-                    <span className="quick-stat-label">Total</span>
+            <div className="grid grid-cols-3 gap-2 mb-6 text-center">
+                <div className="p-2 bg-gray-50 dark:bg-charcoal-700/50 rounded-lg">
+                    <span className="block text-lg font-black text-charcoal-800 dark:text-white">{stats.total}</span>
+                    <span className="text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 tracking-wider">Total</span>
                 </div>
-                <div className="quick-stat">
-                    <span className="quick-stat-value text-success">{stats.active}</span>
-                    <span className="quick-stat-label">Active</span>
+                <div className="p-2 bg-green-50 dark:bg-green-900/10 rounded-lg">
+                    <span className="block text-lg font-black text-green-600 dark:text-green-400">{stats.active}</span>
+                    <span className="text-[10px] uppercase font-bold text-green-600/70 dark:text-green-400/70 tracking-wider">Active</span>
                 </div>
-                <div className="quick-stat">
-                    <span className="quick-stat-value text-warning">{stats.pending}</span>
-                    <span className="quick-stat-label">Pending</span>
+                <div className="p-2 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg">
+                    <span className="block text-lg font-black text-yellow-600 dark:text-yellow-400">{stats.pending}</span>
+                    <span className="text-[10px] uppercase font-bold text-yellow-600/70 dark:text-yellow-400/70 tracking-wider">Pending</span>
                 </div>
             </div>
 
             {approvals.length === 0 ? (
-                <div className="empty-state" style={{ padding: '1.5rem' }}>
-                    <FaCheck className="empty-state-icon" style={{ color: 'var(--success)' }} />
-                    <p className="empty-state-title">All caught up!</p>
-                    <p className="empty-state-text">No pending approvals</p>
+                <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+                    <div className="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mb-3">
+                        <FaCheck className="text-green-600 dark:text-green-400 text-xl" />
+                    </div>
+                    <p className="font-medium text-charcoal-800 dark:text-white">All caught up!</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">No pending approvals</p>
                 </div>
             ) : (
                 <>
-                    <div className="approvals-list">
+                    <div className="flex-1 overflow-y-auto space-y-3 pr-1 max-h-[220px] scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-charcoal-600">
                         {approvals.map((seller) => (
-                            <div key={seller._id} className="approval-item">
-                                <div className="approval-info">
-                                    <span className="approval-name">{seller.name}</span>
-                                    <span className="approval-store">{seller.storeName || 'No store name'}</span>
+                            <div key={seller._id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-charcoal-700/50 hover:bg-gray-100 dark:hover:bg-charcoal-700 transition-colors">
+                                <div className="min-w-0">
+                                    <p className="font-semibold text-charcoal-800 dark:text-white text-sm truncate">{seller.name}</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{seller.storeName || 'No store name'}</p>
                                 </div>
-                                <div className="approval-meta">
-                                    <span className="approval-date">{formatDate(seller.createdAt)}</span>
+                                <div className="text-right">
+                                    <span className="text-[10px] font-mono text-gray-400 bg-white dark:bg-charcoal-600 px-1.5 py-0.5 rounded border border-gray-100 dark:border-charcoal-500">
+                                        {formatDate(seller.createdAt)}
+                                    </span>
                                 </div>
                             </div>
                         ))}
                     </div>
-                    <div style={{ marginTop: '1rem', textAlign: 'center' }}>
-                        <Link to="/admin/sellers" className="btn btn-sm btn-secondary">
-                            <FaEye style={{ marginRight: '0.25rem' }} /> View All
+                    <div className="mt-4 text-center pt-3 border-t border-gray-100 dark:border-charcoal-700">
+                        <Link to="/admin/sellers" className="inline-flex items-center gap-2 text-sm font-medium text-terracotta-500 hover:text-terracotta-600 transition-colors">
+                            <FaEye /> View All Sellers
                         </Link>
                     </div>
                 </>

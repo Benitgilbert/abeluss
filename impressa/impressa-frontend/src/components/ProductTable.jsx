@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import api from "../utils/axiosInstance";
+import { FaSearch, FaEdit, FaTrash, FaSort, FaSortUp, FaSortDown, FaBox, FaCheck } from "react-icons/fa";
 import ProductCreateEditModal from "./ProductCreateEditModal";
 
 function ProductTable() {
@@ -18,24 +19,26 @@ function ProductTable() {
   const [bulkAction, setBulkAction] = useState("");
   const [bulkValue, setBulkValue] = useState("");
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
+  useEffect(() => { fetchProducts(); }, []);
 
   useEffect(() => {
     const id = setTimeout(() => {
       const q = search.trim().toLowerCase();
       const next = products.filter((p) => {
-        const matchesQ = q
-          ? (p.name?.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q))
-          : true;
-        return matchesQ;
+        return q ? (p.name?.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q)) : true;
       });
       setFiltered(next);
       setPage(1);
     }, 200);
     return () => clearTimeout(id);
   }, [search, products]);
+
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => setMessage(""), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
 
   const fetchProducts = async () => {
     try {
@@ -44,7 +47,7 @@ function ProductTable() {
       setFiltered(res.data);
     } catch (err) {
       console.error("Failed to fetch products:", err);
-      setMessage("❌ Failed to load products");
+      setMessage("error:Failed to load products");
     } finally {
       setLoading(false);
     }
@@ -55,10 +58,10 @@ function ProductTable() {
     try {
       await api.delete(`/products/${id}`);
       setProducts((prev) => prev.filter((p) => p._id !== id));
-      setMessage("✅ Product deleted");
+      setMessage("success:Product deleted");
     } catch (err) {
       console.error("Delete failed:", err);
-      setMessage("❌ Failed to delete product");
+      setMessage("error:Failed to delete product");
     }
   };
 
@@ -66,11 +69,11 @@ function ProductTable() {
     if (editing) {
       setProducts((prev) => prev.map((p) => (p._id === saved._id ? saved : p)));
       setEditing(null);
-      setMessage("✅ Product updated");
+      setMessage("success:Product updated");
     } else {
       setProducts((prev) => [saved, ...prev]);
       setCreating(false);
-      setMessage("✅ Product created");
+      setMessage("success:Product created");
     }
   };
 
@@ -91,38 +94,37 @@ function ProductTable() {
       if (bulkAction === "delete") {
         await Promise.all(selectedIds.map(id => api.delete(`/products/${id}`)));
         setProducts(prev => prev.filter(p => !selectedIds.includes(p._id)));
-        setMessage(`✅ Deleted ${selectedIds.length} products`);
+        setMessage(`success:Deleted ${selectedIds.length} products`);
       } else if (bulkAction === "stock") {
         const val = parseInt(bulkValue);
         if (isNaN(val)) return alert("Invalid stock value");
         await Promise.all(selectedIds.map(id => api.put(`/products/${id}`, { stock: val })));
         setProducts(prev => prev.map(p => selectedIds.includes(p._id) ? { ...p, stock: val } : p));
-        setMessage(`✅ Updated stock for ${selectedIds.length} products`);
+        setMessage(`success:Updated stock for ${selectedIds.length} products`);
       } else if (bulkAction === "price") {
         const val = parseFloat(bulkValue);
         if (isNaN(val)) return alert("Invalid price value");
         await Promise.all(selectedIds.map(id => api.put(`/products/${id}`, { price: val })));
         setProducts(prev => prev.map(p => selectedIds.includes(p._id) ? { ...p, price: val } : p));
-        setMessage(`✅ Updated price for ${selectedIds.length} products`);
+        setMessage(`success:Updated price for ${selectedIds.length} products`);
       }
       setSelectedIds([]);
       setBulkAction("");
       setBulkValue("");
     } catch (err) {
       console.error("Bulk action failed:", err);
-      setMessage("❌ Bulk action failed");
+      setMessage("error:Bulk action failed");
     }
   };
 
   const sorted = useMemo(() => {
-    const s = [...filtered].sort((a, b) => {
+    return [...filtered].sort((a, b) => {
       const av = (a[sortKey] ?? "").toString().toLowerCase();
       const bv = (b[sortKey] ?? "").toString().toLowerCase();
       if (av < bv) return sortDir === "asc" ? -1 : 1;
       if (av > bv) return sortDir === "asc" ? 1 : -1;
       return 0;
     });
-    return s;
   }, [filtered, sortKey, sortDir]);
 
   const total = sorted.length;
@@ -137,49 +139,65 @@ function ProductTable() {
     else { setSortKey(key); setSortDir("asc"); }
   };
 
+  const SortIcon = ({ column }) => {
+    if (sortKey !== column) return <FaSort className="text-charcoal-300 dark:text-charcoal-600" />;
+    return sortDir === "asc" ? <FaSortUp className="text-terracotta-500" /> : <FaSortDown className="text-terracotta-500" />;
+  };
+
+  const formatPrice = (v) => (typeof v === 'number' ? `RWF ${v.toLocaleString()}` : v);
+
   if (loading) {
     return (
-      <div className="product-table-container">
-        <div className="animate-pulse space-y-3">
-          <div className="h-6 bg-gray-200 rounded w-1/3"></div>
-          <div className="h-40 bg-gray-100 rounded"></div>
-        </div>
+      <div className="p-12 text-center">
+        <div className="w-8 h-8 border-2 border-terracotta-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+        <p className="text-charcoal-500 dark:text-charcoal-400">Loading products...</p>
       </div>
     );
   }
 
-  const formatPrice = (v) => (typeof v === 'number' ? v.toLocaleString() : v);
-
   return (
-    <div className="product-table-container">
-      <div className="product-table-header">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 w-full">
-          <h2 className="product-table-title">Product Catalog</h2>
-          <div className="product-actions">
-            <div className="hidden sm:block text-sm text-gray-500">{total} items</div>
-            {/* Add Product button removed to enforce creation via Seller Dashboard */}
-          </div>
+    <div className="p-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <h2 className="text-lg font-bold text-charcoal-800 dark:text-white">All Products</h2>
+          <span className="px-2.5 py-1 bg-charcoal-100 dark:bg-charcoal-700 text-charcoal-600 dark:text-charcoal-300 rounded-full text-xs font-semibold">
+            {total} items
+          </span>
         </div>
       </div>
 
+      {/* Message */}
       {message && (
-        <div className={`mb-3 text-sm ${message.startsWith("✅") ? "text-green-600" : "text-red-600"}`}>{message}</div>
+        <div className={`mb-4 p-4 rounded-xl text-sm ${message.startsWith("success")
+            ? "bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 text-sage-700 dark:text-sage-400"
+            : "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400"
+          }`}>
+          {message.split(":")[1]}
+        </div>
       )}
 
-      <div className="toolbar">
+      {/* Search */}
+      <div className="relative mb-4">
+        <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-charcoal-400" />
         <input
           type="text"
           placeholder="Search name or description..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="search-input"
+          className="w-full pl-11 pr-4 py-2.5 bg-cream-100 dark:bg-charcoal-700 border border-transparent focus:border-terracotta-500 rounded-xl text-charcoal-800 dark:text-white placeholder:text-charcoal-400 outline-none transition-colors"
         />
       </div>
 
+      {/* Bulk Actions */}
       {selectedIds.length > 0 && (
-        <div className="bulk-actions">
-          <span className="bulk-count">{selectedIds.length} selected</span>
-          <select value={bulkAction} onChange={(e) => setBulkAction(e.target.value)} className="bulk-select">
+        <div className="flex flex-wrap items-center gap-3 mb-4 p-3 bg-terracotta-50 dark:bg-terracotta-900/20 border border-terracotta-200 dark:border-terracotta-800 rounded-xl">
+          <span className="text-sm font-medium text-terracotta-700 dark:text-terracotta-400">{selectedIds.length} selected</span>
+          <select
+            value={bulkAction}
+            onChange={(e) => setBulkAction(e.target.value)}
+            className="px-3 py-1.5 bg-white dark:bg-charcoal-700 border border-cream-200 dark:border-charcoal-600 rounded-lg text-sm text-charcoal-800 dark:text-white outline-none"
+          >
             <option value="">-- Bulk Action --</option>
             <option value="delete">Delete</option>
             <option value="stock">Set Stock</option>
@@ -191,113 +209,174 @@ function ProductTable() {
               placeholder="Value"
               value={bulkValue}
               onChange={(e) => setBulkValue(e.target.value)}
-              className="bulk-input w-24"
+              className="w-24 px-3 py-1.5 bg-white dark:bg-charcoal-700 border border-cream-200 dark:border-charcoal-600 rounded-lg text-sm text-charcoal-800 dark:text-white outline-none"
             />
           )}
-          <button onClick={handleBulkAction} className="btn-secondary">Apply</button>
+          <button onClick={handleBulkAction} className="px-3 py-1.5 bg-terracotta-500 hover:bg-terracotta-600 text-white rounded-lg text-sm font-medium transition-all">
+            Apply
+          </button>
         </div>
       )}
 
-      <div className="table-wrapper">
-        <table className="product-table">
-          <thead>
+      {/* Table */}
+      <div className="overflow-x-auto rounded-xl border border-cream-200 dark:border-charcoal-700">
+        <table className="w-full">
+          <thead className="bg-cream-50 dark:bg-charcoal-900">
             <tr>
-              <th className="w-8"><input type="checkbox" checked={selectedIds.length === pageItems.length && pageItems.length > 0} onChange={toggleSelectAll} /></th>
-              <th onClick={() => setSort("name")} className="cursor-pointer select-none">Name {sortKey === "name" && (sortDir === "asc" ? "▲" : "▼")}</th>
-              <th onClick={() => setSort("price")} className="cursor-pointer select-none">Price {sortKey === "price" && (sortDir === "asc" ? "▲" : "▼")}</th>
-              <th onClick={() => setSort("stock")} className="cursor-pointer select-none">Stock {sortKey === "stock" && (sortDir === "asc" ? "▲" : "▼")}</th>
-              <th>Image</th>
-              <th>Customization</th>
-              <th>Actions</th>
+              <th className="px-4 py-4 w-12">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.length === pageItems.length && pageItems.length > 0}
+                  onChange={toggleSelectAll}
+                  className="w-4 h-4 rounded border-charcoal-300 text-terracotta-500 focus:ring-terracotta-500"
+                />
+              </th>
+              <th onClick={() => setSort("name")} className="px-6 py-4 text-left text-xs font-bold text-charcoal-500 dark:text-charcoal-400 uppercase tracking-wider cursor-pointer hover:text-charcoal-700 dark:hover:text-charcoal-200">
+                <span className="flex items-center gap-2">Name <SortIcon column="name" /></span>
+              </th>
+              <th onClick={() => setSort("price")} className="px-6 py-4 text-left text-xs font-bold text-charcoal-500 dark:text-charcoal-400 uppercase tracking-wider cursor-pointer hover:text-charcoal-700 dark:hover:text-charcoal-200">
+                <span className="flex items-center gap-2">Price <SortIcon column="price" /></span>
+              </th>
+              <th onClick={() => setSort("stock")} className="px-6 py-4 text-left text-xs font-bold text-charcoal-500 dark:text-charcoal-400 uppercase tracking-wider cursor-pointer hover:text-charcoal-700 dark:hover:text-charcoal-200">
+                <span className="flex items-center gap-2">Stock <SortIcon column="stock" /></span>
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-bold text-charcoal-500 dark:text-charcoal-400 uppercase tracking-wider hidden md:table-cell">Image</th>
+              <th className="px-6 py-4 text-left text-xs font-bold text-charcoal-500 dark:text-charcoal-400 uppercase tracking-wider hidden lg:table-cell">Customization</th>
+              <th className="px-6 py-4 text-center text-xs font-bold text-charcoal-500 dark:text-charcoal-400 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
-          <tbody>
-            {pageItems.length === 0 && (
+          <tbody className="divide-y divide-cream-100 dark:divide-charcoal-700 bg-white dark:bg-charcoal-800">
+            {pageItems.length === 0 ? (
               <tr>
-                <td colSpan={6} className="text-center text-gray-500 py-6">No products match your filters.</td>
+                <td colSpan={7} className="px-6 py-12 text-center">
+                  <FaBox className="text-4xl text-charcoal-300 dark:text-charcoal-600 mx-auto mb-3" />
+                  <p className="text-charcoal-500 dark:text-charcoal-400">No products match your filters</p>
+                </td>
               </tr>
-            )}
-            {pageItems.map((p, idx) => {
-              const isLowStock = p.stock !== null && p.stock < 5;
-              return (
-                <tr key={p._id} className={isLowStock ? "low-stock" : ""}>
-                  <td><input type="checkbox" checked={selectedIds.includes(p._id)} onChange={() => toggleSelect(p._id)} /></td>
-                  <td>
-                    <div className="product-name">{p.name}</div>
-                    <div className="product-desc">{p.description}</div>
-                  </td>
-                  <td>{formatPrice(p.price)}</td>
-                  <td>
-                    {p.stock !== null && (
-                      <span className={`badge ${p.stock < 5 ? 'bg-red-100 text-red-800' : 'badge-gray'}`}>
-                        {p.stock}
-                      </span>
-                    )}
-                    {p.stock === null && <span className="text-gray-400">-</span>}
-                  </td>
-                  <td>
-                    {p.image ? (
-                      <img src={p.image} alt="" className="product-table-img" />
-                    ) : (
-                      <div className="product-table-img bg-gray-100 border"></div>
-                    )}
-                  </td>
-                  <td>
-                    {p.customizable ? (
-                      <div className="flex flex-wrap gap-1">
-                        {Array.isArray(p.customizationOptions) && p.customizationOptions.length > 0 ? (
-                          p.customizationOptions.map((opt) => (
-                            <span key={opt} className="badge badge-gray">
-                              {opt}
+            ) : (
+              pageItems.map((p) => {
+                const isLowStock = p.stock !== null && p.stock < 5;
+                return (
+                  <tr key={p._id} className={`hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors ${isLowStock ? 'bg-red-50/50 dark:bg-red-900/10' : ''}`}>
+                    <td className="px-4 py-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(p._id)}
+                        onChange={() => toggleSelect(p._id)}
+                        className="w-4 h-4 rounded border-charcoal-300 text-terracotta-500 focus:ring-terracotta-500"
+                      />
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="font-medium text-charcoal-800 dark:text-white">{p.name}</div>
+                      <div className="text-xs text-charcoal-500 dark:text-charcoal-400 line-clamp-1">{p.description}</div>
+                    </td>
+                    <td className="px-6 py-4 text-charcoal-800 dark:text-white font-medium">{formatPrice(p.price)}</td>
+                    <td className="px-6 py-4">
+                      {p.stock !== null ? (
+                        <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${p.stock < 5
+                            ? 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400'
+                            : 'bg-charcoal-100 text-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-300'
+                          }`}>
+                          {p.stock}
+                        </span>
+                      ) : (
+                        <span className="text-charcoal-400">—</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 hidden md:table-cell">
+                      {p.image ? (
+                        <img src={p.image} alt="" className="w-12 h-12 rounded-lg object-cover" />
+                      ) : (
+                        <div className="w-12 h-12 rounded-lg bg-charcoal-100 dark:bg-charcoal-700"></div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 hidden lg:table-cell">
+                      {p.customizable ? (
+                        <div className="flex flex-wrap gap-1">
+                          {Array.isArray(p.customizationOptions) && p.customizationOptions.length > 0 ? (
+                            p.customizationOptions.slice(0, 2).map((opt) => (
+                              <span key={opt} className="px-2 py-0.5 bg-sage-100 dark:bg-sage-900/20 text-sage-700 dark:text-sage-400 rounded text-xs">
+                                {opt}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="px-2 py-0.5 bg-sage-100 dark:bg-sage-900/20 text-sage-700 dark:text-sage-400 rounded text-xs">
+                              <FaCheck className="inline mr-1" /> Enabled
                             </span>
-                          ))
-                        ) : (
-                          <span className="badge badge-gray">enabled</span>
-                        )}
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-charcoal-400 text-xs">—</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          onClick={() => setEditing(p)}
+                          className="p-2 rounded-lg text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                          title="Edit"
+                        >
+                          <FaEdit />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(p._id)}
+                          className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                          title="Delete"
+                        >
+                          <FaTrash />
+                        </button>
                       </div>
-                    ) : (
-                      <span className="text-xs text-gray-400">—</span>
-                    )}
-                  </td>
-                  <td>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => setEditing(p)}
-                        className="action-btn btn-edit"
-                      >
-                        ✏️ Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(p._id)}
-                        className="action-btn btn-delete"
-                      >
-                        🗑️ Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>
 
-      <div className="pagination">
-        <div className="pagination-info">Page {page} of {totalPages}</div>
-        <div className="pagination-controls">
-          <label className="text-sm text-gray-600">Rows per page</label>
-          <select value={pageSize} onChange={(e) => { setPageSize(parseInt(e.target.value, 10)); setPage(1); }} className="px-2 py-1 border rounded text-sm">
-            <option value={5}>5</option>
-            <option value={10}>10</option>
-            <option value={20}>20</option>
-          </select>
-          <div className="flex items-center gap-2 ml-2">
-            <button disabled={page === 1} onClick={() => setPage((p) => Math.max(1, p - 1))} className="pagination-btn">Prev</button>
-            <button disabled={page === totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))} className="pagination-btn">Next</button>
+      {/* Pagination */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t border-cream-200 dark:border-charcoal-700">
+        <p className="text-sm text-charcoal-500 dark:text-charcoal-400">Page {page} of {totalPages}</p>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-charcoal-500 dark:text-charcoal-400">Rows:</label>
+            <select
+              value={pageSize}
+              onChange={(e) => { setPageSize(parseInt(e.target.value, 10)); setPage(1); }}
+              className="px-2 py-1 bg-white dark:bg-charcoal-700 border border-cream-200 dark:border-charcoal-600 rounded-lg text-sm text-charcoal-800 dark:text-white outline-none"
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+            </select>
+          </div>
+          <div className="flex gap-2">
+            <button
+              disabled={page === 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${page === 1
+                  ? "bg-cream-100 dark:bg-charcoal-700 text-charcoal-400 cursor-not-allowed"
+                  : "bg-white dark:bg-charcoal-700 border border-cream-200 dark:border-charcoal-600 text-charcoal-700 dark:text-white hover:border-terracotta-500"
+                }`}
+            >
+              Previous
+            </button>
+            <button
+              disabled={page === totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${page === totalPages
+                  ? "bg-cream-100 dark:bg-charcoal-700 text-charcoal-400 cursor-not-allowed"
+                  : "bg-terracotta-500 hover:bg-terracotta-600 text-white"
+                }`}
+            >
+              Next
+            </button>
           </div>
         </div>
       </div>
 
+      {/* Edit Modal */}
       {(creating || editing) && (
         <ProductCreateEditModal
           product={editing}
@@ -310,5 +389,3 @@ function ProductTable() {
 }
 
 export default ProductTable;
-
-

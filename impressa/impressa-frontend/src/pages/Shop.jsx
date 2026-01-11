@@ -28,13 +28,13 @@ const WishlistButton = ({ product }) => {
   return (
     <button
       onClick={toggleWishlist}
-      className="absolute top-4 right-4 w-10 h-10 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-all duration-300 z-10 group/heart"
+      className="absolute top-4 right-4 w-10 h-10 bg-white/95 dark:bg-charcoal-800/95 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-all duration-300 z-10 group/heart"
       title={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
     >
       {isWishlisted ? (
-        <FaHeart className="text-red-500 text-lg group-hover/heart:scale-110 transition-transform" />
+        <FaHeart className="text-terracotta-500 text-lg group-hover/heart:scale-110 transition-transform" />
       ) : (
-        <FaRegHeart className="text-gray-400 group-hover/heart:text-red-500 text-lg transition-colors" />
+        <FaRegHeart className="text-charcoal-400 group-hover/heart:text-terracotta-500 text-lg transition-colors" />
       )}
     </button>
   );
@@ -225,9 +225,9 @@ export default function Shop() {
   };
 
   const getPageIcon = () => {
-    if (sortBy === "featured") return <LuSparkles className="text-amber-500" />;
-    if (sortBy === "trending") return <LuTrendingUp className="text-rose-500" />;
-    return <LuPackage className="text-violet-500" />;
+    if (sortBy === "featured") return <LuSparkles className="text-sand-500" />;
+    if (sortBy === "trending") return <LuTrendingUp className="text-terracotta-500" />;
+    return <LuPackage className="text-terracotta-500" />;
   };
 
   const hasActiveFilters = q || selectedCategory || minPrice || maxPrice;
@@ -237,30 +237,30 @@ export default function Shop() {
     <div className="space-y-8">
       {/* Search */}
       <div>
-        <label className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white mb-3 uppercase tracking-wider">
-          <FaSearch className="text-violet-500" /> Search
+        <label className="flex items-center gap-2 text-sm font-bold text-charcoal-800 dark:text-white mb-3 uppercase tracking-wider">
+          <FaSearch className="text-terracotta-500" /> Search
         </label>
         <div className="relative">
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Find products..."
-            className="w-full pl-4 pr-10 py-3 bg-gray-100 dark:bg-slate-800 border-0 rounded-xl text-sm focus:ring-2 focus:ring-violet-500 outline-none transition-all dark:text-white placeholder:text-gray-400"
+            className="w-full pl-4 pr-10 py-3 bg-cream-100 dark:bg-charcoal-800 border-0 rounded-xl text-sm focus:ring-2 focus:ring-terracotta-500 outline-none transition-all dark:text-white placeholder:text-charcoal-400"
           />
-          <FaSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
+          <FaSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-charcoal-400" />
         </div>
       </div>
 
       {/* Categories */}
       <div>
-        <label className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white mb-3 uppercase tracking-wider">
-          <LuSlidersHorizontal className="text-violet-500" /> Categories
+        <label className="flex items-center gap-2 text-sm font-bold text-charcoal-800 dark:text-white mb-3 uppercase tracking-wider">
+          <LuSlidersHorizontal className="text-terracotta-500" /> Categories
         </label>
         <div className="space-y-1 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
           <button
             className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${selectedCategory === ""
-              ? "bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/25"
-              : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800"
+              ? "bg-gradient-to-r from-terracotta-500 to-terracotta-600 text-white shadow-lg shadow-terracotta-500/25"
+              : "text-charcoal-600 dark:text-charcoal-400 hover:bg-cream-100 dark:hover:bg-charcoal-800"
               }`}
             onClick={() => handleCategoryChange("")}
           >
@@ -270,8 +270,8 @@ export default function Shop() {
             <button
               key={c._id}
               className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${selectedCategory === c._id || selectedCategory === c.name
-                ? "bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/25"
-                : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800"
+                ? "bg-gradient-to-r from-terracotta-500 to-terracotta-600 text-white shadow-lg shadow-terracotta-500/25"
+                : "text-charcoal-600 dark:text-charcoal-400 hover:bg-cream-100 dark:hover:bg-charcoal-800"
                 }`}
               onClick={() => handleCategoryChange(c._id)}
             >
@@ -283,7 +283,7 @@ export default function Shop() {
 
       {/* Price Range */}
       <div>
-        <label className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white mb-3 uppercase tracking-wider">
+        <label className="flex items-center gap-2 text-sm font-bold text-charcoal-800 dark:text-white mb-3 uppercase tracking-wider">
           Price Range (RWF)
         </label>
         <div className="flex items-center gap-3">
@@ -292,15 +292,15 @@ export default function Shop() {
             value={minPrice}
             onChange={(e) => setMinPrice(e.target.value)}
             placeholder="Min"
-            className="w-full px-4 py-3 bg-gray-100 dark:bg-slate-800 border-0 rounded-xl text-sm outline-none focus:ring-2 focus:ring-violet-500 dark:text-white placeholder:text-gray-400"
+            className="w-full px-4 py-3 bg-cream-100 dark:bg-charcoal-800 border-0 rounded-xl text-sm outline-none focus:ring-2 focus:ring-terracotta-500 dark:text-white placeholder:text-charcoal-400"
           />
-          <span className="text-gray-400 font-bold">–</span>
+          <span className="text-charcoal-400 font-bold">–</span>
           <input
             type="number"
             value={maxPrice}
             onChange={(e) => setMaxPrice(e.target.value)}
             placeholder="Max"
-            className="w-full px-4 py-3 bg-gray-100 dark:bg-slate-800 border-0 rounded-xl text-sm outline-none focus:ring-2 focus:ring-violet-500 dark:text-white placeholder:text-gray-400"
+            className="w-full px-4 py-3 bg-cream-100 dark:bg-charcoal-800 border-0 rounded-xl text-sm outline-none focus:ring-2 focus:ring-terracotta-500 dark:text-white placeholder:text-charcoal-400"
           />
         </div>
       </div>
@@ -318,12 +318,12 @@ export default function Shop() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-slate-950 dark:to-slate-900 transition-colors duration-300">
+    <div className="min-h-screen bg-gradient-to-b from-cream-100 to-cream-200 dark:from-charcoal-900 dark:to-charcoal-800 transition-colors duration-300">
       <Header />
 
       <main className="pb-16">
         {/* Compact Hero Banner */}
-        <div className="relative bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 overflow-hidden">
+        <div className="relative bg-gradient-to-r from-terracotta-500 via-terracotta-600 to-charcoal-700 overflow-hidden">
           <div className="relative mx-auto max-w-7xl px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -346,7 +346,7 @@ export default function Shop() {
             {/* Filter Button - Always Visible */}
             <button
               onClick={() => setMobileFiltersOpen(true)}
-              className="lg:hidden flex items-center justify-center gap-2 bg-gradient-to-r from-violet-600 to-purple-600 shadow-xl rounded-2xl px-6 py-4 font-bold text-white hover:from-violet-700 hover:to-purple-700 transition-all"
+              className="lg:hidden flex items-center justify-center gap-2 bg-gradient-to-r from-terracotta-500 to-terracotta-600 shadow-xl rounded-2xl px-6 py-4 font-bold text-white hover:from-terracotta-600 hover:to-terracotta-700 transition-all"
             >
               <FaFilter /> Filters & Categories
               {hasActiveFilters && (
@@ -358,12 +358,12 @@ export default function Shop() {
             {mobileFiltersOpen && (
               <div className="fixed inset-0 z-50">
                 <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setMobileFiltersOpen(false)} />
-                <div className="absolute right-0 top-0 bottom-0 w-full max-w-sm bg-white dark:bg-slate-900 shadow-2xl p-6 overflow-y-auto">
+                <div className="absolute right-0 top-0 bottom-0 w-full max-w-sm bg-white dark:bg-charcoal-800 shadow-2xl p-6 overflow-y-auto">
                   <div className="flex items-center justify-between mb-8">
-                    <h2 className="text-xl font-black text-gray-900 dark:text-white">Filters</h2>
+                    <h2 className="text-xl font-black text-charcoal-800 dark:text-white">Filters</h2>
                     <button
                       onClick={() => setMobileFiltersOpen(false)}
-                      className="w-10 h-10 bg-gray-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-700 dark:hover:text-white transition-colors"
+                      className="w-10 h-10 bg-cream-100 dark:bg-charcoal-700 rounded-full flex items-center justify-center text-charcoal-500 hover:text-charcoal-700 dark:hover:text-white transition-colors"
                     >
                       <FaTimes />
                     </button>
@@ -375,9 +375,9 @@ export default function Shop() {
 
             {/* Desktop Sidebar */}
             <aside className="hidden lg:block w-80 shrink-0">
-              <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-xl border border-gray-100 dark:border-slate-800 sticky top-24">
-                <div className="flex items-center gap-3 text-lg font-black text-gray-900 dark:text-white mb-8 pb-4 border-b border-gray-100 dark:border-slate-800">
-                  <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center text-white">
+              <div className="bg-white dark:bg-charcoal-800 rounded-3xl p-6 shadow-xl border border-cream-200 dark:border-charcoal-700 sticky top-24">
+                <div className="flex items-center gap-3 text-lg font-black text-charcoal-800 dark:text-white mb-8 pb-4 border-b border-cream-200 dark:border-charcoal-700">
+                  <div className="w-10 h-10 bg-gradient-to-br from-terracotta-500 to-terracotta-600 rounded-xl flex items-center justify-center text-white">
                     <FaFilter className="text-sm" />
                   </div>
                   Filters
@@ -389,22 +389,22 @@ export default function Shop() {
             {/* Products Grid */}
             <div className="flex-1 min-w-0">
               {/* Sort Bar */}
-              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-gray-100 dark:border-slate-800 p-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="bg-white dark:bg-charcoal-800 rounded-2xl shadow-xl border border-cream-200 dark:border-charcoal-700 p-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3 flex-wrap">
                   {hasActiveFilters && (
                     <>
                       {selectedCategory && (
-                        <span className="inline-flex items-center gap-2 bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 px-3 py-1.5 rounded-full text-sm font-medium">
+                        <span className="inline-flex items-center gap-2 bg-terracotta-100 dark:bg-terracotta-900/30 text-terracotta-700 dark:text-terracotta-400 px-3 py-1.5 rounded-full text-sm font-medium">
                           {categories.find(c => c._id === selectedCategory)?.name || selectedCategory}
-                          <button onClick={() => handleCategoryChange("")} className="hover:text-violet-900 dark:hover:text-violet-200">
+                          <button onClick={() => handleCategoryChange("")} className="hover:text-terracotta-900 dark:hover:text-terracotta-200">
                             <FaTimes className="text-xs" />
                           </button>
                         </span>
                       )}
                       {q && (
-                        <span className="inline-flex items-center gap-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-3 py-1.5 rounded-full text-sm font-medium">
+                        <span className="inline-flex items-center gap-2 bg-sage-100 dark:bg-sage-900/30 text-sage-700 dark:text-sage-400 px-3 py-1.5 rounded-full text-sm font-medium">
                           "{q}"
-                          <button onClick={() => setQ("")} className="hover:text-blue-900 dark:hover:text-blue-200">
+                          <button onClick={() => setQ("")} className="hover:text-sage-900 dark:hover:text-sage-200">
                             <FaTimes className="text-xs" />
                           </button>
                         </span>
@@ -413,9 +413,9 @@ export default function Shop() {
                   )}
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap font-medium">Sort by:</span>
+                  <span className="text-sm text-charcoal-500 dark:text-charcoal-400 whitespace-nowrap font-medium">Sort by:</span>
                   <select
-                    className="bg-gray-100 dark:bg-slate-800 border-0 rounded-xl px-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-violet-500 dark:text-white cursor-pointer min-w-[160px]"
+                    className="bg-cream-100 dark:bg-charcoal-700 border-0 rounded-xl px-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-terracotta-500 dark:text-white cursor-pointer min-w-[160px]"
                     value={sortBy}
                     onChange={handleSortChange}
                   >
@@ -429,25 +429,25 @@ export default function Shop() {
               </div>
 
               {loading ? (
-                <div className="flex flex-col items-center justify-center py-32 bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-gray-100 dark:border-slate-800">
+                <div className="flex flex-col items-center justify-center py-32 bg-white dark:bg-charcoal-800 rounded-3xl shadow-xl border border-cream-200 dark:border-charcoal-700">
                   <div className="relative">
-                    <div className="w-16 h-16 border-4 border-violet-200 dark:border-violet-900 rounded-full" />
-                    <div className="absolute top-0 left-0 w-16 h-16 border-4 border-transparent border-t-violet-600 rounded-full animate-spin" />
+                    <div className="w-16 h-16 border-4 border-terracotta-200 dark:border-terracotta-900 rounded-full" />
+                    <div className="absolute top-0 left-0 w-16 h-16 border-4 border-transparent border-t-terracotta-500 rounded-full animate-spin" />
                   </div>
-                  <p className="mt-6 text-gray-500 dark:text-gray-400 font-medium animate-pulse">Loading products...</p>
+                  <p className="mt-6 text-charcoal-500 dark:text-charcoal-400 font-medium animate-pulse">Loading products...</p>
                 </div>
               ) : products.length === 0 ? (
-                <div className="bg-white dark:bg-slate-900 rounded-3xl p-16 text-center shadow-xl border border-gray-100 dark:border-slate-800">
-                  <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-slate-800 dark:to-slate-700 rounded-full flex items-center justify-center mx-auto mb-8">
-                    <FaSearch className="text-4xl text-gray-300 dark:text-gray-600" />
+                <div className="bg-white dark:bg-charcoal-800 rounded-3xl p-16 text-center shadow-xl border border-cream-200 dark:border-charcoal-700">
+                  <div className="w-24 h-24 bg-gradient-to-br from-cream-100 to-cream-200 dark:from-charcoal-700 dark:to-charcoal-600 rounded-full flex items-center justify-center mx-auto mb-8">
+                    <FaSearch className="text-4xl text-charcoal-300 dark:text-charcoal-500" />
                   </div>
-                  <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-3">No Products Found</h3>
-                  <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-8">
+                  <h3 className="text-2xl font-black text-charcoal-800 dark:text-white mb-3">No Products Found</h3>
+                  <p className="text-charcoal-500 dark:text-charcoal-400 max-w-md mx-auto mb-8">
                     We couldn't find any products matching your current filters. Try adjusting your search or category selection.
                   </p>
                   <button
                     onClick={clearAllFilters}
-                    className="inline-flex items-center gap-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white px-8 py-3 rounded-full font-bold transition-all shadow-lg shadow-violet-500/25"
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-terracotta-500 to-terracotta-600 hover:from-terracotta-600 hover:to-terracotta-700 text-white px-8 py-3 rounded-full font-bold transition-all shadow-lg shadow-terracotta-500/25"
                   >
                     <FaTimes /> Clear All Filters
                   </button>
@@ -457,10 +457,10 @@ export default function Shop() {
                   {products.map((p) => (
                     <div
                       key={p._id}
-                      className="group bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-200 dark:border-slate-700 flex flex-col"
+                      className="group bg-white dark:bg-charcoal-800 rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 border border-cream-200 dark:border-charcoal-700 flex flex-col"
                     >
                       {/* Image Container */}
-                      <div className="relative aspect-square bg-gray-50 dark:bg-slate-800 overflow-hidden">
+                      <div className="relative aspect-square bg-cream-100 dark:bg-charcoal-700 overflow-hidden">
                         <Link to={`/product/${p._id}`} className="block h-full">
                           {p.image ? (
                             <img
@@ -469,8 +469,8 @@ export default function Shop() {
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-violet-100 to-purple-100 dark:from-slate-800 dark:to-slate-700">
-                              <FaTshirt className="text-5xl text-violet-300 dark:text-violet-600" />
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-terracotta-100 to-terracotta-200 dark:from-charcoal-700 dark:to-charcoal-600">
+                              <FaTshirt className="text-5xl text-terracotta-300 dark:text-terracotta-600" />
                             </div>
                           )}
                         </Link>
@@ -479,7 +479,7 @@ export default function Shop() {
                         <WishlistButton product={p} />
 
                         {/* Price Badge */}
-                        <div className="absolute top-4 left-4 bg-gradient-to-r from-violet-600 to-purple-600 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
+                        <div className="absolute top-4 left-4 bg-gradient-to-r from-terracotta-500 to-terracotta-600 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
                           {formatRwf(p.price)}
                         </div>
 
@@ -487,7 +487,7 @@ export default function Shop() {
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                           <button
                             onClick={(e) => { e.preventDefault(); handleAddToCart(p); }}
-                            className="bg-white text-gray-900 px-6 py-3 rounded-full font-bold shadow-xl flex items-center gap-2 transform scale-90 group-hover:scale-100 transition-transform duration-300 hover:bg-violet-600 hover:text-white"
+                            className="bg-white text-charcoal-800 px-6 py-3 rounded-full font-bold shadow-xl flex items-center gap-2 transform scale-90 group-hover:scale-100 transition-transform duration-300 hover:bg-terracotta-500 hover:text-white"
                           >
                             {p.customizable ? (
                               <>✨ Customize</>
@@ -501,26 +501,26 @@ export default function Shop() {
                       {/* Product Info */}
                       <div className="p-5 flex flex-col flex-1">
                         <Link to={`/product/${p._id}`}>
-                          <h3 className="font-bold text-gray-900 dark:text-white mb-2 line-clamp-1 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors text-base">
+                          <h3 className="font-bold text-charcoal-800 dark:text-white mb-2 line-clamp-1 group-hover:text-terracotta-500 dark:group-hover:text-terracotta-400 transition-colors text-base">
                             {p.name}
                           </h3>
                         </Link>
-                        <p className="text-gray-500 dark:text-gray-400 text-sm mb-4 line-clamp-2 leading-relaxed flex-1">
+                        <p className="text-charcoal-500 dark:text-charcoal-400 text-sm mb-4 line-clamp-2 leading-relaxed flex-1">
                           {p.description || "Premium quality product"}
                         </p>
 
                         {/* Rating & Action */}
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1">
-                            <div className="flex text-amber-400 text-sm">
+                            <div className="flex text-sand-400 text-sm">
                               <FaStar /><FaStar /><FaStar /><FaStar />
-                              <FaStarHalfAlt className="text-amber-300" />
+                              <FaStarHalfAlt className="text-sand-300" />
                             </div>
-                            <span className="text-xs text-gray-400 ml-1">(4.5)</span>
+                            <span className="text-xs text-charcoal-400 ml-1">(4.5)</span>
                           </div>
                           <Link
                             to={`/product/${p._id}`}
-                            className="text-violet-600 dark:text-violet-400 text-sm font-bold hover:underline"
+                            className="text-terracotta-500 dark:text-terracotta-400 text-sm font-bold hover:underline"
                           >
                             View →
                           </Link>

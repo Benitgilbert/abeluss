@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaChevronDown, FaUserShield, FaStore, FaCheck } from "react-icons/fa";
-import "../styles/RoleSwitcher.css";
 
 function RoleSwitcher({ user, theme = 'light' }) {
     const [isOpen, setIsOpen] = useState(false);
@@ -38,52 +37,96 @@ function RoleSwitcher({ user, theme = 'light' }) {
     };
 
     return (
-        <div className={`role-switcher ${theme}`} ref={dropdownRef}>
+        <div className="relative inline-block z-50" ref={dropdownRef}>
             <button
-                className="role-switcher-btn"
                 onClick={() => setIsOpen(!isOpen)}
+                className={`
+                    flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 border
+                    ${theme === 'dark'
+                        ? 'bg-charcoal-700/50 border-charcoal-600/50 text-gray-200 hover:bg-charcoal-700 hover:border-charcoal-500'
+                        : 'bg-white border-gray-200 text-charcoal-800 hover:bg-gray-50 hover:shadow-sm'
+                    }
+                `}
             >
                 {isAdminView ? (
                     <>
-                        <FaUserShield className="role-icon" />
-                        <span>Admin Panel</span>
+                        <FaUserShield className="text-terracotta-500 text-lg" />
+                        <span className="hidden sm:inline">Admin Panel</span>
                     </>
                 ) : (
                     <>
-                        <FaStore className="role-icon" />
-                        <span>My Store</span>
+                        <FaStore className="text-sage-500 text-lg" />
+                        <span className="hidden sm:inline">My Store</span>
                     </>
                 )}
-                <FaChevronDown className={`chevron ${isOpen ? 'open' : ''}`} />
+                <FaChevronDown className={`w-3 h-3 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''} text-gray-400`} />
             </button>
 
             {isOpen && (
-                <div className="role-switcher-dropdown">
-                    <div className="role-option-header">Switch View</div>
+                <div className={`
+                    absolute top-full right-0 mt-2 w-64 rounded-xl shadow-xl border overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right
+                    ${theme === 'dark' ? 'bg-charcoal-800 border-charcoal-700' : 'bg-white border-gray-100'}
+                `}>
+                    <div className={`
+                        px-4 py-2 text-[10px] uppercase font-bold tracking-wider border-b
+                        ${theme === 'dark' ? 'bg-charcoal-900/50 text-gray-500 border-charcoal-700' : 'bg-gray-50 text-gray-400 border-gray-100'}
+                    `}>
+                        Switch View
+                    </div>
 
-                    <button
-                        className={`role-option ${isAdminView ? 'active' : ''}`}
-                        onClick={() => handleSwitch('admin')}
-                    >
-                        <FaUserShield className="role-option-icon" style={{ color: '#6366f1' }} />
-                        <div className="role-option-info">
-                            <span className="role-option-title">Admin Panel</span>
-                            <span className="role-option-desc">Manage entire platform</span>
-                        </div>
-                        {isAdminView && <FaCheck className="role-check" />}
-                    </button>
+                    <div className="p-1.5 space-y-0.5">
+                        <button
+                            onClick={() => handleSwitch('admin')}
+                            className={`
+                                w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left group
+                                ${isAdminView
+                                    ? (theme === 'dark' ? 'bg-indigo-500/10 text-indigo-400' : 'bg-indigo-50 text-indigo-600')
+                                    : (theme === 'dark' ? 'text-gray-300 hover:bg-charcoal-700' : 'text-charcoal-600 hover:bg-gray-50')
+                                }
+                            `}
+                        >
+                            <div className={`
+                                w-8 h-8 rounded-lg flex items-center justify-center text-sm
+                                ${isAdminView
+                                    ? (theme === 'dark' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-indigo-100 text-indigo-600')
+                                    : (theme === 'dark' ? 'bg-charcoal-700 text-gray-400 group-hover:bg-charcoal-600 group-hover:text-gray-300' : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600')
+                                }
+                            `}>
+                                <FaUserShield />
+                            </div>
+                            <div className="flex-1">
+                                <div className="font-semibold text-sm">Admin Panel</div>
+                                <div className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>Manage platform</div>
+                            </div>
+                            {isAdminView && <FaCheck className="text-indigo-500 text-sm" />}
+                        </button>
 
-                    <button
-                        className={`role-option ${isSellerView ? 'active' : ''}`}
-                        onClick={() => handleSwitch('seller')}
-                    >
-                        <FaStore className="role-option-icon" style={{ color: '#10b981' }} />
-                        <div className="role-option-info">
-                            <span className="role-option-title">My Store</span>
-                            <span className="role-option-desc">Your products & orders</span>
-                        </div>
-                        {isSellerView && <FaCheck className="role-check" />}
-                    </button>
+                        <button
+                            onClick={() => handleSwitch('seller')}
+                            className={`
+                                w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left group
+                                ${isSellerView
+                                    ? (theme === 'dark' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-600')
+                                    : (theme === 'dark' ? 'text-gray-300 hover:bg-charcoal-700' : 'text-charcoal-600 hover:bg-gray-50')
+                                }
+                            `}
+                        >
+                            <div className={`
+                                w-8 h-8 rounded-lg flex items-center justify-center text-sm
+                                ${isSellerView
+                                    ? (theme === 'dark' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-600')
+                                    : (theme === 'dark' ? 'bg-charcoal-700 text-gray-400 group-hover:bg-charcoal-600 group-hover:text-gray-300' : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600')
+                                }
+                            `}>
+                                <FaStore />
+                            </div>
+                            <div className="flex-1">
+                                <div className="font-semibold text-sm">My Store</div>
+                                <div className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>Products & orders</div>
+                            </div>
+                            {isSellerView && <FaCheck className="text-emerald-500 text-sm" />}
+                        </button>
+                    </div>
                 </div>
             )}
         </div>

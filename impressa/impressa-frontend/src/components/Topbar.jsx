@@ -3,7 +3,6 @@ import { useState, useEffect, useRef } from "react";
 import { useTheme } from "../context/ThemeContext";
 import api from "../utils/axiosInstance";
 import RoleSwitcher from "./RoleSwitcher";
-import "../styles/AdminLayout.css";
 
 function Topbar({ onMenuClick, title }) {
   const { theme, toggleTheme } = useTheme();
@@ -51,20 +50,20 @@ function Topbar({ onMenuClick, title }) {
   };
 
   const getIcon = (type) => {
-    const iconStyle = { fontSize: '0.875rem' };
-    if (type?.includes('order')) return <FaBox style={{ ...iconStyle, color: 'var(--primary)' }} />;
-    if (type?.includes('payment') || type?.includes('payout')) return <FaDollarSign style={{ ...iconStyle, color: 'var(--success)' }} />;
-    if (type?.includes('review')) return <FaStar style={{ ...iconStyle, color: 'var(--warning)' }} />;
-    if (type?.includes('ticket')) return <FaTicketAlt style={{ ...iconStyle, color: 'var(--info)' }} />;
-    return <FaUser style={{ ...iconStyle, color: 'var(--text-muted)' }} />;
+    const baseClass = "text-sm";
+    if (type?.includes('order')) return <FaBox className={`${baseClass} text-terracotta-500`} />;
+    if (type?.includes('payment') || type?.includes('payout')) return <FaDollarSign className={`${baseClass} text-sage-500`} />;
+    if (type?.includes('review')) return <FaStar className={`${baseClass} text-sand-500`} />;
+    if (type?.includes('ticket')) return <FaTicketAlt className={`${baseClass} text-blue-500`} />;
+    return <FaUser className={`${baseClass} text-charcoal-400`} />;
   };
 
   const getIconBg = (type) => {
-    if (type?.includes('order')) return 'var(--primary-light)';
-    if (type?.includes('payment') || type?.includes('payout')) return 'var(--success-light)';
-    if (type?.includes('review')) return 'var(--warning-light)';
-    if (type?.includes('ticket')) return 'var(--info-light)';
-    return 'var(--bg-tertiary)';
+    if (type?.includes('order')) return 'bg-terracotta-100 dark:bg-terracotta-900/20';
+    if (type?.includes('payment') || type?.includes('payout')) return 'bg-sage-100 dark:bg-sage-900/20';
+    if (type?.includes('review')) return 'bg-sand-100 dark:bg-sand-900/20';
+    if (type?.includes('ticket')) return 'bg-blue-100 dark:bg-blue-900/20';
+    return 'bg-charcoal-100 dark:bg-charcoal-800';
   };
 
   const formatTime = (date) => {
@@ -89,91 +88,141 @@ function Topbar({ onMenuClick, title }) {
   }, []);
 
   return (
-    <header className="admin-topbar">
-      {/* Mobile Menu Button */}
-      <button className="mobile-menu-btn" onClick={onMenuClick}>
-        <FaBars />
-      </button>
-
-      {/* Page Title */}
-      {title && (
-        <h3 className="topbar-title">{title}</h3>
-      )}
-
-      <div className="topbar-actions">
-        {/* Theme Toggle */}
+    <header className="h-16 bg-white/80 dark:bg-charcoal-800/90 backdrop-blur-xl border-b border-cream-200 dark:border-charcoal-700 sticky top-0 z-40 flex items-center justify-between px-4 lg:px-6 transition-colors duration-300">
+      {/* Left Section */}
+      <div className="flex items-center gap-4">
+        {/* Mobile Menu Button */}
         <button
-          className="action-btn"
-          onClick={toggleTheme}
-          style={{ marginRight: '8px' }}
-          title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+          onClick={onMenuClick}
+          className="lg:hidden p-2.5 rounded-xl text-charcoal-600 dark:text-charcoal-300 hover:bg-cream-100 dark:hover:bg-charcoal-700 hover:text-terracotta-500 transition-all"
         >
-          {theme === 'light' ? <FaMoon style={{ fontSize: '1.2rem' }} /> : <FaSun style={{ fontSize: '1.2rem', color: '#f59e0b' }} />}
+          <FaBars className="text-lg" />
         </button>
 
-        {/* Role Switcher for Admin */}
+        {/* Page Title */}
+        {title && (
+          <h1 className="text-lg lg:text-xl font-bold text-charcoal-800 dark:text-white truncate">
+            {title}
+          </h1>
+        )}
+      </div>
+
+      {/* Right Section */}
+      <div className="flex items-center gap-2 lg:gap-3">
+        {/* Theme Toggle */}
+        <button
+          onClick={toggleTheme}
+          className="p-2.5 rounded-xl text-charcoal-500 dark:text-charcoal-400 hover:bg-cream-100 dark:hover:bg-charcoal-700 hover:text-terracotta-500 dark:hover:text-sand-400 transition-all"
+          title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+        >
+          {theme === 'light' ? (
+            <FaMoon className="text-lg" />
+          ) : (
+            <FaSun className="text-lg text-sand-400" />
+          )}
+        </button>
+
+        {/* Role Switcher */}
         <RoleSwitcher user={user} />
 
-        <div className="notification-wrapper" ref={dropdownRef}>
-          <button className="action-btn" onClick={() => setShowDropdown(!showDropdown)}>
-            <FaBell style={{ fontSize: '1.125rem' }} />
-            {unreadCount > 0 && <span className="notification-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>}
+        {/* Notifications */}
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setShowDropdown(!showDropdown)}
+            className="relative p-2.5 rounded-xl text-charcoal-500 dark:text-charcoal-400 hover:bg-cream-100 dark:hover:bg-charcoal-700 hover:text-terracotta-500 transition-all"
+          >
+            <FaBell className="text-lg" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 bg-terracotta-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
           </button>
 
+          {/* Notification Dropdown */}
           {showDropdown && (
-            <div className="notification-dropdown">
-              <div className="notification-header">
-                <h4>Notifications</h4>
+            <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-charcoal-800 rounded-2xl shadow-2xl border border-cream-200 dark:border-charcoal-700 overflow-hidden z-50 animate-fade-in">
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 py-3 border-b border-cream-200 dark:border-charcoal-700 bg-cream-50 dark:bg-charcoal-900">
+                <h4 className="font-bold text-charcoal-800 dark:text-white">Notifications</h4>
                 {unreadCount > 0 && (
-                  <button className="btn btn-sm btn-secondary" onClick={markAllRead}>
-                    <FaCheck style={{ fontSize: '0.625rem' }} /> Mark all
+                  <button
+                    onClick={markAllRead}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-terracotta-500 hover:bg-terracotta-50 dark:hover:bg-terracotta-900/20 rounded-lg transition-colors"
+                  >
+                    <FaCheck className="text-[10px]" /> Mark all
                   </button>
                 )}
               </div>
-              <div className="notification-list">
+
+              {/* List */}
+              <div className="max-h-80 overflow-y-auto">
                 {notifications.length === 0 ? (
-                  <div className="empty-state" style={{ padding: '2rem' }}>
-                    <FaBell className="empty-state-icon" />
-                    <p className="empty-state-title">No notifications</p>
-                    <p className="empty-state-text">You're all caught up!</p>
+                  <div className="py-12 text-center">
+                    <FaBell className="text-4xl text-charcoal-300 dark:text-charcoal-600 mx-auto mb-3" />
+                    <p className="font-medium text-charcoal-600 dark:text-charcoal-400">No notifications</p>
+                    <p className="text-sm text-charcoal-400 dark:text-charcoal-500">You're all caught up!</p>
                   </div>
                 ) : (
                   notifications.map(n => (
                     <div
                       key={n._id}
-                      className={`notification-item ${!n.isRead ? 'unread' : ''}`}
                       onClick={() => !n.isRead && markAsRead(n._id)}
+                      className={`
+                        flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors
+                        hover:bg-cream-50 dark:hover:bg-charcoal-700/50
+                        ${!n.isRead ? 'bg-terracotta-50/50 dark:bg-terracotta-900/10' : ''}
+                      `}
                     >
-                      <div
-                        className="notification-icon"
-                        style={{ background: getIconBg(n.type) }}
-                      >
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${getIconBg(n.type)}`}>
                         {getIcon(n.type)}
                       </div>
-                      <div className="notification-content">
-                        <p className="notification-title">{n.title}</p>
-                        <p className="notification-message">{n.message?.substring(0, 60)}...</p>
-                        <span className="notification-time">{formatTime(n.createdAt)}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm text-charcoal-800 dark:text-white truncate">
+                          {n.title}
+                        </p>
+                        <p className="text-xs text-charcoal-500 dark:text-charcoal-400 line-clamp-2 mt-0.5">
+                          {n.message?.substring(0, 60)}...
+                        </p>
+                        <span className="text-[10px] text-charcoal-400 dark:text-charcoal-500 mt-1 block">
+                          {formatTime(n.createdAt)}
+                        </span>
                       </div>
                     </div>
                   ))
                 )}
               </div>
-              <div className="notification-footer">
-                <a href="/admin/notifications">View all notifications</a>
+
+              {/* Footer */}
+              <div className="px-4 py-3 border-t border-cream-200 dark:border-charcoal-700 bg-cream-50 dark:bg-charcoal-900">
+                <a
+                  href="/admin/notifications"
+                  className="text-sm font-medium text-terracotta-500 hover:text-terracotta-600 dark:text-terracotta-400 transition-colors"
+                >
+                  View all notifications
+                </a>
               </div>
             </div>
           )}
         </div>
 
-        <div className="user-profile">
-          <div className="user-info">
-            <p className="user-name">{user?.name || 'Admin'}</p>
-            <p className="user-role">{user?.role?.toUpperCase() || 'ADMIN'}</p>
+        {/* User Profile */}
+        <div className="flex items-center gap-3 pl-3 ml-1 border-l border-cream-200 dark:border-charcoal-700">
+          <div className="hidden sm:block text-right">
+            <p className="text-sm font-semibold text-charcoal-800 dark:text-white">
+              {user?.name || 'Admin'}
+            </p>
+            <p className="text-xs font-medium text-terracotta-500">
+              {user?.role?.toUpperCase() || 'ADMIN'}
+            </p>
           </div>
-          <div className="user-avatar">
+          <div className="w-10 h-10 rounded-xl overflow-hidden bg-gradient-to-br from-terracotta-400 to-sand-400 flex items-center justify-center text-white font-semibold shadow-md">
             {user?.profileImage ? (
-              <img src={`http://localhost:5000${user.profileImage}`} alt="Profile" />
+              <img
+                src={`http://localhost:5000${user.profileImage}`}
+                alt="Profile"
+                className="w-full h-full object-cover"
+              />
             ) : (
               <span>{user?.name?.charAt(0).toUpperCase() || 'A'}</span>
             )}

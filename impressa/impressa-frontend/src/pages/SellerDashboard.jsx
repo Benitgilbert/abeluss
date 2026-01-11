@@ -8,8 +8,6 @@ import {
 import api from '../utils/axiosInstance';
 import Header from '../components/Header';
 import SellerSidebar from '../components/SellerSidebar';
-// import '../styles/AdminLayout.css'; // Removed for Tailwind migration
-// import './SellerDashboard.css'; // Removed for Tailwind migration
 
 import {
     Chart as ChartJS,

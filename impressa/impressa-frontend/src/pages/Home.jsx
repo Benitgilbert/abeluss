@@ -28,8 +28,8 @@ const ProductCard = ({ product }) => {
   };
 
   return (
-    <div className="group bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-slate-700">
-      <div className="relative aspect-square bg-gray-50 dark:bg-slate-900 overflow-hidden">
+    <div className="group bg-white dark:bg-charcoal-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-cream-300 dark:border-charcoal-600">
+      <div className="relative aspect-square bg-cream-100 dark:bg-charcoal-900 overflow-hidden">
         <Link to={`/product/${product._id}`}>
           {product.image ? (
             <img
@@ -38,31 +38,31 @@ const ProductCard = ({ product }) => {
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-300 dark:text-gray-600">No Image</div>
+            <div className="w-full h-full flex items-center justify-center text-charcoal-300 dark:text-charcoal-500">No Image</div>
           )}
         </Link>
         <button
           onClick={toggleWishlist}
-          className="absolute top-3 right-3 w-10 h-10 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md hover:bg-white dark:hover:bg-slate-700 transition text-gray-400 hover:text-red-500"
+          className="absolute top-3 right-3 w-10 h-10 bg-white/90 dark:bg-charcoal-800/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md hover:bg-white dark:hover:bg-charcoal-700 transition text-charcoal-400 hover:text-terracotta-500"
         >
-          {isWishlisted ? <FaHeart className="text-red-500" /> : <FaRegHeart />}
+          {isWishlisted ? <FaHeart className="text-terracotta-500" /> : <FaRegHeart />}
         </button>
       </div>
       <div className="p-4">
         <Link to={`/product/${product._id}`}>
-          <h3 className="font-semibold text-gray-800 dark:text-slate-100 line-clamp-2 mb-2 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition">{product.name}</h3>
+          <h3 className="font-semibold text-charcoal-800 dark:text-cream-100 line-clamp-2 mb-2 group-hover:text-terracotta-500 dark:group-hover:text-terracotta-400 transition">{product.name}</h3>
         </Link>
         <div className="flex items-center gap-1 mb-2">
           {[...Array(5)].map((_, i) => (
-            <FaStar key={i} className="text-amber-400 text-xs" />
+            <FaStar key={i} className="text-sand-400 text-xs" />
           ))}
-          <span className="text-xs text-gray-400 ml-1">(24)</span>
+          <span className="text-xs text-charcoal-400 ml-1">(24)</span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-xl font-bold text-gray-900 dark:text-white">{formatRwf(product.price)}</span>
+          <span className="text-xl font-bold text-charcoal-900 dark:text-white">{formatRwf(product.price)}</span>
           <Link
             to={`/product/${product._id}`}
-            className="text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 text-sm font-medium"
+            className="text-terracotta-500 dark:text-terracotta-400 hover:text-terracotta-600 dark:hover:text-terracotta-300 text-sm font-medium"
           >
             View →
           </Link>
@@ -74,21 +74,21 @@ const ProductCard = ({ product }) => {
 
 // Default category images and colors for fallback
 const categoryDefaults = {
-  'Electronics': { img: 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=300&h=300&fit=crop', color: 'from-blue-500 to-cyan-500' },
-  'Fashion': { img: 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=300&h=300&fit=crop', color: 'from-pink-500 to-rose-500' },
-  'Home & Living': { img: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=300&h=300&fit=crop', color: 'from-amber-500 to-orange-500' },
-  'Sports': { img: 'https://images.unsplash.com/photo-1461896836934-480c9e5d4c98?w=300&h=300&fit=crop', color: 'from-green-500 to-emerald-500' },
-  'Beauty': { img: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=300&h=300&fit=crop', color: 'from-purple-500 to-violet-500' },
-  'Accessories': { img: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&h=300&fit=crop', color: 'from-slate-500 to-gray-600' }
+  'Electronics': { img: 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=300&h=300&fit=crop', color: 'from-charcoal-600 to-charcoal-700' },
+  'Fashion': { img: 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=300&h=300&fit=crop', color: 'from-terracotta-400 to-terracotta-500' },
+  'Home & Living': { img: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=300&h=300&fit=crop', color: 'from-sand-400 to-sand-500' },
+  'Sports': { img: 'https://images.unsplash.com/photo-1461896836934-480c9e5d4c98?w=300&h=300&fit=crop', color: 'from-sage-400 to-sage-500' },
+  'Beauty': { img: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=300&h=300&fit=crop', color: 'from-terracotta-300 to-terracotta-400' },
+  'Accessories': { img: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&h=300&fit=crop', color: 'from-charcoal-500 to-charcoal-600' }
 };
 
 const defaultColors = [
-  'from-violet-500 to-purple-500',
-  'from-blue-500 to-cyan-500',
-  'from-pink-500 to-rose-500',
-  'from-amber-500 to-orange-500',
-  'from-green-500 to-emerald-500',
-  'from-slate-500 to-gray-600'
+  'from-terracotta-400 to-terracotta-500',
+  'from-sage-400 to-sage-500',
+  'from-sand-400 to-sand-500',
+  'from-charcoal-500 to-charcoal-600',
+  'from-terracotta-300 to-terracotta-400',
+  'from-sage-500 to-sage-600'
 ];
 
 export default function Home() {
@@ -238,28 +238,28 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-300">
+    <div className="min-h-screen bg-cream-100 dark:bg-charcoal-900 transition-colors duration-300">
       <Header />
 
       <main>
-        {/* Hero Section - Gradient Split Design */}
+        {/* Hero Section - Warm Humanised Design */}
         <section className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-violet-950 to-slate-950 dark:from-black dark:via-violet-950 dark:to-black"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-charcoal-700 via-charcoal-800 to-charcoal-900 dark:from-charcoal-900 dark:via-black dark:to-charcoal-900"></div>
           <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1557821552-17105176677c?w=1920')] bg-cover bg-center opacity-10"></div>
 
           <div className="relative mx-auto max-w-7xl px-4 py-20 md:py-32">
             <div className="max-w-3xl">
-              <span className="inline-block bg-violet-500/20 text-violet-300 px-4 py-2 rounded-full text-sm font-medium mb-6 backdrop-blur-sm border border-violet-500/30">
+              <span className="inline-block bg-terracotta-500/20 text-terracotta-200 px-4 py-2 rounded-full text-sm font-medium mb-6 backdrop-blur-sm border border-terracotta-500/30">
                 ✨ Welcome to the future of shopping
               </span>
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
-                Discover <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400">Premium</span> Products
+                Discover <span className="text-transparent bg-clip-text bg-gradient-to-r from-terracotta-300 to-sand-300">Premium</span> Products
               </h1>
-              <p className="text-xl text-gray-300 dark:text-gray-400 mb-10 max-w-xl">
+              <p className="text-xl text-cream-300 dark:text-cream-400 mb-10 max-w-xl">
                 Curated collections, exclusive deals, and a seamless shopping experience. Find everything you need in one place.
               </p>
               <div className="flex flex-wrap gap-4">
-                <Link to="/shop" className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white px-8 py-4 rounded-full font-semibold text-lg transition-all shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 flex items-center gap-2">
+                <Link to="/shop" className="bg-gradient-to-r from-terracotta-500 to-terracotta-600 hover:from-terracotta-600 hover:to-terracotta-700 text-white px-8 py-4 rounded-full font-semibold text-lg transition-all shadow-lg shadow-terracotta-500/25 hover:shadow-terracotta-500/40 flex items-center gap-2">
                   Explore Now <FaArrowRight />
                 </Link>
                 <Link to="/daily-deals" className="bg-white/10 hover:bg-white/20 text-white px-8 py-4 rounded-full font-semibold text-lg transition backdrop-blur-sm border border-white/20">
@@ -270,8 +270,8 @@ export default function Home() {
           </div>
 
           {/* Decorative Elements */}
-          <div className="absolute top-20 right-10 w-72 h-72 bg-violet-500 rounded-full blur-[128px] opacity-30"></div>
-          <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-fuchsia-500 rounded-full blur-[128px] opacity-20"></div>
+          <div className="absolute top-20 right-10 w-72 h-72 bg-terracotta-500 rounded-full blur-[128px] opacity-30"></div>
+          <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-sand-400 rounded-full blur-[128px] opacity-20"></div>
         </section>
 
         {/* Categories Section */}
@@ -279,10 +279,10 @@ export default function Home() {
           <div className="mx-auto max-w-7xl px-4">
             <div className="flex items-end justify-between mb-10">
               <div>
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Shop by Category</h2>
-                <p className="text-gray-500 dark:text-gray-400">Browse our curated collections</p>
+                <h2 className="text-3xl font-bold text-charcoal-800 dark:text-white mb-2">Shop by Category</h2>
+                <p className="text-charcoal-500 dark:text-charcoal-400">Browse our curated collections</p>
               </div>
-              <Link to="/shop" className="text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 font-semibold flex items-center gap-1">
+              <Link to="/shop" className="text-terracotta-500 dark:text-terracotta-400 hover:text-terracotta-600 dark:hover:text-terracotta-300 font-semibold flex items-center gap-1">
                 View All <FaArrowRight className="text-sm" />
               </Link>
             </div>
@@ -304,7 +304,7 @@ export default function Home() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12 text-gray-400 dark:text-gray-600">
+              <div className="text-center py-12 text-charcoal-400 dark:text-charcoal-500">
                 <p>No categories available yet. Check back soon!</p>
               </div>
             )}
@@ -389,21 +389,21 @@ export default function Home() {
         </section>
 
         {/* Featured Products */}
-        <section className="py-16 bg-white dark:bg-slate-900 border-y border-gray-100 dark:border-slate-800">
+        <section className="py-16 bg-white dark:bg-charcoal-800 border-y border-cream-200 dark:border-charcoal-700">
           <div className="mx-auto max-w-7xl px-4">
             <div className="flex items-end justify-between mb-10">
               <div>
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Featured Products</h2>
-                <p className="text-gray-500 dark:text-gray-400">Handpicked just for you</p>
+                <h2 className="text-3xl font-bold text-charcoal-800 dark:text-white mb-2">Featured Products</h2>
+                <p className="text-charcoal-500 dark:text-charcoal-400">Handpicked just for you</p>
               </div>
-              <Link to="/shop?sort=featured" className="text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 font-semibold flex items-center gap-1">
+              <Link to="/shop?sort=featured" className="text-terracotta-500 dark:text-terracotta-400 hover:text-terracotta-600 dark:hover:text-terracotta-300 font-semibold flex items-center gap-1">
                 See All <FaArrowRight className="text-sm" />
               </Link>
             </div>
 
             {loading ? (
               <div className="flex justify-center py-12">
-                <div className="w-8 h-8 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin"></div>
+                <div className="w-8 h-8 border-4 border-terracotta-200 border-t-terracotta-500 rounded-full animate-spin"></div>
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -418,7 +418,7 @@ export default function Home() {
         {/* Banner Section */}
         <section className="py-16">
           <div className="mx-auto max-w-7xl px-4">
-            <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-violet-600 to-fuchsia-600">
+            <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-terracotta-500 to-terracotta-600">
               <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1607082349566-187342175e2f?w=1920')] bg-cover bg-center opacity-20"></div>
               <div className="relative px-8 md:px-16 py-16 md:py-24 flex flex-col md:flex-row items-center justify-between gap-8">
                 <div className="text-center md:text-left">
@@ -431,7 +431,7 @@ export default function Home() {
                   <p className="text-white/80 text-lg mb-6 max-w-md">
                     Don't miss out on our biggest sale of the season. Shop now and save big on premium products.
                   </p>
-                  <Link to="/daily-deals" className="inline-block bg-white text-violet-600 px-8 py-3 rounded-full font-bold hover:bg-gray-100 transition">
+                  <Link to="/daily-deals" className="inline-block bg-white text-terracotta-600 px-8 py-3 rounded-full font-bold hover:bg-cream-100 transition">
                     Shop the Sale
                   </Link>
                 </div>
@@ -448,21 +448,21 @@ export default function Home() {
         </section>
 
         {/* Trending Products */}
-        <section className="py-16 bg-white dark:bg-slate-900 border-y border-gray-100 dark:border-slate-800">
+        <section className="py-16 bg-white dark:bg-charcoal-800 border-y border-cream-200 dark:border-charcoal-700">
           <div className="mx-auto max-w-7xl px-4">
             <div className="flex items-end justify-between mb-10">
               <div>
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Trending Now</h2>
-                <p className="text-gray-500 dark:text-gray-400">What everyone's buying</p>
+                <h2 className="text-3xl font-bold text-charcoal-800 dark:text-white mb-2">Trending Now</h2>
+                <p className="text-charcoal-500 dark:text-charcoal-400">What everyone's buying</p>
               </div>
-              <Link to="/shop?sort=trending" className="text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 font-semibold flex items-center gap-1">
+              <Link to="/shop?sort=trending" className="text-terracotta-500 dark:text-terracotta-400 hover:text-terracotta-600 dark:hover:text-terracotta-300 font-semibold flex items-center gap-1">
                 See All <FaArrowRight className="text-sm" />
               </Link>
             </div>
 
             {loading ? (
               <div className="flex justify-center py-12">
-                <div className="w-8 h-8 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin"></div>
+                <div className="w-8 h-8 border-4 border-terracotta-200 border-t-terracotta-500 rounded-full animate-spin"></div>
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -475,11 +475,11 @@ export default function Home() {
         </section>
 
         {/* Testimonials */}
-        <section className="py-20 bg-gray-50 dark:bg-slate-950">
+        <section className="py-20 bg-cream-100 dark:bg-charcoal-900">
           <div className="mx-auto max-w-7xl px-4">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">What Our Customers Say</h2>
-              <p className="text-gray-500 dark:text-gray-400">Real reviews from real shoppers</p>
+              <h2 className="text-3xl font-bold text-charcoal-800 dark:text-white mb-2">What Our Customers Say</h2>
+              <p className="text-charcoal-500 dark:text-charcoal-400">Real reviews from real shoppers</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -506,24 +506,24 @@ export default function Home() {
                   content: "I was hesitant to order online, but Impressa made it so easy. The product was exactly as described."
                 }
               ]).slice(0, 6).map((testimonial, idx) => (
-                <div key={testimonial._id || idx} className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-slate-700">
+                <div key={testimonial._id || idx} className="bg-white dark:bg-charcoal-800 rounded-2xl p-6 shadow-sm border border-cream-200 dark:border-charcoal-700">
                   <div className="flex items-center gap-1 mb-4">
                     {[...Array(testimonial.rating || 5)].map((_, i) => (
-                      <FaStar key={i} className="text-amber-400" />
+                      <FaStar key={i} className="text-sand-400" />
                     ))}
                   </div>
-                  <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">"{testimonial.content || testimonial.text}"</p>
+                  <p className="text-charcoal-600 dark:text-cream-300 mb-6 leading-relaxed">"{testimonial.content || testimonial.text}"</p>
                   <div className="flex items-center gap-3">
                     {testimonial.avatar ? (
                       <img src={testimonial.avatar} alt={testimonial.name} className="w-12 h-12 rounded-full object-cover" />
                     ) : (
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-bold text-lg">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-terracotta-400 to-terracotta-500 flex items-center justify-center text-white font-bold text-lg">
                         {testimonial.name?.charAt(0) || '?'}
                       </div>
                     )}
                     <div>
-                      <h4 className="font-semibold text-gray-800 dark:text-slate-100">{testimonial.name}</h4>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{testimonial.role}</p>
+                      <h4 className="font-semibold text-charcoal-800 dark:text-cream-100">{testimonial.name}</h4>
+                      <p className="text-sm text-charcoal-500 dark:text-charcoal-400">{testimonial.role}</p>
                     </div>
                   </div>
                 </div>
@@ -533,9 +533,9 @@ export default function Home() {
         </section>
 
         {/* Brand Logos / Trusted By */}
-        <section className="py-12 bg-white dark:bg-slate-900 border-y border-gray-100 dark:border-slate-800">
+        <section className="py-12 bg-white dark:bg-charcoal-800 border-y border-cream-200 dark:border-charcoal-700">
           <div className="mx-auto max-w-7xl px-4">
-            <p className="text-center text-gray-400 text-sm uppercase tracking-wider mb-8">Trusted by leading brands</p>
+            <p className="text-center text-charcoal-400 text-sm uppercase tracking-wider mb-8">Trusted by leading brands</p>
             <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-60 dark:opacity-40 grayscale hover:grayscale-0 transition-all duration-500">
               {(brandPartners.length > 0 ? brandPartners : [
                 { name: 'TechCorp' },
@@ -561,7 +561,7 @@ export default function Home() {
                 ) : (
                   <div
                     key={partner._id || idx}
-                    className="text-2xl font-bold text-gray-400 dark:text-gray-500 hover:text-violet-600 dark:hover:text-violet-400 transition-colors cursor-pointer"
+                    className="text-2xl font-bold text-charcoal-400 dark:text-charcoal-500 hover:text-terracotta-500 dark:hover:text-terracotta-400 transition-colors cursor-pointer"
                   >
                     {partner.name}
                   </div>
@@ -572,7 +572,7 @@ export default function Home() {
         </section>
 
         {/* Trust Badges */}
-        <section className="bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800">
+        <section className="bg-white dark:bg-charcoal-800 border-b border-cream-200 dark:border-charcoal-700">
           <div className="mx-auto max-w-7xl px-4 py-10">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               {(trustBadges.length > 0 ? trustBadges : [
@@ -593,12 +593,12 @@ export default function Home() {
                 };
                 return (
                   <div key={badge._id || idx} className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-violet-50 dark:bg-slate-800 rounded-xl flex items-center justify-center text-violet-600 dark:text-violet-400">
+                    <div className="w-12 h-12 bg-terracotta-50 dark:bg-charcoal-700 rounded-xl flex items-center justify-center text-terracotta-500 dark:text-terracotta-400">
                       {iconMap[badge.icon] || <FaShieldAlt className="text-2xl" />}
                     </div>
                     <div>
-                      <h4 className="font-semibold text-gray-800 dark:text-slate-100">{badge.title}</h4>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{badge.description}</p>
+                      <h4 className="font-semibold text-charcoal-800 dark:text-cream-100">{badge.title}</h4>
+                      <p className="text-sm text-charcoal-500 dark:text-charcoal-400">{badge.description}</p>
                     </div>
                   </div>
                 );
@@ -608,12 +608,12 @@ export default function Home() {
         </section>
 
         {/* Newsletter */}
-        <section className="py-20 bg-slate-900 dark:bg-black">
+        <section className="py-20 bg-charcoal-700 dark:bg-charcoal-900">
           <div className="mx-auto max-w-7xl px-4 text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Join Our Community
             </h2>
-            <p className="text-gray-400 mb-8 max-w-md mx-auto">
+            <p className="text-charcoal-300 mb-8 max-w-md mx-auto">
               Subscribe to get exclusive deals, new arrivals, and special offers delivered to your inbox.
             </p>
             <form
@@ -648,19 +648,19 @@ export default function Home() {
                 placeholder="Enter your email"
                 value={newsletterEmail}
                 onChange={(e) => setNewsletterEmail(e.target.value)}
-                className="flex-1 bg-slate-800 dark:bg-slate-900 border border-slate-700 rounded-full px-6 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                className="flex-1 bg-charcoal-600 dark:bg-charcoal-800 border border-charcoal-500 rounded-full px-6 py-3 text-white placeholder-charcoal-300 focus:outline-none focus:ring-2 focus:ring-terracotta-500"
                 disabled={newsletterStatus.loading}
               />
               <button
                 type="submit"
-                className="bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white px-8 py-3 rounded-full font-semibold hover:from-violet-700 hover:to-fuchsia-700 transition disabled:opacity-50"
+                className="bg-gradient-to-r from-terracotta-500 to-terracotta-600 text-white px-8 py-3 rounded-full font-semibold hover:from-terracotta-600 hover:to-terracotta-700 transition disabled:opacity-50"
                 disabled={newsletterStatus.loading}
               >
                 {newsletterStatus.loading ? 'Subscribing...' : 'Subscribe'}
               </button>
             </form>
             {newsletterStatus.message && (
-              <p className={`mt-4 text-sm ${newsletterStatus.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+              <p className={`mt-4 text-sm ${newsletterStatus.type === 'success' ? 'text-sage-400' : 'text-terracotta-400'}`}>
                 {newsletterStatus.message}
               </p>
             )}
