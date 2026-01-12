@@ -74,8 +74,8 @@ export const createOrderFromCart = async (req, res, next) => {
       customizations: item.customizations,
     }));
 
-    // Generate public order ID
-    const publicId = crypto.randomBytes(6).toString("hex").toUpperCase();
+    // Generate public order ID (8 characters: letters + numbers)
+    const publicId = crypto.randomBytes(4).toString("hex").toUpperCase();
 
     // Create order
     const orderData = {
@@ -84,10 +84,10 @@ export const createOrderFromCart = async (req, res, next) => {
       guestInfo: req.user
         ? undefined
         : {
-            name: shippingAddress.fullName,
-            email: shippingAddress.email,
-            phone: shippingAddress.phone,
-          },
+          name: shippingAddress.fullName,
+          email: shippingAddress.email,
+          phone: shippingAddress.phone,
+        },
       items: orderItems,
       shippingAddress,
       billingAddress: sameAsShipping ? shippingAddress : billingAddress,

@@ -227,7 +227,8 @@ export default function CheckoutPage() {
       };
 
       const orderRes = await api.post("/orders/create", orderPayload);
-      const orderId = orderRes.data._id; // Correctly extract _id from the Mongoose document
+      const orderId = orderRes.data._id; // MongoDB ID for API calls
+      const publicId = orderRes.data.publicId; // Public ID for user-facing display
 
       // 2. Process Payment
       if (paymentMethod === "mtn_momo") {
@@ -250,7 +251,7 @@ export default function CheckoutPage() {
                 setPaymentStatus("success");
                 clearCart();
                 showSuccess("Order placed successfully!");
-                setTimeout(() => nav(`/order-success/${orderId}`), 1000);
+                setTimeout(() => nav(`/order-success/${publicId}`), 1000);
               } else if (status === "failed") {
                 clearInterval(pollInterval);
                 setPaymentStatus("failed");
@@ -267,7 +268,7 @@ export default function CheckoutPage() {
         setPaymentStatus("success");
         clearCart();
         showSuccess("Order placed successfully!");
-        setTimeout(() => nav(`/order-success/${orderId}`), 1000);
+        setTimeout(() => nav(`/order-success/${publicId}`), 1000);
       }
 
     } catch (error) {

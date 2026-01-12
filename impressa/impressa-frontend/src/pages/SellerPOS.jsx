@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import api from "../utils/axiosInstance";
+import assetUrl from "../utils/assetUrl";
 import { FaSearch, FaShoppingCart, FaTrash, FaPlus, FaMinus, FaMoneyBillWave, FaMobileAlt, FaBoxOpen, FaStore, FaBarcode, FaTimes } from "react-icons/fa";
 import Header from "../components/Header";
 import Receipt from "../components/Receipt";
@@ -475,7 +476,7 @@ export default function SellerPOS() {
                                             <div className="aspect-square bg-gray-100 dark:bg-gray-600 relative overflow-hidden">
                                                 {product.image ? (
                                                     <img
-                                                        src={product.image.startsWith('http') ? product.image : `http://localhost:5000${product.image}`}
+                                                        src={assetUrl(product.image)}
                                                         alt={product.name}
                                                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                                                     />

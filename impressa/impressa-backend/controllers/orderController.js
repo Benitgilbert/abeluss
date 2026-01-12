@@ -1,4 +1,5 @@
 import path from "path";
+import crypto from "crypto";
 import User from "../models/User.js";
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
@@ -754,5 +755,5 @@ export const lookupByBarcode = async (req, res) => {
 
 // Helper to generate public ID (if not imported)
 const generatePublicId = () => {
-  return Math.random().toString(36).substring(2, 10).toUpperCase();
+  return crypto.randomBytes(4).toString("hex").toUpperCase();
 };
