@@ -1,10 +1,21 @@
 import { Resend } from 'resend';
 
-// Initialize Resend with API key
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend with API key (with fallback if not set)
+let resend = null;
+
+if (process.env.RESEND_API_KEY) {
+  resend = new Resend(process.env.RESEND_API_KEY);
+} else {
+  console.warn('⚠️  RESEND_API_KEY not set. Email functionality will be disabled.');
+}
 
 export const sendReportEmail = async ({ to, subject, text, html, attachmentPath }) => {
   try {
+    if (!resend) {
+      console.warn('⚠️  Resend not configured. Skipping email.');
+      return;
+    }
+
     const emailData = {
       from: 'Impressa <noreply@impressa.rw>',
       to,

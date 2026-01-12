@@ -1,10 +1,21 @@
 import { Resend } from 'resend';
 
-// Initialize Resend with API key
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend with API key (with fallback if not set)
+let resend = null;
+
+if (process.env.RESEND_API_KEY) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+} else {
+    console.warn('⚠️  RESEND_API_KEY not set. Email functionality will be disabled.');
+}
 
 export const sendOrderConfirmation = async (order) => {
     try {
+        if (!resend) {
+            console.warn('⚠️  Resend not configured. Skipping order confirmation email.');
+            return;
+        }
+
         const { data, error } = await resend.emails.send({
             from: 'Impressa <noreply@impressa.rw>',
             to: order.guestInfo?.email || order.customer?.email,
@@ -31,6 +42,11 @@ export const sendOrderConfirmation = async (order) => {
 
 export const sendStatusUpdate = async (order) => {
     try {
+        if (!resend) {
+            console.warn('⚠️  Resend not configured. Skipping status update email.');
+            return;
+        }
+
         const { data, error } = await resend.emails.send({
             from: 'Impressa <noreply@impressa.rw>',
             to: order.guestInfo?.email || order.customer?.email,
