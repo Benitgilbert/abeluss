@@ -40,7 +40,7 @@ app.use(cors({
     }
 
     // Check if origin is in allowed list
-    if (allowedOrigins.some(allowed => origin === allowed || origin.endsWith('.replit.dev'))) {
+    if (allowedOrigins.some(allowed => origin === allowed || origin.endsWith('.replit.dev') || origin.endsWith('.vercel.app'))) {
       return callback(null, true);
     }
 
