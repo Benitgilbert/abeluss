@@ -19,8 +19,9 @@ function CreateUserForm() {
     e.preventDefault();
     setLoading(true);
     setMessage("");
+    const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
     try {
-      await axios.post("http://localhost:5000/api/auth/register", form);
+      await axios.post(`${API_URL}/auth/register`, form);
       setMessage("✅ User created successfully");
       setForm({ name: "", email: "", password: "", role: "cashier" });
     } catch (err) {

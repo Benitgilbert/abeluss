@@ -67,7 +67,7 @@ function LowStockWidget() {
                                 <div className="w-10 h-10 rounded-lg bg-white dark:bg-charcoal-600 border border-gray-100 dark:border-charcoal-500 overflow-hidden flex-shrink-0">
                                     {product.image ? (
                                         <img
-                                            src={`http://localhost:5000${product.image}`}
+                                            src={`${process.env.REACT_APP_API_URL?.replace(/\/api$/, '') || 'http://localhost:5000'}${product.image}`}
                                             alt={product.name}
                                             className="w-full h-full object-cover"
                                         />

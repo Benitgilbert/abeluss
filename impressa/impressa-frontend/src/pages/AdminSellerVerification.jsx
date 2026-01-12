@@ -23,7 +23,8 @@ export default function AdminSellerVerification() {
     const [processing, setProcessing] = useState(false);
     const [rejectionReason, setRejectionReason] = useState('');
 
-    const API_URL = 'http://localhost:5000/api';
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+    const BASE_URL = API_URL.replace(/\/api$/, '');
 
     useEffect(() => { fetchSellers(); }, [currentPage, statusFilter]);
     useEffect(() => { if (error || success) { const t = setTimeout(() => { setError(''); setSuccess(''); }, 3000); return () => clearTimeout(t); } }, [error, success]);
@@ -244,7 +245,7 @@ export default function AdminSellerVerification() {
                                         <h4 className="text-sm font-bold text-charcoal-800 dark:text-white mb-3 uppercase tracking-wider">Uploaded Documents</h4>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             {selectedSeller.rdbVerification?.rdbCertificate && (
-                                                <a href={`http://localhost:5000${selectedSeller.rdbVerification.rdbCertificate}`} target="_blank" rel="noopener noreferrer"
+                                                <a href={`${BASE_URL}${selectedSeller.rdbVerification.rdbCertificate}`} target="_blank" rel="noopener noreferrer"
                                                     className="flex items-center justify-between p-4 bg-white dark:bg-charcoal-700 border border-cream-200 dark:border-charcoal-600 rounded-xl hover:border-terracotta-500 transition-colors group">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-10 h-10 bg-red-50 dark:bg-red-900/20 rounded-lg flex items-center justify-center text-red-500"><FaFileAlt /></div>
@@ -254,7 +255,7 @@ export default function AdminSellerVerification() {
                                                 </a>
                                             )}
                                             {selectedSeller.rdbVerification?.nationalId && (
-                                                <a href={`http://localhost:5000${selectedSeller.rdbVerification.nationalId}`} target="_blank" rel="noopener noreferrer"
+                                                <a href={`${BASE_URL}${selectedSeller.rdbVerification.nationalId}`} target="_blank" rel="noopener noreferrer"
                                                     className="flex items-center justify-between p-4 bg-white dark:bg-charcoal-700 border border-cream-200 dark:border-charcoal-600 rounded-xl hover:border-terracotta-500 transition-colors group">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-center text-blue-500"><FaIdCard /></div>

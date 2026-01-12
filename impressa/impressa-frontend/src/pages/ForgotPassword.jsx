@@ -16,13 +16,15 @@ function ForgotPassword() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+
   const handleRequest = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
     setSuccess("");
     try {
-      await axios.post("http://localhost:5000/api/auth/request-password-reset", {
+      await axios.post(`${API_URL}/auth/request-password-reset`, {
         email: form.email,
       });
       setStep("confirm");
@@ -41,7 +43,7 @@ function ForgotPassword() {
     setError("");
     setSuccess("");
     try {
-      await axios.post("http://localhost:5000/api/auth/confirm-password-reset", {
+      await axios.post(`${API_URL}/auth/confirm-password-reset`, {
         email: form.email,
         token: form.token,
         newPassword: form.newPassword,

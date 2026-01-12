@@ -22,7 +22,7 @@ export default function AdminTickets() {
     const [replyText, setReplyText] = useState('');
     const [processing, setProcessing] = useState(false);
 
-    const API_URL = 'http://localhost:5000/api';
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
     useEffect(() => { fetchTickets(); }, [currentPage, statusFilter]);
 
@@ -292,9 +292,9 @@ export default function AdminTickets() {
                                             {['in_progress', 'waiting', 'resolved', 'closed'].map(s => (
                                                 <button key={s} onClick={() => updateStatus(selectedTicket._id, s)} disabled={selectedTicket.status === s}
                                                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed capitalize ${s === 'in_progress' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/20 dark:text-blue-400' :
-                                                            s === 'waiting' ? 'bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-orange-900/20 dark:text-orange-400' :
-                                                                s === 'resolved' ? 'bg-sage-100 text-sage-700 hover:bg-sage-200 dark:bg-sage-900/20 dark:text-sage-400' :
-                                                                    'bg-charcoal-100 text-charcoal-600 hover:bg-charcoal-200 dark:bg-charcoal-700 dark:text-charcoal-300'
+                                                        s === 'waiting' ? 'bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-orange-900/20 dark:text-orange-400' :
+                                                            s === 'resolved' ? 'bg-sage-100 text-sage-700 hover:bg-sage-200 dark:bg-sage-900/20 dark:text-sage-400' :
+                                                                'bg-charcoal-100 text-charcoal-600 hover:bg-charcoal-200 dark:bg-charcoal-700 dark:text-charcoal-300'
                                                         }`}>
                                                     {s.replace('_', ' ')}
                                                 </button>

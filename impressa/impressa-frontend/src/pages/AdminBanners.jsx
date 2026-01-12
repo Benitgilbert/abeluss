@@ -21,7 +21,8 @@ export default function AdminBanners() {
         backgroundImage: '', gradientFrom: '#8b5cf6', gradientTo: '#d946ef', startDate: '', endDate: '', position: 'hero', isActive: true
     });
 
-    const API_URL = 'http://localhost:5000/api';
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+    const BASE_URL = API_URL.replace(/\/api$/, '');
 
     const presetGradients = [
         { from: '#8b5cf6', to: '#d946ef', label: 'Violet → Fuchsia' },
@@ -63,7 +64,7 @@ export default function AdminBanners() {
             const token = localStorage.getItem('authToken');
             const res = await fetch(`${API_URL}/upload`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData });
             const data = await res.json();
-            if (data.success) setForm({ ...form, backgroundImage: `http://localhost:5000${data.data.url}` });
+            if (data.success) setForm({ ...form, backgroundImage: `${BASE_URL}${data.data.url}` });
             else setError('Failed to upload image');
         } catch (err) { setError('Error uploading image'); }
         finally { setUploading(false); }

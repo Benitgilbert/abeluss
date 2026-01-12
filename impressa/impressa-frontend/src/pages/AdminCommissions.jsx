@@ -15,7 +15,7 @@ export default function AdminCommissions() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
-    const API_URL = 'http://localhost:5000/api';
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
     useEffect(() => { fetchData(); }, []);
     useEffect(() => { if (error || success) { const t = setTimeout(() => { setError(''); setSuccess(''); }, 3000); return () => clearTimeout(t); } }, [error, success]);

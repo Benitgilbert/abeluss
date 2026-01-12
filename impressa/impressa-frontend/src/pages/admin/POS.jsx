@@ -247,8 +247,8 @@ const POS = () => {
                                     <button
                                         onClick={() => setSelectedCategory("All")}
                                         className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${selectedCategory === "All"
-                                                ? "bg-terracotta-500 text-white shadow-md shadow-terracotta-500/20"
-                                                : "bg-white dark:bg-charcoal-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-charcoal-600 border border-gray-200 dark:border-charcoal-600"
+                                            ? "bg-terracotta-500 text-white shadow-md shadow-terracotta-500/20"
+                                            : "bg-white dark:bg-charcoal-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-charcoal-600 border border-gray-200 dark:border-charcoal-600"
                                             }`}
                                     >
                                         All Items
@@ -258,8 +258,8 @@ const POS = () => {
                                             key={cat}
                                             onClick={() => setSelectedCategory(cat)}
                                             className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${selectedCategory === cat
-                                                    ? "bg-terracotta-500 text-white shadow-md shadow-terracotta-500/20"
-                                                    : "bg-white dark:bg-charcoal-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-charcoal-600 border border-gray-200 dark:border-charcoal-600"
+                                                ? "bg-terracotta-500 text-white shadow-md shadow-terracotta-500/20"
+                                                : "bg-white dark:bg-charcoal-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-charcoal-600 border border-gray-200 dark:border-charcoal-600"
                                                 }`}
                                         >
                                             {cat}
@@ -287,7 +287,7 @@ const POS = () => {
                                             <div className="aspect-square relative overflow-hidden bg-cream-100 dark:bg-charcoal-900">
                                                 {product.image ? (
                                                     <img
-                                                        src={`http://localhost:5000${product.image}`}
+                                                        src={`${process.env.REACT_APP_API_URL?.replace(/\/api$/, '') || 'http://localhost:5000'}${product.image}`}
                                                         alt={product.name}
                                                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                                     />

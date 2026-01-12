@@ -219,7 +219,7 @@ function Topbar({ onMenuClick, title }) {
           <div className="w-10 h-10 rounded-xl overflow-hidden bg-gradient-to-br from-terracotta-400 to-sand-400 flex items-center justify-center text-white font-semibold shadow-md">
             {user?.profileImage ? (
               <img
-                src={`http://localhost:5000${user.profileImage}`}
+                src={`${process.env.REACT_APP_API_URL?.replace(/\/api$/, '') || 'http://localhost:5000'}${user.profileImage}`}
                 alt="Profile"
                 className="w-full h-full object-cover"
               />

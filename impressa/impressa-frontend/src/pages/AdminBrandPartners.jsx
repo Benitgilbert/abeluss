@@ -18,7 +18,8 @@ export default function AdminBrandPartners() {
     const [form, setForm] = useState({ name: '', logo: '', websiteUrl: '', isActive: true });
     const [logoFile, setLogoFile] = useState(null);
 
-    const API_URL = 'http://localhost:5000/api';
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+    const BASE_URL = API_URL.replace(/\/api$/, '');
 
     useEffect(() => { fetchPartners(); }, []);
     useEffect(() => { if (error || success) { const t = setTimeout(() => { setError(''); setSuccess(''); }, 3000); return () => clearTimeout(t); } }, [error, success]);

@@ -17,7 +17,8 @@ export default function AdminTestimonials() {
 
     const [form, setForm] = useState({ name: '', role: 'Customer', content: '', avatar: '', rating: 5, isActive: true, featured: false });
 
-    const API_URL = 'http://localhost:5000/api';
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+    const BASE_URL = API_URL.replace(/\/api$/, '');
 
     useEffect(() => { fetchTestimonials(); }, []);
     useEffect(() => { if (error || success) { const t = setTimeout(() => { setError(''); setSuccess(''); }, 3000); return () => clearTimeout(t); } }, [error, success]);

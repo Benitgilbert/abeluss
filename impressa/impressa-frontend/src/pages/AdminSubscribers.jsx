@@ -33,7 +33,7 @@ export default function AdminSubscribers() {
     const [templateValues, setTemplateValues] = useState({});
     const [showPreview, setShowPreview] = useState(false);
 
-    const API_URL = 'http://localhost:5000/api';
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
     useEffect(() => { fetchSubscribers(); }, [currentPage, statusFilter]);
     useEffect(() => { if (error || success) { const t = setTimeout(() => { setError(''); setSuccess(''); }, 3000); return () => clearTimeout(t); } }, [error, success]);

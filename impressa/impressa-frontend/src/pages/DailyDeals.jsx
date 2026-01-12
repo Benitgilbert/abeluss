@@ -17,7 +17,8 @@ export default function DailyDeals() {
     useEffect(() => {
         const fetchFlashSales = async () => {
             try {
-                const res = await fetch('http://localhost:5000/api/flash-sales/active');
+                const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+                const res = await fetch(`${apiUrl}/flash-sales/active`);
                 const data = await res.json();
 
                 if (data.success && data.data && data.data.length > 0) {
