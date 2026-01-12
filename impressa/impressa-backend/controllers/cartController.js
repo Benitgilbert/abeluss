@@ -15,7 +15,7 @@ export const getCart = async (req, res, next) => {
       sessionToken = Cart.generateSessionToken();
     }
 
-    const userId = req.user?._id; // From auth middleware if logged in
+    const userId = req.user?.id; // From auth middleware if logged in
 
     let cart = await Cart.findOrCreateBySession(sessionToken, userId);
     cart = await Cart.findById(cart._id).populate({
@@ -72,7 +72,7 @@ export const addToCart = async (req, res, next) => {
       sessionToken = Cart.generateSessionToken();
     }
 
-    const userId = req.user?._id;
+    const userId = req.user?.id;
 
     // Find or create cart
     const cart = await Cart.findOrCreateBySession(sessionToken, userId);
@@ -312,7 +312,7 @@ export const applyCoupon = async (req, res, next) => {
     }
 
     // Check user eligibility
-    const userId = req.user?._id;
+    const userId = req.user?.id;
     const userEmail = req.user?.email || cart.user?.email;
 
     if (userId || userEmail) {
@@ -384,7 +384,7 @@ export const removeCoupon = async (req, res, next) => {
 export const mergeCarts = async (req, res, next) => {
   try {
     const { guestSessionToken } = req.body;
-    const userId = req.user._id;
+    const userId = req.user.id;
 
     if (!guestSessionToken) {
       return res.json({

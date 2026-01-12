@@ -50,8 +50,8 @@ export const deleteZone = async (req, res, next) => {
     }
 };
 
-// Calculate shipping methods for an address (Public)
-export const calculateShipping = async (req, res, next) => {
+// Calculate delivery methods for an address (Public)
+export const calculateDelivery = async (req, res, next) => {
     try {
         const { province, district, sector, cell, total, items } = req.body;
 

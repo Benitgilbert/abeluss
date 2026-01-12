@@ -120,7 +120,7 @@ export default function TrackOrder() {
                         </div>
                         {result.items && result.items.length > 0 && (
                           <div className="text-charcoal-500 dark:text-charcoal-400 font-bold text-sm uppercase tracking-wide">
-                            {result.items.length} item(s) included in this shipment
+                            {result.items.length} item(s) included in this delivery
                           </div>
                         )}
                       </div>
@@ -130,18 +130,55 @@ export default function TrackOrder() {
                   <div>
                     <h3 className="text-xs font-black text-charcoal-400 dark:text-charcoal-500 uppercase tracking-widest mb-4">Order Timeline</h3>
                     <div className="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-terracotta-500/20 before:to-transparent">
-                      <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                        <div className="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-terracotta-500 text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
-                          <FaCheckCircle className="text-lg" />
-                        </div>
-                        <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-6 rounded-3xl bg-white dark:bg-charcoal-800 border border-cream-200 dark:border-charcoal-700 shadow-sm">
-                          <div className="flex items-center justify-between space-x-2 mb-1">
-                            <div className="font-black text-charcoal-800 dark:text-white">Order Placed</div>
-                            <time className="font-mono text-xs font-bold text-terracotta-500 dark:text-terracotta-400">{new Date(result.createdAt).toLocaleDateString()}</time>
+
+                      {/* Dynamic Status Stages */}
+                      {[
+                        { status: 'pending', label: 'Order Placed', desc: 'Your order has been received and is waiting for processing.' },
+                        { status: 'processing', label: 'Processing', desc: 'We are preparing your items for delivery.' },
+                        { status: 'shipped', label: 'Delivering', desc: 'Your order is on its way to you!' },
+                        { status: 'delivered', label: 'Delivered', desc: 'Order has been successfully delivered.' }
+                      ].map((stage, idx) => {
+                        const statusOrder = ['pending', 'processing', 'shipped', 'delivered'];
+                        const currentStatusIdx = statusOrder.indexOf(result.status?.toLowerCase()) ?? 0;
+                        const stageIdx = statusOrder.indexOf(stage.status);
+                        const isCompleted = stageIdx <= currentStatusIdx;
+
+                        if (!isCompleted && stage.status !== statusOrder[currentStatusIdx + 1]) return null;
+
+                        return (
+                          <div key={stage.status} className={`relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group ${isCompleted ? 'is-active' : 'opacity-50'}`}>
+                            <div className={`flex items-center justify-center w-10 h-10 rounded-full border border-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 ${isCompleted ? 'bg-terracotta-500 text-white' : 'bg-cream-300 text-charcoal-400'}`}>
+                              {isCompleted ? <FaCheckCircle className="text-lg" /> : <div className="w-2 h-2 rounded-full bg-charcoal-400"></div>}
+                            </div>
+                            <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-6 rounded-3xl bg-white dark:bg-charcoal-800 border border-cream-200 dark:border-charcoal-700 shadow-sm transition-all hover:shadow-md">
+                              <div className="flex items-center justify-between space-x-2 mb-1">
+                                <div className={`font-black ${isCompleted ? 'text-charcoal-800 dark:text-white' : 'text-charcoal-400'}`}>{stage.label}</div>
+                                {stage.status === 'pending' && (
+                                  <time className="font-mono text-xs font-bold text-terracotta-500 dark:text-terracotta-400">{new Date(result.createdAt).toLocaleDateString()}</time>
+                                )}
+                              </div>
+                              <p className="text-sm text-charcoal-500 dark:text-charcoal-400 font-medium">{stage.desc}</p>
+                            </div>
                           </div>
-                          <p className="text-sm text-charcoal-500 dark:text-charcoal-400 font-medium">Your order has been received and is waiting for processing.</p>
+                        );
+                      })}
+
+                      {/* Customer Notes / Updates */}
+                      {result.notes?.filter(n => n.isCustomerVisible).map((note, idx) => (
+                        <div key={idx} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
+                          <div className="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-sand-500 text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
+                            <FaTruck className="text-xs" />
+                          </div>
+                          <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-6 rounded-3xl bg-sand-50 dark:bg-charcoal-800 border border-sand-200 dark:border-charcoal-700 shadow-sm border-l-4 border-l-sand-500">
+                            <div className="flex items-center justify-between space-x-2 mb-1">
+                              <div className="font-black text-charcoal-800 dark:text-white">Delivery Update</div>
+                              <time className="font-mono text-xs font-bold text-sand-600 dark:text-sand-400">{new Date(note.createdAt).toLocaleDateString()}</time>
+                            </div>
+                            <p className="text-sm text-charcoal-600 dark:text-gray-300 font-medium italic">"{note.text}"</p>
+                          </div>
                         </div>
-                      </div>
+                      ))}
+
                     </div>
                   </div>
                 </div>

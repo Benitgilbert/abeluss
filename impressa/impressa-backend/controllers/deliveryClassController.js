@@ -1,8 +1,8 @@
 import ShippingClass from "../models/ShippingClass.js";
 import slugify from "slugify";
 
-// Get all shipping classes
-export const getShippingClasses = async (req, res, next) => {
+// Get all delivery classes
+export const getDeliveryClasses = async (req, res, next) => {
     try {
         const classes = await ShippingClass.find().sort({ name: 1 });
         res.json({ success: true, data: classes });
@@ -11,8 +11,8 @@ export const getShippingClasses = async (req, res, next) => {
     }
 };
 
-// Create shipping class
-export const createShippingClass = async (req, res, next) => {
+// Create delivery class
+export const createDeliveryClass = async (req, res, next) => {
     try {
         const { name, description } = req.body;
         const slug = slugify(name, { lower: true, strict: true });
@@ -29,8 +29,8 @@ export const createShippingClass = async (req, res, next) => {
     }
 };
 
-// Update shipping class
-export const updateShippingClass = async (req, res, next) => {
+// Update delivery class
+export const updateDeliveryClass = async (req, res, next) => {
     try {
         const { name, description } = req.body;
         const updateData = { name, description };
@@ -46,7 +46,7 @@ export const updateShippingClass = async (req, res, next) => {
         );
 
         if (!shippingClass) {
-            const error = new Error("Shipping Class not found");
+            const error = new Error("Delivery Class not found");
             error.statusCode = 404;
             throw error;
         }
@@ -57,8 +57,8 @@ export const updateShippingClass = async (req, res, next) => {
     }
 };
 
-// Delete shipping class
-export const deleteShippingClass = async (req, res, next) => {
+// Delete delivery class
+export const deleteDeliveryClass = async (req, res, next) => {
     try {
         const shippingClass = await ShippingClass.findByIdAndDelete(req.params.id);
 

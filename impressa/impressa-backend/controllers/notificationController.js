@@ -9,7 +9,7 @@ export const getMyNotifications = async (req, res, next) => {
     try {
         const { page = 1, limit = 20, unreadOnly } = req.query;
 
-        const filter = { recipient: req.user._id };
+        const filter = { recipient: req.user.id };
         if (unreadOnly === 'true') filter.isRead = false;
 
         const notifications = await Notification.find(filter)
@@ -19,7 +19,7 @@ export const getMyNotifications = async (req, res, next) => {
 
         const total = await Notification.countDocuments(filter);
         const unreadCount = await Notification.countDocuments({
-            recipient: req.user._id,
+            recipient: req.user.id,
             isRead: false
         });
 
@@ -45,7 +45,7 @@ export const getMyNotifications = async (req, res, next) => {
 export const getUnreadCount = async (req, res, next) => {
     try {
         const count = await Notification.countDocuments({
-            recipient: req.user._id,
+            recipient: req.user.id,
             isRead: false
         });
 
@@ -66,7 +66,7 @@ export const markAsRead = async (req, res, next) => {
         const { id } = req.params;
 
         const notification = await Notification.findOneAndUpdate(
-            { _id: id, recipient: req.user._id },
+            { _id: id, recipient: req.user.id },
             { isRead: true, readAt: new Date() },
             { new: true }
         );
@@ -86,7 +86,7 @@ export const markAsRead = async (req, res, next) => {
 export const markAllAsRead = async (req, res, next) => {
     try {
         await Notification.updateMany(
-            { recipient: req.user._id, isRead: false },
+            { recipient: req.user.id, isRead: false },
             { isRead: true, readAt: new Date() }
         );
 
@@ -108,7 +108,7 @@ export const deleteNotification = async (req, res, next) => {
 
         await Notification.findOneAndDelete({
             _id: id,
-            recipient: req.user._id
+            recipient: req.user.id
         });
 
         res.json({
@@ -125,7 +125,7 @@ export const deleteNotification = async (req, res, next) => {
  */
 export const clearAllNotifications = async (req, res, next) => {
     try {
-        await Notification.deleteMany({ recipient: req.user._id });
+        await Notification.deleteMany({ recipient: req.user.id });
 
         res.json({
             success: true,

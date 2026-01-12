@@ -212,15 +212,15 @@ export const verifySeller = async (req, res) => {
         if (action === 'approve') {
             seller.rdbVerification.documentStatus = 'approved';
             seller.rdbVerification.verifiedAt = new Date();
-            seller.rdbVerification.verifiedBy = req.user._id;
+            seller.rdbVerification.verifiedBy = req.user.id;
             seller.sellerStatus = 'active';
             seller.approvedAt = new Date();
-            seller.approvedBy = req.user._id;
+            seller.approvedBy = req.user.id;
         } else {
             seller.rdbVerification.documentStatus = 'rejected';
             seller.rdbVerification.rejectionReason = rejectionReason;
             seller.rdbVerification.verifiedAt = new Date();
-            seller.rdbVerification.verifiedBy = req.user._id;
+            seller.rdbVerification.verifiedBy = req.user.id;
             seller.sellerStatus = 'rejected';
         }
 

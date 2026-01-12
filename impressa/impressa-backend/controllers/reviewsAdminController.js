@@ -95,7 +95,7 @@ export const approveReview = async (req, res, next) => {
             id,
             {
                 status: 'approved',
-                moderatedBy: req.user._id,
+                moderatedBy: req.user.id,
                 moderatedAt: new Date(),
                 reported: false,
                 reportReason: ''
@@ -132,7 +132,7 @@ export const rejectReview = async (req, res, next) => {
             id,
             {
                 status: 'rejected',
-                moderatedBy: req.user._id,
+                moderatedBy: req.user.id,
                 moderatedAt: new Date(),
                 moderationNote: reason || ''
             },
@@ -176,7 +176,7 @@ export const replyToReview = async (req, res, next) => {
             {
                 reply: {
                     text,
-                    author: req.user._id,
+                    author: req.user.id,
                     createdAt: new Date()
                 }
             },

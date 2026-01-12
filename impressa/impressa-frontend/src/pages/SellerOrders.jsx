@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { FaEye, FaSearch, FaFilter, FaBox } from "react-icons/fa";
 import api from "../utils/axiosInstance";
 import SellerSidebar from "../components/SellerSidebar";
@@ -116,12 +117,13 @@ const SellerOrders = () => {
                                                     <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">RWF {order.totals?.grandTotal?.toLocaleString()}</td>
                                                     <td className="px-6 py-4">{getStatusBadge(order.status)}</td>
                                                     <td className="px-6 py-4">
-                                                        <button
-                                                            className="p-2 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors"
+                                                        <Link
+                                                            to={`/seller/orders/${order._id}`}
+                                                            className="p-2 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors flex items-center justify-center w-fit"
                                                             title="View Details"
                                                         >
                                                             <FaEye className="text-lg" />
-                                                        </button>
+                                                        </Link>
                                                     </td>
                                                 </tr>
                                             ))}

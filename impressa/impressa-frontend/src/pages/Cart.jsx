@@ -21,7 +21,7 @@ export default function CartPage() {
   const handleCalculateShipping = async () => {
     try {
       setCalculating(true);
-      const res = await api.calculateShipping(shippingAddress);
+      const res = await api.calculateDelivery(shippingAddress);
       setShippingEstimate(res.data);
     } catch (error) {
       console.error("Failed to calculate shipping", error);
@@ -204,7 +204,7 @@ export default function CartPage() {
 
                     {/* Shipping Calculator */}
                     <div className="space-y-4 mb-8">
-                      <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest">Est. Shipping</h3>
+                      <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest">Est. Delivery</h3>
                       <div className="space-y-2">
                         <select
                           value={shippingAddress.country}
@@ -236,12 +236,12 @@ export default function CartPage() {
                           disabled={calculating}
                           className="w-full py-2.5 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-900 dark:text-white rounded-xl text-sm font-bold transition-all disabled:opacity-50"
                         >
-                          {calculating ? "Calculating..." : "Calculate Shipping"}
+                          {calculating ? "Calculating..." : "Calculate Delivery Fee"}
                         </button>
                         {shippingEstimate && (
                           <div className="bg-violet-50 dark:bg-violet-900/10 rounded-xl p-4 border border-violet-100 dark:border-violet-900/30 animate-fade-in">
                             <div className="flex justify-between items-center mb-1">
-                              <span className="text-sm text-violet-700 dark:text-violet-400">Shipping Cost:</span>
+                              <span className="text-sm text-violet-700 dark:text-violet-400">Delivery Fee:</span>
                               <span className="font-bold text-violet-900 dark:text-violet-200">{formatRwf(shippingEstimate.cost)}</span>
                             </div>
                             <div className="text-[10px] text-violet-500 uppercase font-bold">

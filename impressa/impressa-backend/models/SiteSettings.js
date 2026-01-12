@@ -33,7 +33,7 @@ const siteSettingsSchema = new mongoose.Schema(
         trustBadges: {
             type: [trustBadgeSchema],
             default: [
-                { icon: 'truck', title: 'Free Shipping', description: 'On orders over 50,000 Rwf', isActive: true, order: 0 },
+                { icon: 'truck', title: 'Free Delivery', description: 'On orders over 50,000 Rwf', isActive: true, order: 0 },
                 { icon: 'shield', title: 'Secure Payment', description: '100% protected', isActive: true, order: 1 },
                 { icon: 'undo', title: 'Easy Returns', description: '30-day policy', isActive: true, order: 2 },
                 { icon: 'headset', title: '24/7 Support', description: 'Always here to help', isActive: true, order: 3 }

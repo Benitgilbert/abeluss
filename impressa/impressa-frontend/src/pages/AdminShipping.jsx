@@ -25,12 +25,12 @@ function AdminShipping() {
 
     const fetchZones = async () => {
         try {
-            const { data } = await api.get("/shipping");
+            const { data } = await api.get("/shipping"); // Path is /shipping but displayed as Delivery
             setZones(data.data);
             setLoading(false);
         } catch (error) {
             console.error("Error fetching zones:", error);
-            showError("Failed to load shipping zones");
+            showError("Failed to load delivery zones");
             setLoading(false);
         }
     };
@@ -84,7 +84,7 @@ function AdminShipping() {
         setEditId(null);
     };
 
-    const addMethod = () => setFormData({ ...formData, methods: [...formData.methods, { name: "Standard Shipping", type: "flat_rate", cost: 0, isActive: true }] });
+    const addMethod = () => setFormData({ ...formData, methods: [...formData.methods, { name: "Standard Delivery", type: "flat_rate", cost: 0, isActive: true }] });
     const updateMethod = (index, field, value) => { const newMethods = [...formData.methods]; newMethods[index][field] = value; setFormData({ ...formData, methods: newMethods }); };
     const removeMethod = (index) => { const newMethods = formData.methods.filter((_, i) => i !== index); setFormData({ ...formData, methods: newMethods }); };
 
@@ -112,12 +112,12 @@ function AdminShipping() {
         <div className="min-h-screen bg-cream-100 dark:bg-charcoal-900 transition-colors duration-300">
             <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
             <div className="lg:ml-64 min-h-screen flex flex-col transition-all duration-300">
-                <Topbar onMenuClick={() => setSidebarOpen(true)} title="Shipping Zones" />
+                <Topbar onMenuClick={() => setSidebarOpen(true)} title="Delivery Zones" />
                 <main className="flex-1 p-4 lg:p-6 max-w-[1600px] w-full mx-auto">
                     {/* Header */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                         <div>
-                            <h1 className="text-2xl font-bold text-charcoal-800 dark:text-white">Shipping Zones</h1>
+                            <h1 className="text-2xl font-bold text-charcoal-800 dark:text-white">Delivery Zones</h1>
                             <p className="text-charcoal-500 dark:text-charcoal-400 text-sm mt-1">Manage delivery locations and rates</p>
                         </div>
                         <button onClick={() => { resetForm(); setShowModal(true); }}
@@ -155,7 +155,7 @@ function AdminShipping() {
                                     </div>
 
                                     <div className="p-6 pt-4 flex-1 bg-cream-50/50 dark:bg-charcoal-700/30">
-                                        <h4 className="text-xs font-bold text-charcoal-400 uppercase tracking-wider mb-3">Shipping Methods</h4>
+                                        <h4 className="text-xs font-bold text-charcoal-400 uppercase tracking-wider mb-3">Delivery Methods</h4>
                                         <div className="space-y-3">
                                             {zone.methods.length > 0 ? zone.methods.map((method, idx) => (
                                                 <div key={idx} className="flex items-center justify-between p-3 bg-white dark:bg-charcoal-700 rounded-xl border border-cream-100 dark:border-charcoal-600">
@@ -185,7 +185,7 @@ function AdminShipping() {
                                         <FaPlus className="text-2xl" />
                                     </div>
                                     <h3 className="text-lg font-bold text-charcoal-600 dark:text-charcoal-300">Create First Zone</h3>
-                                    <p className="text-charcoal-400 text-sm text-center mt-2 max-w-[200px]">Define shipping regions and calculate costs</p>
+                                    <p className="text-charcoal-400 text-sm text-center mt-2 max-w-[200px]">Define delivery regions and calculate costs</p>
                                 </div>
                             )}
                         </div>
@@ -198,7 +198,7 @@ function AdminShipping() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowModal(false)}>
                     <div className="bg-white dark:bg-charcoal-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-between px-6 py-4 border-b border-cream-200 dark:border-charcoal-700">
-                            <h3 className="text-lg font-bold text-charcoal-800 dark:text-white">{isEdit ? 'Edit Shipping Zone' : 'Create New Zone'}</h3>
+                            <h3 className="text-lg font-bold text-charcoal-800 dark:text-white">{isEdit ? 'Edit Delivery Zone' : 'Create New Zone'}</h3>
                             <button onClick={() => setShowModal(false)} className="p-2 rounded-lg text-charcoal-400 hover:text-charcoal-600 hover:bg-cream-100 dark:hover:bg-charcoal-700 transition-colors"><FaTimes /></button>
                         </div>
 
@@ -260,7 +260,7 @@ function AdminShipping() {
 
                                 <div className="space-y-4 pt-6 border-t border-cream-200 dark:border-charcoal-700">
                                     <div className="flex items-center justify-between">
-                                        <label className="block text-sm font-bold text-charcoal-800 dark:text-white uppercase tracking-wider">Shipping Methods</label>
+                                        <label className="block text-sm font-bold text-charcoal-800 dark:text-white uppercase tracking-wider">Delivery Methods</label>
                                         <button type="button" onClick={addMethod} className="text-sm font-bold text-terracotta-500 hover:text-terracotta-600">+ Add Method</button>
                                     </div>
 
@@ -279,7 +279,7 @@ function AdminShipping() {
                                                         <select value={method.type} onChange={(e) => updateMethod(idx, "type", e.target.value)}
                                                             className="w-full px-3 py-1.5 bg-white dark:bg-charcoal-800 border border-cream-200 dark:border-charcoal-600 rounded-lg text-sm text-charcoal-800 dark:text-white outline-none focus:border-terracotta-500">
                                                             <option value="flat_rate">Flat Rate</option>
-                                                            <option value="free_shipping">Free Shipping</option>
+                                                            <option value="free_shipping">Free Delivery</option>
                                                             <option value="local_pickup">Local Pickup</option>
                                                         </select>
                                                     </div>

@@ -11,8 +11,8 @@ const FAQ = () => {
 
     const faqs = [
         {
-            question: "How long does shipping take?",
-            answer: "Standard shipping typically takes 3-5 business days within the country. International shipping can take 7-14 business days depending on the destination."
+            question: "How long does delivery take?",
+            answer: "Standard delivery typically takes 3-5 business days within the country. International delivery can take 7-14 business days depending on the destination."
         },
         {
             question: "What is your return policy?",
@@ -23,8 +23,8 @@ const FAQ = () => {
             answer: "Yes, once your order is shipped, you will receive a tracking number via email. You can also use the 'Track Order' link in the footer to check your status."
         },
         {
-            question: "Do you offer international shipping?",
-            answer: "Yes, we ship to most countries worldwide. Shipping costs and times vary based on location."
+            question: "Do you offer international delivery?",
+            answer: "Yes, we deliver to most countries worldwide. Delivery costs and times vary based on location."
         },
         {
             question: "How can I contact customer support?",

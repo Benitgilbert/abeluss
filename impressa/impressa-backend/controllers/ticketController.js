@@ -91,12 +91,12 @@ export const createTicket = async (req, res, next) => {
             description,
             category: category || 'other',
             priority: priority || 'medium',
-            createdBy: req.user._id,
+            createdBy: req.user.id,
             createdByRole: req.user.role === 'seller' ? 'seller' : 'customer',
             relatedOrder,
             relatedProduct,
             messages: [{
-                sender: req.user._id,
+                sender: req.user.id,
                 senderRole: req.user.role === 'seller' ? 'seller' : 'customer',
                 message: description
             }]
@@ -142,7 +142,7 @@ export const addMessage = async (req, res, next) => {
         else if (req.user.role === 'seller') senderRole = 'seller';
 
         ticket.messages.push({
-            sender: req.user._id,
+            sender: req.user.id,
             senderRole,
             message
         });
@@ -181,7 +181,7 @@ export const updateTicketStatus = async (req, res, next) => {
 
         if (status === 'resolved' || status === 'closed') {
             update.resolvedAt = new Date();
-            update.resolvedBy = req.user._id;
+            update.resolvedBy = req.user.id;
         }
 
         const ticket = await Ticket.findByIdAndUpdate(id, update, { new: true })
@@ -211,7 +211,7 @@ export const getMyTickets = async (req, res, next) => {
     try {
         const { status, page = 1, limit = 10 } = req.query;
 
-        const filter = { createdBy: req.user._id };
+        const filter = { createdBy: req.user.id };
         if (status && status !== 'all') filter.status = status;
 
         const tickets = await Ticket.find(filter)

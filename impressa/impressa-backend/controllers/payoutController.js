@@ -10,7 +10,7 @@ import { notifyPayoutRequest, notifyPayoutProcessed } from "./notificationContro
  */
 export const requestPayout = async (req, res, next) => {
     try {
-        const sellerId = req.user._id;
+        const sellerId = req.user.id;
         const { paymentMethod, paymentDetails } = req.body;
 
         // Get commission settings
@@ -81,7 +81,7 @@ export const requestPayout = async (req, res, next) => {
  */
 export const getMyPayouts = async (req, res, next) => {
     try {
-        const sellerId = req.user._id;
+        const sellerId = req.user.id;
         const { status, page = 1, limit = 10 } = req.query;
 
         const filter = { seller: sellerId };
@@ -183,7 +183,7 @@ export const processPayout = async (req, res, next) => {
             payout.status = "completed";
             payout.transactionId = transactionId;
             payout.adminNote = adminNote;
-            payout.processedBy = req.user._id;
+            payout.processedBy = req.user.id;
             payout.processedAt = new Date();
 
             // Mark all linked earnings as paid
@@ -208,7 +208,7 @@ export const processPayout = async (req, res, next) => {
                             { account: payableAcc._id, debit: payout.amount }, // Reduce Liability (Debit)
                             { account: bankAcc._id, credit: payout.amount }    // Reduce Asset (Credit)
                         ],
-                        createdBy: req.user._id
+                        createdBy: req.user.id
                     });
                 }
             } catch (finErr) {
@@ -217,7 +217,7 @@ export const processPayout = async (req, res, next) => {
         } else if (action === "reject") {
             payout.status = "rejected";
             payout.rejectionReason = rejectionReason;
-            payout.processedBy = req.user._id;
+            payout.processedBy = req.user.id;
             payout.processedAt = new Date();
 
             // Unlink earnings so seller can request again
@@ -255,7 +255,7 @@ export const processPayout = async (req, res, next) => {
 export const cancelPayout = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const sellerId = req.user._id;
+        const sellerId = req.user.id;
 
         const payout = await Payout.findOne({ _id: id, seller: sellerId });
 

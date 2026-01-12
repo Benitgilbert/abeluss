@@ -166,7 +166,7 @@ export const createFlashSale = async (req, res, next) => {
             notifyFlashSaleCreated({
                 name: flashSale.name,
                 status: 'Created',
-                recipientId: req.user._id // Although internal, good for logging? Or notify OTHER admins? 
+                recipientId: req.user.id // Although internal, good for logging? Or notify OTHER admins? 
                 // Wait, notifyAdmins ignores recipientId and broadcasts.
             });
         } catch (e) { }

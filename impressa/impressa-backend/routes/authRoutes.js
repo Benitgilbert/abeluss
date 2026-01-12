@@ -34,13 +34,13 @@ router.get(
   (req, res) => {
     // Generate JWT
     const accessToken = jwt.sign(
-      { userId: req.user._id, role: req.user.role },
+      { userId: req.user.id, role: req.user.role },
       process.env.JWT_SECRET,
       { expiresIn: "15m" }
     );
 
     const refreshToken = jwt.sign(
-      { userId: req.user._id },
+      { userId: req.user.id },
       process.env.REFRESH_TOKEN_SECRET,
       { expiresIn: "7d" }
     );

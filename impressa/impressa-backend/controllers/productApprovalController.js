@@ -105,7 +105,7 @@ export const approveProduct = async (req, res, next) => {
 
         product.approvalStatus = 'approved';
         product.approvalNote = note || '';
-        product.approvedBy = req.user._id;
+        product.approvedBy = req.user.id;
         product.approvedAt = new Date();
         product.visibility = 'public'; // Make visible when approved
 
@@ -151,7 +151,7 @@ export const rejectProduct = async (req, res, next) => {
 
         product.approvalStatus = 'rejected';
         product.approvalNote = reason;
-        product.approvedBy = req.user._id;
+        product.approvedBy = req.user.id;
         product.approvedAt = new Date();
         product.visibility = 'hidden'; // Hide rejected products
 
@@ -191,7 +191,7 @@ export const bulkApproveProducts = async (req, res, next) => {
             {
                 approvalStatus: 'approved',
                 visibility: 'public',
-                approvedBy: req.user._id,
+                approvedBy: req.user.id,
                 approvedAt: new Date()
             }
         );
@@ -233,7 +233,7 @@ export const bulkRejectProducts = async (req, res, next) => {
                 approvalStatus: 'rejected',
                 visibility: 'hidden',
                 approvalNote: reason,
-                approvedBy: req.user._id,
+                approvedBy: req.user.id,
                 approvedAt: new Date()
             }
         );

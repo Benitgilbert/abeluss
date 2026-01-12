@@ -12,7 +12,7 @@ import AdminOrders from "./pages/admin/AdminOrders";
 import AdminOrderDetails from "./pages/admin/AdminOrderDetails";
 import AdminProducts from "./pages/AdminProducts";
 import AdminCoupons from "./pages/AdminCoupons";
-import AdminShipping from "./pages/AdminShipping";
+import AdminDelivery from "./pages/AdminShipping"; // Renamed from AdminShipping
 import AdminTax from "./pages/AdminTax";
 import AdminReports from "./pages/AdminReports";
 import AdminAttributes from "./pages/AdminAttributes";
@@ -59,6 +59,7 @@ import SellerProducts from "./pages/SellerProducts";
 import SellerOrders from "./pages/SellerOrders";
 import SellerPayouts from "./pages/SellerPayouts";
 import SellerProfile from "./pages/SellerProfile";
+import SellerOrderDetails from "./pages/SellerOrderDetails";
 import AdminNotifications from "./pages/AdminNotifications";
 import OrderSuccess from "./pages/OrderSuccess";
 
@@ -143,6 +144,11 @@ function App() {
                       <SellerOrders />
                     </ProtectedRoute>
                   } />
+                  <Route path="/seller/orders/:id" element={
+                    <ProtectedRoute allowedRoles={['seller', 'admin']}>
+                      <SellerOrderDetails />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/seller/payouts" element={
                     <ProtectedRoute allowedRoles={['seller', 'admin']}>
                       <SellerPayouts />
@@ -177,9 +183,9 @@ function App() {
                       <AdminCoupons />
                     </ProtectedRoute>
                   } />
-                  <Route path="/admin/shipping" element={
+                  <Route path="/admin/delivery" element={
                     <ProtectedRoute allowedRoles={['admin']}>
-                      <AdminShipping />
+                      <AdminDelivery />
                     </ProtectedRoute>
                   } />
                   <Route path="/admin/taxes" element={

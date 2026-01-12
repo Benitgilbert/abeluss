@@ -325,9 +325,9 @@ function UserDashboard() {
                       </div>
                     </div>
 
-                    {/* Shipping Address */}
+                    {/* Delivery Address */}
                     <div>
-                      <h3 className="font-semibold text-gray-700 mb-4 border-b pb-2">Shipping Address</h3>
+                      <h3 className="font-semibold text-gray-700 mb-4 border-b pb-2">Delivery Address</h3>
                       <div className="space-y-3">
                         {/* Province */}
                         <select

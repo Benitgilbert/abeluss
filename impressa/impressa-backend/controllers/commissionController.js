@@ -33,7 +33,7 @@ export const updateCommissionSettings = async (req, res, next) => {
         if (payoutSchedule !== undefined) settings.payoutSchedule = payoutSchedule;
         if (payoutMethods !== undefined) settings.payoutMethods = payoutMethods;
         if (categoryRates !== undefined) settings.categoryRates = categoryRates;
-        settings.updatedBy = req.user._id;
+        settings.updatedBy = req.user.id;
 
         await settings.save();
 
@@ -103,7 +103,7 @@ export const getAllEarnings = async (req, res, next) => {
  */
 export const getSellerEarningsSummary = async (req, res, next) => {
     try {
-        const sellerId = req.user._id;
+        const sellerId = req.user.id;
 
         // Get pending earnings (not yet paid)
         const pendingEarnings = await SellerEarning.aggregate([

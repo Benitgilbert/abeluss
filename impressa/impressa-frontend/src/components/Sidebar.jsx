@@ -146,7 +146,7 @@ function Sidebar({ isOpen, onClose }) {
           <NavSection label="Configuration">
             <NavLink to="/admin/site-settings" icon={FaGlobe} iconColor="text-sage-400">Site Settings</NavLink>
             <NavLink to="/admin/subscribers" icon={FaEnvelope} iconColor="text-pink-400">Subscribers</NavLink>
-            <NavLink to="/admin/shipping" icon={FaTruck} iconColor="text-blue-400">Shipping</NavLink>
+            <NavLink to="/admin/delivery" icon={FaTruck} iconColor="text-blue-400">Delivery</NavLink>
             <NavLink to="/admin/taxes" icon={FaPercentage} iconColor="text-orange-400">Taxes</NavLink>
             <NavLink to="/admin/reports" icon={FaFileAlt} iconColor="text-charcoal-400">Reports</NavLink>
             <NavLink to="/admin/settings" icon={FaCog} iconColor="text-charcoal-400">Settings</NavLink>

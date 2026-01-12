@@ -118,7 +118,7 @@ export const createOrder = async (req, res) => {
             // For simplicity, remaining amount is temporarily balanced to Receivable or Revenue
             // Let's add balancing entry to Revenue for Shipping/Tax for now or ignore if creating imbalance
           ],
-          createdBy: req.user?._id
+          createdBy: req.user?.id
         });
         // Balance check: Debit (GrandTotal) vs Credit (SellerAmount + Commission)
         // GrandTotal = Subtotal + Shipping + Tax
@@ -292,7 +292,10 @@ export const placeOrderGuest = placeOrder;
 export const getMyOrders = async (req, res) => {
   try {
     const orders = await Order.find({ customer: req.user.id }).sort({ createdAt: -1 });
-    res.json(orders);
+    res.json({
+      success: true,
+      data: orders
+    });
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch orders" });
   }
@@ -305,9 +308,73 @@ export const getSellerOrders = async (req, res) => {
     const orders = await Order.find({ "items.seller": req.user.id })
       .populate("customer", "name email")
       .sort({ createdAt: -1 });
-    res.json(orders);
+    res.json({
+      success: true,
+      data: orders
+    });
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch seller orders" });
+  }
+};
+
+/**
+ * Get all orders (Admin)
+ */
+export const getOrders = async (req, res) => {
+  try {
+    const { status, search, page = 1, limit = 10 } = req.query;
+
+    const filter = {};
+    if (status && status !== "all") filter.status = status;
+
+    if (search) {
+      filter.$or = [
+        { publicId: { $regex: search, $options: "i" } },
+        { "customer.name": { $regex: search, $options: "i" } },
+        { "customer.email": { $regex: search, $options: "i" } },
+        { "guestInfo.name": { $regex: search, $options: "i" } },
+        { "guestInfo.email": { $regex: search, $options: "i" } }
+      ];
+    }
+
+    const orders = await Order.find(filter)
+      .populate("customer", "name email")
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
+
+    const total = await Order.countDocuments(filter);
+
+    res.json({
+      success: true,
+      orders,
+      total,
+      pages: Math.ceil(total / limit),
+      page: parseInt(page)
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch orders", error: err.message });
+  }
+};
+
+/**
+ * Get single order by ID (Admin/Seller)
+ */
+export const getOrderById = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id)
+      .populate("customer", "name email")
+      .populate("items.product", "name price image sku")
+      .populate("items.seller", "name storeName");
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    res.json(order);
+  } catch (err) {
+    console.error("Fetch order by ID error:", err);
+    res.status(500).json({ message: "Failed to fetch order details" });
   }
 };
 
@@ -383,7 +450,7 @@ export const updateOrderStatus = async (req, res) => {
           { account: cashAccountId, debit: order.totals.grandTotal },
           { account: salesAccountId, credit: order.totals.grandTotal }
         ],
-        createdBy: req.user._id
+        createdBy: req.user.id
       });
 
       // Update Seller Earnings to 'confirmed' (ready for payout)
@@ -428,7 +495,7 @@ export const updateOrderStatus = async (req, res) => {
               { account: payableAcc._id, debit: sellerAmount },   // Cancel Seller Owed (Debit Liability)
               { account: revenueAcc._id, debit: commissionAmount } // Cancel Revenue (Debit Revenue)
             ],
-            createdBy: req.user._id
+            createdBy: req.user.id
           });
         }
       }
@@ -447,12 +514,68 @@ export const updateOrderStatus = async (req, res) => {
   }
 };
 
+/**
+ * Update order items & recalculate totals (Admin only)
+ */
+export const updateOrderItems = async (req, res) => {
+  try {
+    const { items } = req.body;
+    const order = await Order.findById(req.params.id);
+
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    // Update items
+    order.items = items;
+
+    // Recalculate totals
+    let subtotal = 0;
+    items.forEach(item => {
+      subtotal += (item.price * item.quantity);
+    });
+
+    order.totals.subtotal = subtotal;
+    order.totals.grandTotal = subtotal + (order.totals.shipping || 0) + (order.totals.tax || 0) - (order.totals.discount || 0);
+
+    await order.save();
+    res.json(order);
+  } catch (err) {
+    console.error("Update order items failed:", err);
+    res.status(500).json({ message: "Failed to update order items" });
+  }
+};
+
+/**
+ * Add note to order
+ */
+export const addOrderNote = async (req, res) => {
+  try {
+    const { text, isCustomerVisible } = req.body;
+    const order = await Order.findById(req.params.id);
+
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    order.notes.push({
+      text,
+      isCustomerVisible: isCustomerVisible || false,
+      author: req.user.id,
+      authorName: req.user.name || "Staff",
+      createdAt: new Date()
+    });
+
+    await order.save();
+    res.json(order);
+  } catch (err) {
+    console.error("Add order note failed:", err);
+    res.status(500).json({ message: "Failed to add note" });
+  }
+};
+
 // 🏪 Create POS Order (Physical Sale) - Admin or Seller
 export const createPOSOrder = async (req, res) => {
   try {
     const { items, paymentMethod, storeLocation } = req.body;
     const userRole = req.user.role;
-    const userId = req.user._id;
+    const userId = req.user.id;
 
     if (!items || items.length === 0) {
       return res.status(400).json({ message: "Order must contain items" });
@@ -662,7 +785,7 @@ export const createPOSOrder = async (req, res) => {
 export const getSellerPOSProducts = async (req, res) => {
   try {
     const products = await Product.find({
-      seller: req.user._id,
+      seller: req.user.id,
       stock: { $gt: 0 },
       visibility: 'public'
     })

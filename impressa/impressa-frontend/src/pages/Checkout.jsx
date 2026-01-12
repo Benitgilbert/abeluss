@@ -73,7 +73,7 @@ export default function CheckoutPage() {
     const fetchShipping = async () => {
       setLoadingShipping(true);
       try {
-        const { data } = await api.post("/shipping/calculate", {
+        const { data } = await api.post("/delivery/calculate", {
           province: formData.province,
           district: formData.district,
           sector: formData.sector,
@@ -186,7 +186,7 @@ export default function CheckoutPage() {
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
     if (!selectedMethod) {
-      showWarning("Please select a shipping method"); // Replaced alert
+      showWarning("Please select a delivery method"); // Replaced alert
       return;
     }
     if (paymentMethod === "mtn_momo" && !momoPhone) {
@@ -312,7 +312,7 @@ export default function CheckoutPage() {
                     <FaTruck className="text-2xl" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Billing & Shipping</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Billing & Delivery</h2>
                     <p className="text-gray-500 dark:text-gray-400 text-sm">Enter your delivery details</p>
                   </div>
                 </div>
@@ -374,12 +374,12 @@ export default function CheckoutPage() {
                 {/* Shipping Method Selector inside Billing Card */}
                 <div className="mt-10 pt-10 border-t border-gray-50 dark:border-slate-800">
                   <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                    <FaTruck className="text-violet-600" /> Shipping Method
+                    <FaTruck className="text-violet-600" /> Delivery Method
                   </h3>
                   {loadingShipping ? (
                     <div className="flex items-center gap-3 text-gray-500">
                       <div className="w-4 h-4 border-2 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
-                      <span className="text-sm">Calculating shipping options...</span>
+                      <span className="text-sm">Calculating delivery options...</span>
                     </div>
                   ) : shippingMethods.length > 0 ? (
                     <div className="space-y-4">
@@ -403,7 +403,7 @@ export default function CheckoutPage() {
                     </div>
                   ) : (
                     <div className="bg-gray-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-gray-100 dark:border-slate-800 text-sm text-gray-500 text-center italic">
-                      Please complete your location details to see shipping options.
+                      Please complete your location details to see delivery options.
                     </div>
                   )}
                 </div>
@@ -507,7 +507,7 @@ export default function CheckoutPage() {
                     <span className="font-bold text-gray-900 dark:text-white">{formatRwf(totals.subtotal)}</span>
                   </div>
                   <div className="flex justify-between text-gray-500 dark:text-gray-400 font-medium">
-                    <span>Shipping</span>
+                    <span>Delivery</span>
                     <span className="font-bold text-gray-900 dark:text-white">{selectedMethod ? formatRwf(shippingCost) : "--"}</span>
                   </div>
                   {taxData.taxes.map((tax, idx) => (

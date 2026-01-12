@@ -110,11 +110,11 @@ export const validateCoupon = async (code) => {
 // ==================== CHECKOUT API ====================
 
 /**
- * Calculate shipping cost
- * @param {Object} address - Shipping address with city, state, country, postalCode
+ * Calculate delivery cost
+ * @param {Object} address - Delivery address with city, state, country, postalCode
  */
-export const calculateShipping = async (address) => {
-  const response = await axios.post("/checkout/shipping/calculate", address);
+export const calculateDelivery = async (address) => {
+  const response = await axios.post("/checkout/delivery/calculate", address);
   return response.data;
 };
 
@@ -129,7 +129,7 @@ export const calculateTax = async (data) => {
 
 /**
  * Create order from cart
- * @param {Object} orderData - Order data with billing/shipping address, shipping method, notes
+ * @param {Object} orderData - Order data with billing/delivery address, delivery method, notes
  */
 export const createOrder = async (orderData) => {
   const response = await axios.post("/checkout/order", orderData);
@@ -201,7 +201,7 @@ export const getProducts = async (filters = {}) => {
       params.append(key, filters[key]);
     }
   });
-  
+
   const response = await axios.get(`/products?${params.toString()}`);
   return response.data;
 };
@@ -261,20 +261,20 @@ export const getCategoryTree = async () => {
  */
 export const formatPhoneNumber = (phone) => {
   if (!phone) return "";
-  
+
   // Remove all non-digit characters
   let cleaned = phone.replace(/\D/g, "");
-  
+
   // If starts with 0, assume it's Rwanda without country code
   if (cleaned.startsWith("0")) {
     cleaned = "250" + cleaned.substring(1);
   }
-  
+
   // If doesn't start with 250, add it
   if (!cleaned.startsWith("250")) {
     cleaned = "250" + cleaned;
   }
-  
+
   return cleaned;
 };
 
@@ -307,36 +307,37 @@ export default {
   applyCoupon,
   removeCoupon,
   mergeCart,
-  
+
   // Coupons
   validateCoupon,
-  
+
   // Checkout
-  calculateShipping,
+  calculateDelivery,
   calculateTax,
   createOrder,
-  
+
   // Payments
   initiateMTNPayment,
   checkPaymentStatus,
   verifyMTNAccount,
   getMTNBalance,
-  
+
   // Products
   getProduct,
   getProducts,
-  
+
   // Orders
   getUserOrders,
   getOrder,
   trackOrder,
-  
+
   // Categories
   getCategories,
   getCategoryTree,
-  
+
   // Helpers
   formatPhoneNumber,
   validatePhoneNumber,
   formatCurrency,
+  calculateDelivery, // Added alias for consistency
 };

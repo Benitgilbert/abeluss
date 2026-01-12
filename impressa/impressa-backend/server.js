@@ -111,8 +111,8 @@ const startServer = async () => {
     const checkoutRoutes = (await import("./routes/checkoutRoutes.js")).default;
     const paymentRoutes = (await import("./routes/paymentRoutes.js")).default;
     const attributeRoutes = (await import("./routes/attributeRoutes.js")).default;
-    const shippingRoutes = (await import("./routes/shippingRoutes.js")).default;
-    const shippingClassRoutes = (await import("./routes/shippingClassRoutes.js")).default;
+    const deliveryRoutes = (await import("./routes/deliveryRoutes.js")).default;
+    const deliveryClassRoutes = (await import("./routes/deliveryClassRoutes.js")).default;
     const taxRoutes = (await import("./routes/taxRoutes.js")).default;
     const blogRoutes = (await import("./routes/blogRoutes.js")).default;
     const financeRoutes = (await import("./routes/financeRoutes.js")).default;
@@ -136,8 +136,10 @@ const startServer = async () => {
     app.use("/api/checkout", checkoutRoutes);
     app.use("/api/payments", paymentRoutes);
     app.use("/api/attributes", attributeRoutes);
-    app.use("/api/shipping", shippingRoutes);
-    app.use("/api/shipping-classes", shippingClassRoutes);
+    app.use("/api/shipping", deliveryRoutes);
+    app.use("/api/delivery", deliveryRoutes); // Alias
+    app.use("/api/shipping-classes", deliveryClassRoutes);
+    app.use("/api/delivery-classes", deliveryClassRoutes); // Alias
     app.use("/api/taxes", taxRoutes);
     app.use("/api/customizations", customizationRoutes);
     app.use("/api/orders", orderRoutes);
