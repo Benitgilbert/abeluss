@@ -24,51 +24,22 @@ export default function AdminSellerReports() {
 
     const fetchReports = async () => {
         setLoading(true);
+        setError('');
         try {
-            // Mock data
-            const mockReports = [
-                {
-                    _id: '1',
-                    seller: { name: 'Premium Store', email: 'premium@demo.com', storeName: 'Premium Store' },
-                    period: { month: 12, year: 2024 },
-                    metrics: {
-                        totalOrders: 156,
-                        completedOrders: 148,
-                        cancelledOrders: 8,
-                        totalRevenue: 2450000,
-                        averageOrderValue: 15705,
-                        averageRating: 4.8,
-                        responseTime: 2.3,
-                        fulfillmentTime: 24,
-                        returnRate: 2.1
-                    },
-                    trends: { revenue: 15, orders: 12, rating: 0.2 },
-                    performanceScore: 92,
-                    status: 'excellent'
-                },
-                {
-                    _id: '2',
-                    seller: { name: 'Basic Shop', email: 'basic@demo.com', storeName: 'Basic Shop' },
-                    period: { month: 12, year: 2024 },
-                    metrics: {
-                        totalOrders: 45,
-                        completedOrders: 38,
-                        cancelledOrders: 7,
-                        totalRevenue: 675000,
-                        averageOrderValue: 15000,
-                        averageRating: 3.9,
-                        responseTime: 8.5,
-                        fulfillmentTime: 48,
-                        returnRate: 5.2
-                    },
-                    trends: { revenue: -5, orders: -8, rating: -0.3 },
-                    performanceScore: 68,
-                    status: 'needs_improvement'
+            const token = localStorage.getItem('authToken');
+            const res = await fetch(`${API_URL}/sellers/performance-reports?date=${selectedMonth}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
                 }
-            ];
-
-            setReports(mockReports);
+            });
+            const data = await res.json();
+            if (data.success) {
+                setReports(data.data);
+            } else {
+                setError(data.message || 'Failed to fetch reports');
+            }
         } catch (err) {
+            console.error('Fetch reports error:', err);
             setError('Failed to fetch reports');
         } finally {
             setLoading(false);

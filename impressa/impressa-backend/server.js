@@ -126,6 +126,7 @@ const startServer = async () => {
 
     // ✅ Register health checks first (no auth required)
     app.use("/", healthRoutes);
+    app.use("/api", healthRoutes);
 
     // ✅ Register API routes
     app.use("/api/auth", authRoutes);

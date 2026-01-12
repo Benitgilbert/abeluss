@@ -26,6 +26,18 @@ router.get("/health", (req, res) => {
 });
 
 /**
+ * Server time endpoint for synchronization
+ */
+router.get("/time", (req, res) => {
+  const now = new Date();
+  res.json({
+    success: true,
+    iso: now.toISOString(),
+    timestamp: now.getTime()
+  });
+});
+
+/**
  * Readiness check endpoint
  * Returns 200 only if all critical services are available
  * Used by load balancers and orchestrators (Kubernetes, Docker Swarm)

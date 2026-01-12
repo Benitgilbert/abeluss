@@ -5,48 +5,81 @@ import LandingFooter from '../components/LandingFooter';
 import { FaClock, FaFire, FaShoppingCart, FaPercent } from 'react-icons/fa';
 import { formatRwf } from '../utils/currency';
 import { useCart } from '../context/CartContext';
+import axiosInstance from '../utils/axiosInstance';
+
+const getImageUrl = (path) => {
+    if (!path) return '';
+    if (path.startsWith('http')) return path;
+    if (path.startsWith('/uploads/')) return `${process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000'}${path}`;
+    return process.env.PUBLIC_URL + path;
+};
 
 export default function DailyDeals() {
     const [flashSales, setFlashSales] = useState([]);
     const [loading, setLoading] = useState(true);
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
     const [activeSale, setActiveSale] = useState(null);
+    const [serverTimeOffset, setServerTimeOffset] = useState(0);
     const { addItem } = useCart();
 
-    // Fetch active flash sales
-    useEffect(() => {
-        const fetchFlashSales = async () => {
-            try {
-                const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-                const res = await fetch(`${apiUrl}/flash-sales/active`);
-                const data = await res.json();
+    const fetchFlashSales = async () => {
+        try {
+            const res = await axiosInstance.get('/flash-sales/active');
+            const data = res.data;
 
-                if (data.success && data.data && data.data.length > 0) {
-                    setFlashSales(data.data);
-                    setActiveSale(data.data[0]); // Use the first active sale
+            if (data.success && data.data) {
+                setFlashSales(data.data);
+                if (data.data.length > 0) {
+                    setActiveSale(data.data[0]);
+                } else {
+                    setActiveSale(null);
                 }
-            } catch (error) {
-                console.error('Error fetching flash sales:', error);
-            } finally {
-                setLoading(false);
             }
+        } catch (error) {
+            console.error('Error fetching flash sales:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Initial fetch and time sync
+    useEffect(() => {
+        const syncTimeAndFetch = async () => {
+            try {
+                // Fetch server time using axiosInstance
+                const timeRes = await axiosInstance.get('/time');
+                if (timeRes.data.success) {
+                    const offset = timeRes.data.timestamp - Date.now();
+                    setServerTimeOffset(offset);
+                }
+            } catch (err) {
+                console.error('Time sync failed:', err);
+            }
+            await fetchFlashSales();
         };
-        fetchFlashSales();
+
+        syncTimeAndFetch();
+
+        // Polling for updates every 30 seconds
+        const pollInterval = setInterval(fetchFlashSales, 30000);
+        return () => clearInterval(pollInterval);
     }, []);
 
     // Countdown timer
     useEffect(() => {
         if (!activeSale) return;
 
-        const endTime = new Date(activeSale.endDate);
+        const endTime = new Date(activeSale.endDate).getTime();
 
         const timer = setInterval(() => {
-            const now = new Date().getTime();
-            const distance = endTime.getTime() - now;
+            const now = Date.now() + serverTimeOffset;
+            const distance = endTime - now;
 
             if (distance < 0) {
                 clearInterval(timer);
                 setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+                // Trigger a refresh when a sale ends
+                fetchFlashSales();
                 return;
             }
 
@@ -59,7 +92,7 @@ export default function DailyDeals() {
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [activeSale]);
+    }, [activeSale, serverTimeOffset]);
 
     const handleAddToCart = (product) => {
         addItem({
@@ -146,7 +179,7 @@ export default function DailyDeals() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                         {allProducts.map((product, index) => {
                             const isAvailable = product.isAvailable;
-                            const imageUrl = product.images?.[0] || 'https://via.placeholder.com/300';
+                            const imageUrl = getImageUrl(product.images?.[0]);
 
                             return (
                                 <div key={`${product._id}-${index}`} className="group bg-white dark:bg-charcoal-800 rounded-3xl shadow-sm hover:shadow-2xl border border-cream-200 dark:border-charcoal-700 transition-all duration-500 overflow-hidden flex flex-col h-full transform hover:-translate-y-2">

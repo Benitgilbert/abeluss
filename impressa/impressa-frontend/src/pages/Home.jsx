@@ -100,7 +100,6 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [activeFlashSale, setActiveFlashSale] = useState(null);
-  const [promoBanner, setPromoBanner] = useState(null);
   const [testimonials, setTestimonials] = useState([]);
   const [brandPartners, setBrandPartners] = useState([]);
   const [trustBadges, setTrustBadges] = useState([]);
@@ -109,43 +108,120 @@ export default function Home() {
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [newsletterStatus, setNewsletterStatus] = useState({ loading: false, message: '', type: '' });
 
+  const [serverTimeOffset, setServerTimeOffset] = useState(0);
+  const [promoBanner, setPromoBanner] = useState(null);
+
+  // Flash sale polling function
+  const fetchFlashSale = async () => {
+    try {
+      const res = await api.get('/flash-sales/active');
+      if (res.data.success && res.data.data && res.data.data.length > 0) {
+        setActiveFlashSale(res.data.data[0]);
+      } else {
+        setActiveFlashSale(null);
+      }
+    } catch (err) {
+      console.error('Error polling flash sale:', err);
+    }
+  };
+
+  const fetchData = async () => {
+    try {
+      const [featuredRes, trendingRes, categoriesRes, flashSaleRes, bannersRes, testimonialsRes, brandPartnersRes, siteSettingsRes] = await Promise.all([
+        api.get('/products/featured/list'),
+        api.get('/products/trending'),
+        api.get('/categories'),
+        api.get('/flash-sales/active'),
+        api.get('/banners/active?position=hero'),
+        api.get('/testimonials/active?limit=6'),
+        api.get('/brand-partners/active'),
+        api.get('/site-settings/public')
+      ]);
+
+      const featuredData = featuredRes.data;
+      const trendingData = trendingRes.data;
+      const categoriesData = categoriesRes.data;
+      const flashSaleData = flashSaleRes.data;
+      const bannersData = bannersRes.data;
+      const testimonialsData = testimonialsRes.data;
+      const brandPartnersData = brandPartnersRes.data;
+      const siteSettingsData = siteSettingsRes.data;
+
+      if (Array.isArray(featuredData)) {
+        setFeatured(featuredData.filter(item => item && item._id));
+      } else if (featuredData.success && Array.isArray(featuredData.products)) {
+        setFeatured(featuredData.products.filter(item => item && item._id));
+      }
+
+      if (Array.isArray(trendingData)) {
+        setTrending(trendingData.filter(item => item && item._id));
+      }
+
+      // Process categories with fallback images/colors
+      if (categoriesData.success && Array.isArray(categoriesData.data)) {
+        const processedCategories = categoriesData.data.map((cat, idx) => {
+          const defaults = categoryDefaults[cat.name] || {};
+          return {
+            ...cat,
+            img: cat.image || defaults.img || `https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=300&h=300&fit=crop`,
+            color: cat.color || defaults.color || defaultColors[idx % defaultColors.length]
+          };
+        });
+        setCategories(processedCategories);
+      }
+
+      // Set active flash sale
+      if (flashSaleData.success && flashSaleData.data && flashSaleData.data.length > 0) {
+        setActiveFlashSale(flashSaleData.data[0]);
+      } else {
+        setActiveFlashSale(null);
+      }
+
+      // Set promotional banner
+      if (bannersData.success && bannersData.data && bannersData.data.length > 0) {
+        setPromoBanner(bannersData.data[0]);
+      }
+
+      // Set testimonials
+      if (testimonialsData.success && testimonialsData.data) {
+        setTestimonials(testimonialsData.data);
+      }
+
+      // Set brand partners
+      if (brandPartnersData.success && brandPartnersData.data) {
+        setBrandPartners(brandPartnersData.data);
+      }
+
+      // Set trust badges
+      if (siteSettingsData.success && siteSettingsData.data?.trustBadges) {
+        setTrustBadges(siteSettingsData.data.trustBadges);
+      }
+    } catch (error) {
+      console.error('Error fetching home data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Countdown timer for Flash Sale
   useEffect(() => {
-    if (!activeFlashSale) {
-      // Default to midnight if no active sale
+    const getTargetTime = () => {
+      if (activeFlashSale) return new Date(activeFlashSale.endDate).getTime();
       const endTime = new Date();
       endTime.setHours(23, 59, 59, 999);
+      return endTime.getTime();
+    };
 
-      const timer = setInterval(() => {
-        const now = new Date().getTime();
-        const distance = endTime.getTime() - now;
-
-        if (distance < 0) {
-          clearInterval(timer);
-          return;
-        }
-
-        setTimeLeft({
-          days: Math.floor(distance / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-          minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
-          seconds: Math.floor((distance % (1000 * 60)) / 1000)
-        });
-      }, 1000);
-
-      return () => clearInterval(timer);
-    }
-
-    // Use actual flash sale end time
-    const endTime = new Date(activeFlashSale.endDate);
+    const targetTime = getTargetTime();
 
     const timer = setInterval(() => {
-      const now = new Date().getTime();
-      const distance = endTime.getTime() - now;
+      const now = Date.now() + serverTimeOffset;
+      const distance = targetTime - now;
 
       if (distance < 0) {
         clearInterval(timer);
         setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        fetchFlashSale(); // Refresh data when sale ends
         return;
       }
 
@@ -158,85 +234,26 @@ export default function Home() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [activeFlashSale]);
+  }, [activeFlashSale, serverTimeOffset]);
 
+  // Initial fetch and time sync
   useEffect(() => {
-    const fetchData = async () => {
+    const syncTimeAndFetch = async () => {
       try {
-        const [featuredRes, trendingRes, categoriesRes, flashSaleRes, bannersRes, testimonialsRes, brandPartnersRes, siteSettingsRes] = await Promise.all([
-          api.get('/products/featured/list'),
-          api.get('/products/trending'),
-          api.get('/categories'),
-          api.get('/flash-sales/active'),
-          api.get('/banners/active?position=hero'),
-          api.get('/testimonials/active?limit=6'),
-          api.get('/brand-partners/active'),
-          api.get('/site-settings/public')
-        ]);
-
-        const featuredData = featuredRes.data;
-        const trendingData = trendingRes.data;
-        const categoriesData = categoriesRes.data;
-        const flashSaleData = flashSaleRes.data;
-        const bannersData = bannersRes.data;
-        const testimonialsData = testimonialsRes.data;
-        const brandPartnersData = brandPartnersRes.data;
-        const siteSettingsData = siteSettingsRes.data;
-
-        if (Array.isArray(featuredData)) {
-          setFeatured(featuredData.filter(item => item && item._id));
-        } else if (featuredData.success && Array.isArray(featuredData.products)) {
-          setFeatured(featuredData.products.filter(item => item && item._id));
-        }
-
-        if (Array.isArray(trendingData)) {
-          setTrending(trendingData.filter(item => item && item._id));
-        }
-
-        // Process categories with fallback images/colors
-        if (categoriesData.success && Array.isArray(categoriesData.data)) {
-          const processedCategories = categoriesData.data.map((cat, idx) => {
-            const defaults = categoryDefaults[cat.name] || {};
-            return {
-              ...cat,
-              img: cat.image || defaults.img || `https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=300&h=300&fit=crop`,
-              color: cat.color || defaults.color || defaultColors[idx % defaultColors.length]
-            };
-          });
-          setCategories(processedCategories);
-        }
-
-        // Set active flash sale
-        if (flashSaleData.success && flashSaleData.data && flashSaleData.data.length > 0) {
-          setActiveFlashSale(flashSaleData.data[0]);
-        }
-
-        // Set promotional banner
-        if (bannersData.success && bannersData.data && bannersData.data.length > 0) {
-          setPromoBanner(bannersData.data[0]);
-        }
-
-        // Set testimonials
-        if (testimonialsData.success && testimonialsData.data) {
-          setTestimonials(testimonialsData.data);
-        }
-
-        // Set brand partners
-        if (brandPartnersData.success && brandPartnersData.data) {
-          setBrandPartners(brandPartnersData.data);
-        }
-
-        // Set trust badges
-        if (siteSettingsData.success && siteSettingsData.data?.trustBadges) {
-          setTrustBadges(siteSettingsData.data.trustBadges);
-        }
-      } catch (error) {
-        console.error('Error fetching home data:', error);
-      } finally {
-        setLoading(false);
+        const serverTimeRes = await api.get('/time');
+        const serverTimestamp = serverTimeRes.data.timestamp || Date.now();
+        setServerTimeOffset(serverTimestamp - Date.now());
+      } catch (err) {
+        console.error('Time sync failed on Home:', err);
       }
+      await fetchData();
     };
-    fetchData();
+
+    syncTimeAndFetch();
+
+    // Polling for updates every 30 seconds
+    const pollInterval = setInterval(fetchFlashSale, 30000);
+    return () => clearInterval(pollInterval);
   }, []);
 
   return (
