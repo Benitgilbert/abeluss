@@ -13,8 +13,9 @@ export default function assetUrl(path) {
   if (path.startsWith("/uploads/")) {
     // Use environment variable or fallback to localhost:5000
     // We strip /api if it's included in the env var, though here we just want the origin
-    const backendUrl = "http://localhost:5000";
-    return `${backendUrl}${path}`;
+    const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+    const origin = apiUrl.replace(/\/api$/, "");
+    return `${origin}${path}`;
   }
 
   // For local public paths

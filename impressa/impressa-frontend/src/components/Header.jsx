@@ -12,7 +12,9 @@ import {
   LuTruck,
   LuChevronDown,
   LuUser,
-  LuLogOut
+  LuLogOut,
+  LuMenu,
+  LuX
 } from "react-icons/lu";
 import RoleSwitcher from "./RoleSwitcher";
 import api from "../utils/axiosInstance";
@@ -31,6 +33,7 @@ export default function Header() {
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -105,17 +108,25 @@ export default function Header() {
     <header className="sticky top-0 z-50 bg-charcoal-800 text-white shadow-xl border-b border-charcoal-700">
       <div className="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between gap-6">
 
+        {/* Mobile Menu Button - Left */}
+        <button
+          className="md:hidden p-2 text-white"
+          onClick={() => setMobileMenuOpen(true)}
+        >
+          <LuMenu className="w-6 h-6" />
+        </button>
+
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3 shrink-0">
           <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-terracotta-500 to-terracotta-600 shadow-lg shadow-terracotta-500/20">
             <span className="text-xl font-bold text-white">I</span>
           </div>
-          <span className="text-xl font-bold tracking-tight text-white">Impressa</span>
+          <span className="text-xl font-bold tracking-tight text-white hidden sm:block">Impressa</span>
         </Link>
 
-        {/* Navigation - ALWAYS VISIBLE */}
+        {/* Navigation - DESKTOP ONLY */}
         {!isSellerOrAdminView && (
-          <nav className="flex items-center gap-2">
+          <nav className="hidden md:flex items-center gap-2">
             {/* Categories Dropdown */}
             <div className="relative">
               <button
@@ -163,9 +174,9 @@ export default function Header() {
           </nav>
         )}
 
-        {/* Search Bar - ALWAYS VISIBLE */}
+        {/* Search Bar - DESKTOP ONLY */}
         {!isSellerOrAdminView && (
-          <div className="flex-1 max-w-md px-4">
+          <div className="hidden md:block flex-1 max-w-md px-4">
             <div className="relative w-full group">
               <form onSubmit={handleSearchSubmit}>
                 <input
@@ -291,6 +302,89 @@ export default function Header() {
           )}
         </div>
       </div>
-    </header>
+
+      {/* Mobile Menu Overlay */}
+      {
+        mobileMenuOpen && (
+          <div className="fixed inset-0 z-50 bg-charcoal-900/95 backdrop-blur-sm md:hidden overflow-y-auto">
+            <div className="p-6 flex flex-col gap-6">
+              <div className="flex items-center justify-between">
+                <span className="text-xl font-bold text-white">Menu</span>
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-2 text-charcoal-400 hover:text-white"
+                >
+                  <LuX className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Mobile Search */}
+              <form onSubmit={(e) => {
+                handleSearchSubmit(e);
+                setMobileMenuOpen(false);
+              }} className="relative">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search products..."
+                  className="w-full h-12 pl-4 pr-10 rounded-xl bg-charcoal-800 border border-charcoal-700 text-white placeholder-charcoal-500 focus:border-terracotta-500 outline-none"
+                />
+                <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-charcoal-400">
+                  <LuSearch className="w-5 h-5" />
+                </button>
+              </form>
+
+              <nav className="flex flex-col gap-2">
+                <Link
+                  to="/shop"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-4 rounded-xl bg-charcoal-800 text-cream-200 font-medium hover:bg-charcoal-700"
+                >
+                  Shop All
+                </Link>
+                <Link
+                  to="/daily-deals"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-4 rounded-xl bg-charcoal-800 text-sand-400 font-medium hover:bg-charcoal-700"
+                >
+                  Daily Deals
+                </Link>
+                <Link
+                  to="/track"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-4 rounded-xl bg-charcoal-800 text-cream-200 font-medium hover:bg-charcoal-700 flex items-center gap-2"
+                >
+                  <LuTruck className="w-4 h-4" /> Track Order
+                </Link>
+                <Link
+                  to="/blog"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-4 rounded-xl bg-charcoal-800 text-cream-200 font-medium hover:bg-charcoal-700"
+                >
+                  Blog
+                </Link>
+
+                <div className="h-px bg-charcoal-800 my-2" />
+
+                <div className="text-xs font-bold text-charcoal-500 uppercase tracking-wider px-2 mb-2">Categories</div>
+                <div className="grid grid-cols-2 gap-2">
+                  {categories.slice(0, 8).map(cat => (
+                    <Link
+                      key={cat._id}
+                      to={`/shop?category=${encodeURIComponent(cat.name)}`}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="p-3 rounded-lg bg-charcoal-800/50 text-sm text-charcoal-300 hover:text-white hover:bg-charcoal-700 truncate"
+                    >
+                      {cat.name}
+                    </Link>
+                  ))}
+                </div>
+              </nav>
+            </div>
+          </div>
+        )
+      }
+    </header >
   );
 }

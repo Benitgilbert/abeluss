@@ -60,6 +60,7 @@ import SellerOrders from "./pages/SellerOrders";
 import SellerPayouts from "./pages/SellerPayouts";
 import SellerProfile from "./pages/SellerProfile";
 import AdminNotifications from "./pages/AdminNotifications";
+import OrderSuccess from "./pages/OrderSuccess";
 
 import { CartProvider } from "./context/CartContext";
 import { WishlistProvider } from "./context/WishlistContext";
@@ -82,6 +83,7 @@ function App() {
                   <Route path="/product/:id" element={<ProductDetail />} />
                   <Route path="/cart" element={<CartPage />} />
                   <Route path="/checkout" element={<CheckoutPage />} />
+                  <Route path="/order-success/:id" element={<OrderSuccess />} />
                   <Route path="/track" element={<TrackOrder />} />
                   <Route path="/wishlist" element={<Wishlist />} />
                   <Route path="/about" element={<About />} />

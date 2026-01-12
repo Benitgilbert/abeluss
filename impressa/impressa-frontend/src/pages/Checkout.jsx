@@ -249,8 +249,8 @@ export default function CheckoutPage() {
                 clearInterval(pollInterval);
                 setPaymentStatus("success");
                 clearCart();
-                showSuccess("Order placed successfully!"); // Added success toast
-                setTimeout(() => nav("/shop"), 3000); // Redirect to shop or success page
+                showSuccess("Order placed successfully!");
+                setTimeout(() => nav(`/order-success/${orderId}`), 1000);
               } else if (status === "failed") {
                 clearInterval(pollInterval);
                 setPaymentStatus("failed");
@@ -266,8 +266,8 @@ export default function CheckoutPage() {
         // Other methods (e.g. Cash)
         setPaymentStatus("success");
         clearCart();
-        showSuccess("Order placed successfully!"); // Replaced alert
-        nav("/shop");
+        showSuccess("Order placed successfully!");
+        setTimeout(() => nav(`/order-success/${orderId}`), 1000);
       }
 
     } catch (error) {

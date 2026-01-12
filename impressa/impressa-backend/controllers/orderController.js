@@ -16,6 +16,7 @@ import generateAISummary from "../utils/aiSummary.js";
 import sendReportEmail from "../utils/sendReportEmail.js";
 import { sendStatusUpdate } from "../services/emailService.js";
 import { notifyAdminNewOrder, notifyOrderPlaced } from "./notificationController.js";
+import { sendOrderConfirmation } from "../services/emailService.js";
 
 // 📦 Place an order (customer only) - Legacy/Single Item
 export const placeOrder = async (req, res) => {
@@ -178,6 +179,9 @@ export const createOrder = async (req, res) => {
       if (req.user?.id) {
         notifyOrderPlaced(req.user.id, order._id, order.totals.grandTotal);
       }
+
+      // Send Email Confirmation (to registered or guest)
+      await sendOrderConfirmation(order);
 
       // 2. Notify Admin
       notifyAdminNewOrder(
