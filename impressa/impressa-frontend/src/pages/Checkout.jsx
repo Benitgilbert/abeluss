@@ -6,7 +6,7 @@ import { formatRwf } from "../utils/currency";
 import api from "../utils/axiosInstance";
 import { getProvinces, getDistricts, getSectors, getCells } from "../utils/locationHelpers";
 import { useToast } from "../context/ToastContext";
-import { FaShoppingCart, FaCreditCard, FaMoneyBillWave, FaLock, FaHeart, FaSearch, FaTruck, FaMobileAlt } from "react-icons/fa";
+import { FaShoppingCart, FaCreditCard, FaMoneyBillWave, FaLock, FaHeart, FaSearch, FaTruck, FaMobileAlt, FaGift } from "react-icons/fa";
 import LandingFooter from "../components/LandingFooter";
 import Header from "../components/Header";
 
@@ -67,6 +67,12 @@ export default function CheckoutPage() {
   const [momoPhone, setMomoPhone] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null); // 'pending', 'success', 'failed'
+
+  // Gift Card State
+  const [giftCardCode, setGiftCardCode] = useState("");
+  const [appliedGiftCard, setAppliedGiftCard] = useState(null);
+  const [giftCardDiscount, setGiftCardDiscount] = useState(0);
+  const [isApplyingGC, setIsApplyingGC] = useState(false);
 
   // Fetch shipping methods when district changes
   useEffect(() => {
@@ -180,7 +186,43 @@ export default function CheckoutPage() {
     setShippingCost(method.cost);
   };
 
-  const grandTotal = (totals.subtotal - (totals.discount || 0)) + shippingCost + taxData.totalTax;
+  const handleApplyGiftCard = async (e) => {
+    e.preventDefault();
+    if (!giftCardCode) return;
+    setIsApplyingGC(true);
+    try {
+      const response = await api.post("/gift-cards/validate", { code: giftCardCode });
+      // Backend returns { success: true, data: giftCard }
+      const giftCardData = response.data?.data || response.data;
+
+      if (giftCardData && giftCardData.currentBalance > 0) {
+        setAppliedGiftCard(giftCardData);
+        // Calculate how much can be applied: min(balance, currentTotal)
+        const currentTotal = (totals.subtotal - (totals.discount || 0)) + shippingCost + taxData.totalTax;
+        const discountToApply = Math.min(giftCardData.currentBalance, currentTotal);
+        setGiftCardDiscount(discountToApply);
+        showSuccess(`Gift Card applied! Saved ${formatRwf(discountToApply)}`);
+      } else {
+        showError("Gift card has no balance remaining");
+        setAppliedGiftCard(null);
+        setGiftCardDiscount(0);
+      }
+    } catch (error) {
+      showError(error.response?.data?.message || "Invalid or expired gift card");
+      setAppliedGiftCard(null);
+      setGiftCardDiscount(0);
+    } finally {
+      setIsApplyingGC(false);
+    }
+  };
+
+  const removeGiftCard = () => {
+    setAppliedGiftCard(null);
+    setGiftCardDiscount(0);
+    setGiftCardCode("");
+  };
+
+  const grandTotal = Math.max(0, (totals.subtotal - (totals.discount || 0)) + shippingCost + taxData.totalTax - giftCardDiscount);
 
 
   const handlePlaceOrder = async (e) => {
@@ -223,7 +265,12 @@ export default function CheckoutPage() {
           name: `${formData.firstName} ${formData.lastName}`,
           email: formData.email,
           phone: formData.phone
-        }
+        },
+        // Gift card application
+        giftCard: appliedGiftCard ? {
+          code: appliedGiftCard.code,
+          amountApplied: giftCardDiscount
+        } : null
       };
 
       const orderRes = await api.post("/orders/create", orderPayload);
@@ -522,6 +569,47 @@ export default function CheckoutPage() {
                       <span>-{formatRwf(totals.discount)}</span>
                     </div>
                   )}
+
+                  {/* Gift Card Application UI */}
+                  <div className="py-6 border-y border-gray-100 dark:border-slate-800 my-2">
+                    <div className="flex items-center gap-2 mb-4">
+                      <FaGift className="text-terracotta-500" />
+                      <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Have a Gift Card?</span>
+                    </div>
+                    {appliedGiftCard ? (
+                      <div className="flex items-center justify-between bg-violet-50 dark:bg-violet-900/10 p-4 rounded-2xl border border-violet-200 dark:border-violet-800 animate-fade-in-up">
+                        <div>
+                          <p className="text-xs font-bold text-violet-600 dark:text-violet-400 uppercase tracking-widest">{appliedGiftCard.code}</p>
+                          <p className="text-lg font-black text-gray-900 dark:text-white mt-1">-{formatRwf(giftCardDiscount)}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={removeGiftCard}
+                          className="text-xs font-bold text-red-500 hover:text-red-700 uppercase tracking-tighter"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={giftCardCode}
+                          onChange={(e) => setGiftCardCode(e.target.value)}
+                          placeholder="IMPR-XXXX-XXXX"
+                          className="flex-1 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-violet-500 outline-none transition-all uppercase placeholder:normal-case"
+                        />
+                        <button
+                          type="button"
+                          disabled={isApplyingGC || !giftCardCode}
+                          onClick={handleApplyGiftCard}
+                          className="bg-charcoal-900 dark:bg-white dark:text-charcoal-900 text-white px-6 rounded-xl font-bold text-sm hover:bg-terracotta-500 transition-all disabled:opacity-50"
+                        >
+                          {isApplyingGC ? "..." : "Apply"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   <div className="flex justify-between items-center py-8 pt-10 border-t border-gray-100 dark:border-slate-800 mt-4">
                     <span className="text-2xl font-bold text-gray-900 dark:text-white">To Pay</span>
                     <span className="text-4xl font-black text-violet-600 dark:text-violet-400 drop-shadow-sm">{formatRwf(grandTotal)}</span>

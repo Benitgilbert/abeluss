@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import Sidebar from "../components/Sidebar";
+import SellerSidebar from "../components/SellerSidebar";
 import Topbar from "../components/Topbar";
 import api from "../utils/axiosInstance";
 import { FaCheck, FaCheckDouble, FaTrash, FaBell, FaInfoCircle, FaBox, FaMoneyBillWave, FaUserCheck, FaExclamationTriangle } from "react-icons/fa";
 
-const AdminNotifications = () => {
+const SellerNotifications = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -70,7 +70,7 @@ const AdminNotifications = () => {
 
     return (
         <div className="min-h-screen bg-cream-100 dark:bg-charcoal-900 transition-colors duration-300">
-            <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+            <SellerSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
             <div className="lg:ml-64 min-h-screen flex flex-col transition-all duration-300">
                 <Topbar onMenuClick={() => setSidebarOpen(true)} title="Notifications" />
                 <main className="flex-1 p-4 lg:p-6 max-w-[1200px] w-full mx-auto">
@@ -161,4 +161,4 @@ const AdminNotifications = () => {
     );
 };
 
-export default AdminNotifications;
+export default SellerNotifications;

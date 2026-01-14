@@ -1,5 +1,6 @@
 import Ticket from "../models/Ticket.js";
 import { notifyViolation } from "./notificationController.js"; // abusing this for tickets too if category is violation
+import User from "../models/User.js";
 
 /**
  * Get all tickets (admin)
@@ -105,7 +106,8 @@ export const createTicket = async (req, res, next) => {
         // 🔔 Notify Admin if Violation
         try {
             if (category === 'violation' || category === 'report' || category === 'abuse') {
-                notifyViolation('manual_report', req.user.name);
+                const user = await User.findById(req.user.id).select('name');
+                notifyViolation('manual_report', user?.name || "User");
             }
         } catch (e) { }
 

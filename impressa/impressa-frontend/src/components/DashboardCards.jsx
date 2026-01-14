@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../utils/axiosInstance";
 import { FaShoppingCart, FaBox, FaCheckCircle, FaTimesCircle, FaDollarSign, FaPalette, FaStar, FaUserPlus, FaUsers, FaClock, FaBuilding, FaArrowUp, FaArrowDown } from "react-icons/fa";
 
-function DashboardCards() {
+function DashboardCards({ refreshKey }) {
   const [data, setData] = useState(null);
 
   useEffect(() => {
@@ -16,7 +16,7 @@ function DashboardCards() {
     };
 
     fetchAnalytics();
-  }, []);
+  }, [refreshKey]);
 
   const cards = data
     ? [

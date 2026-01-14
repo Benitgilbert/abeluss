@@ -264,7 +264,16 @@ export const getSellerPerformanceReports = async (req, res, next) => {
                     },
                     totalRevenue: {
                         $sum: {
-                            $cond: [{ $eq: ["$status", "delivered"] }, "$items.subtotal", 0]
+                            $cond: [
+                                {
+                                    $or: [
+                                        { $eq: ["$status", "delivered"] },
+                                        { $eq: ["$payment.status", "completed"] }
+                                    ]
+                                },
+                                "$items.subtotal",
+                                0
+                            ]
                         }
                     },
                     // For fulfillment time calculation
@@ -315,14 +324,55 @@ export const getSellerPerformanceReports = async (req, res, next) => {
             }
         ]);
 
-        // Add dummy trends and performance scores for now as these require comparison with previous period
+        // Calculate Average Ratings via separate aggregation
+        // 1. Find all products associated with the sellers found in reports (optimization)
+        const sellerIds = reports.map(r => r._id);
+
+        // 2. Aggregate reviews for these sellers
+        // We link Review -> Product -> Seller
+        const reviewStats = await import("../models/Review.js").then(Review =>
+            Review.default.aggregate([
+                {
+                    $lookup: {
+                        from: "products",
+                        localField: "product",
+                        foreignField: "_id",
+                        as: "productInfo"
+                    }
+                },
+                { $unwind: "$productInfo" },
+                {
+                    $match: {
+                        "productInfo.seller": { $in: sellerIds },
+                        status: "approved"
+                    }
+                },
+                {
+                    $group: {
+                        _id: "$productInfo.seller",
+                        avgRating: { $avg: "$rating" },
+                        count: { $sum: 1 }
+                    }
+                }
+            ])
+        );
+
+        // Create a map for quick lookup
+        const ratingMap = {};
+        reviewStats.forEach(stat => {
+            ratingMap[stat._id.toString()] = parseFloat(stat.avgRating.toFixed(1));
+        });
+
         const finalReports = reports.map(report => {
             const completed = report.metrics.completedOrders || 0;
             const revenue = report.metrics.totalRevenue || 0;
 
             // Calculate some derived metrics
             report.metrics.averageOrderValue = completed > 0 ? Math.round(revenue / completed) : 0;
-            report.metrics.averageRating = 4.5; // Placeholder, would require Review lookup
+
+            // USE REAL RATING OR DEFAULT TO 0 (Not 4.5)
+            report.metrics.averageRating = ratingMap[report._id.toString()] || 0;
+
             report.metrics.responseTime = 2.5; // Placeholder
             report.metrics.returnRate = 0; // Placeholder
 
@@ -337,7 +387,9 @@ export const getSellerPerformanceReports = async (req, res, next) => {
             const revScore = Math.min(40, (revenue / 100000) * 10);
             const orderScore = Math.min(30, (completed / 10) * 10);
             const cancelPenalty = (report.metrics.cancelledOrders || 0) * 5;
-            report.performanceScore = Math.max(0, Math.min(100, Math.round(50 + revScore + orderScore - cancelPenalty)));
+            const ratingScore = (report.metrics.averageRating / 5) * 20; // Max 20 points for rating
+
+            report.performanceScore = Math.max(0, Math.min(100, Math.round(30 + revScore + orderScore + ratingScore - cancelPenalty)));
 
             report.status = report.performanceScore >= 90 ? 'excellent' :
                 report.performanceScore >= 70 ? 'good' :

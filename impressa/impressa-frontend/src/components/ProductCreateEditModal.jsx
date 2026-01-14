@@ -8,6 +8,7 @@ function ProductCreateEditModal({ product, onClose, onSaved }) {
   const [globalAttributes, setGlobalAttributes] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
   const [shippingClasses, setShippingClasses] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -37,6 +38,7 @@ function ProductCreateEditModal({ product, onClose, onSaved }) {
     fetchGlobalAttributes();
     fetchAllProducts();
     fetchShippingClasses();
+    fetchCategories();
   }, []);
 
   const fetchGlobalAttributes = async () => {
@@ -63,6 +65,15 @@ function ProductCreateEditModal({ product, onClose, onSaved }) {
       setShippingClasses(res.data.data || res.data);
     } catch (err) {
       console.error("Failed to fetch shipping classes:", err);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const res = await api.get("/categories");
+      setCategories(res.data.data || res.data || []);
+    } catch (err) {
+      console.error("Failed to fetch categories:", err);
     }
   };
 
@@ -146,6 +157,7 @@ function ProductCreateEditModal({ product, onClose, onSaved }) {
       fd.append("crossSells", JSON.stringify(form.crossSells));
 
       if (form.shippingClass) fd.append("shippingClass", form.shippingClass);
+      if (form.category) fd.append("category", form.category);
 
       if (form.image instanceof File) {
         fd.append("image", form.image);
@@ -224,6 +236,23 @@ function ProductCreateEditModal({ product, onClose, onSaved }) {
                 >
                   <option value="simple">Simple Product</option>
                   <option value="variable">Variable Product</option>
+                </select>
+              </div>
+
+              <div className="md:col-span-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Category</label>
+                <select
+                  name="category"
+                  value={form.category}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 dark:text-white transition-all text-sm"
+                >
+                  <option value="">Select Category</option>
+                  {categories.map(cat => (
+                    <option key={cat._id || cat.name} value={cat.name || cat}>
+                      {cat.name || cat}
+                    </option>
+                  ))}
                 </select>
               </div>
 

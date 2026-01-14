@@ -130,6 +130,7 @@ const SellerProducts = () => {
                                         <thead className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
                                             <tr>
                                                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Product</th>
+                                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
                                                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Price</th>
                                                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Stock</th>
                                                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
@@ -153,6 +154,11 @@ const SellerProducts = () => {
                                                                 <div className="text-xs text-gray-500 dark:text-gray-400">SKU: {product.sku || 'N/A'}</div>
                                                             </div>
                                                         </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                                                            {product.category || 'Uncategorized'}
+                                                        </span>
                                                     </td>
                                                     <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-200">
                                                         RWF {product.price?.toLocaleString()}

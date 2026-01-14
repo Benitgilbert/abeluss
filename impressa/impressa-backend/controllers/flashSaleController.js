@@ -56,7 +56,8 @@ export const getActiveFlashSales = async (req, res, next) => {
             endDate: { $gte: now }
         }).populate({
             path: "products.product",
-            select: "name price compareAtPrice images stock description"
+            match: { visibility: "public", approvalStatus: "approved" },
+            select: "name price compareAtPrice image images stock description averageRating"
         });
 
         // Format response with product details
@@ -78,6 +79,8 @@ export const getActiveFlashSales = async (req, res, next) => {
                     ? Math.round(((sp.product.price - sp.flashSalePrice) / sp.product.price) * 100)
                     : 0,
                 images: sp.product?.images,
+                image: sp.product?.image,
+                averageRating: sp.product?.averageRating,
                 stockLimit: sp.stockLimit,
                 soldCount: sp.soldCount,
                 remaining: sp.stockLimit ? sp.stockLimit - sp.soldCount : null,
@@ -104,6 +107,7 @@ export const getFlashSaleById = async (req, res, next) => {
 
         const flashSale = await FlashSale.findById(id).populate({
             path: "products.product",
+            match: { visibility: "public", approvalStatus: "approved" },
             select: "name price compareAtPrice images stock"
         });
 

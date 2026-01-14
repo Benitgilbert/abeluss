@@ -53,10 +53,10 @@ export const getCategoryTree = async (req, res, next) => {
 export const getCategoryByIdOrSlug = async (req, res, next) => {
   try {
     const { identifier } = req.params;
-    
+
     // Check if identifier is a valid ObjectId
     const isObjectId = identifier.match(/^[0-9a-fA-F]{24}$/);
-    
+
     const category = isObjectId
       ? await Category.findById(identifier).populate("parent", "name slug")
       : await Category.findOne({ slug: identifier }).populate("parent", "name slug");
@@ -209,7 +209,8 @@ export const getProductsByCategory = async (req, res, next) => {
 
     const products = await Product.find({
       categories: { $in: categoryIds },
-      // Add visibility filter if needed
+      visibility: "public",
+      approvalStatus: "approved"
     })
       .populate("categories", "name slug")
       .sort({ featured: -1, createdAt: -1 });

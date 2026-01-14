@@ -77,7 +77,7 @@ export default function AdminSellerReports() {
         return <span className="text-charcoal-400 text-xs">—</span>;
     };
 
-    const formatCurrency = (amount) => `RWF ${amount.toLocaleString()}`;
+    const formatCurrency = (amount) => `RWF ${(amount || 0).toLocaleString()}`;
 
     const exportReport = (report) => {
         const content = `

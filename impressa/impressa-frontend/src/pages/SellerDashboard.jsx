@@ -53,13 +53,19 @@ export default function SellerDashboard() {
 
     useEffect(() => {
         fetchDashboardData();
+        const interval = setInterval(() => fetchDashboardData(true), 15000); // 15s polling
+        return () => clearInterval(interval);
     }, []);
 
-    const fetchDashboardData = async () => {
+    const fetchDashboardData = async (isPolling = false) => {
         try {
-            // Get user info
-            const userRes = await api.get('/auth/me');
-            setUser(userRes.data);
+            if (!isPolling) setLoading(true);
+
+            // Get user info (only once effectively, but cheap)
+            if (!user) {
+                const userRes = await api.get('/auth/me');
+                setUser(userRes.data);
+            }
 
             // Get seller's products stats
             const productsRes = await api.get('/products/seller/my-products?limit=5');
@@ -75,63 +81,61 @@ export default function SellerDashboard() {
             try {
                 const earningsRes = await api.get('/commissions/my-earnings');
                 if (earningsRes.data.success) {
+                    const earningsData = earningsRes.data.data || {};
+                    const totalEarnings = (earningsData.totalPaid || 0) + (earningsData.availableBalance || 0);
+
                     setStats(prev => ({
                         ...prev,
-                        totalEarnings: earningsRes.data.summary?.totalEarnings || 0,
-                        availableBalance: earningsRes.data.summary?.availableBalance || 0,
-                        pendingPayouts: earningsRes.data.summary?.pendingPayouts || 0
+                        totalEarnings: totalEarnings,
+                        availableBalance: earningsData.availableBalance || 0,
+                        pendingPayouts: earningsData.pendingPayouts || 0
                     }));
                 }
-            } catch (err) {
-                console.log('Earnings endpoint not available');
-            }
+            } catch (err) { }
 
             // Get recent orders for this seller
             try {
                 const ordersRes = await api.get('/orders/seller/my-orders?limit=5');
                 if (ordersRes.data.success) {
-                    setRecentOrders(ordersRes.data.data || []);
+                    const allOrders = ordersRes.data.data || [];
+                    setRecentOrders(allOrders.slice(0, 5));
                     setStats(prev => ({
                         ...prev,
-                        totalOrders: ordersRes.data.pagination?.total || ordersRes.data.data?.length || 0
+                        totalOrders: ordersRes.data.pagination?.total || allOrders.length || 0
                     }));
                 }
-            } catch (err) {
-                console.log('Seller orders endpoint not available');
-            }
+            } catch (err) { }
 
-            // Get revenue data (Sales Chart)
-            try {
-                const revenueRes = await api.get('/analytics/seller/revenue?period=day');
-                // Ensure array
-                const data = Array.isArray(revenueRes.data) ? revenueRes.data : [];
+            // Get revenue data (Sales Chart) - Only fetch initially to save bandwidth
+            if (!isPolling) {
+                try {
+                    const revenueRes = await api.get('/analytics/seller/revenue?period=day');
+                    const data = Array.isArray(revenueRes.data) ? revenueRes.data : [];
+                    const labels = data.map(item => item.label);
+                    const revenues = data.map(item => item.revenue);
 
-                const labels = data.map(item => item.label);
-                const revenues = data.map(item => item.revenue);
-
-                setRevenueData({
-                    labels,
-                    datasets: [
-                        {
-                            label: 'Sales Revenue',
-                            data: revenues,
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            fill: true,
-                            tension: 0.4,
-                            pointRadius: 4,
-                            pointHoverRadius: 6
-                        }
-                    ]
-                });
-            } catch (err) {
-                console.error('Failed to load revenue data', err);
+                    setRevenueData({
+                        labels,
+                        datasets: [
+                            {
+                                label: 'Sales Revenue',
+                                data: revenues,
+                                borderColor: '#3b82f6',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                fill: true,
+                                tension: 0.4,
+                                pointRadius: 4,
+                                pointHoverRadius: 6
+                            }
+                        ]
+                    });
+                } catch (err) { }
             }
 
         } catch (err) {
             console.error('Failed to fetch dashboard data', err);
         } finally {
-            setLoading(false);
+            if (!isPolling) setLoading(false);
         }
     };
 

@@ -120,7 +120,7 @@ export default function CartPage() {
                                 </div>
                               </td>
                               <td className="px-6 py-6 text-sm font-medium text-gray-600 dark:text-gray-300 hidden sm:table-cell">
-                                {formatRwf(it.product.price)}
+                                {formatRwf(it.price)}
                               </td>
                               <td className="px-6 py-6 text-center">
                                 <input
@@ -132,7 +132,7 @@ export default function CartPage() {
                                 />
                               </td>
                               <td className="px-6 py-6 text-right text-sm font-bold text-violet-600 dark:text-violet-400">
-                                {formatRwf((it.product.price || 0) * it.quantity)}
+                                {formatRwf(it.subtotal)}
                               </td>
                               <td className="px-6 py-6 text-right">
                                 <button

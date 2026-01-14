@@ -1,4 +1,4 @@
-import { FaChartBar, FaUser, FaBox, FaFileAlt, FaSignOutAlt, FaTags, FaTicketAlt, FaTruck, FaPercentage, FaCog, FaMoneyBillWave, FaFolder, FaFire, FaDesktop, FaQuoteLeft, FaHandshake, FaGlobe, FaEnvelope, FaStore, FaPercent, FaDollarSign, FaClipboardCheck, FaStar, FaHeadset, FaExclamationTriangle, FaChartLine, FaTimes } from "react-icons/fa";
+import { FaChartBar, FaUser, FaBox, FaFileAlt, FaSignOutAlt, FaTags, FaTicketAlt, FaTruck, FaPercentage, FaCog, FaMoneyBillWave, FaFolder, FaFire, FaDesktop, FaQuoteLeft, FaHandshake, FaGlobe, FaEnvelope, FaStore, FaPercent, FaDollarSign, FaClipboardCheck, FaStar, FaHeadset, FaExclamationTriangle, FaChartLine, FaTimes, FaGift } from "react-icons/fa";
 import { Link, useLocation } from "react-router-dom";
 import { useRef, useLayoutEffect } from "react";
 import AdminChatbot from "./AdminChatBot";
@@ -131,6 +131,8 @@ function Sidebar({ isOpen, onClose }) {
 
           <NavSection label="Marketing">
             <NavLink to="/admin/coupons" icon={FaTicketAlt} iconColor="text-pink-400">Coupons</NavLink>
+            <NavLink to="/admin/gift-cards" icon={FaGift} iconColor="text-orange-400">Gift Cards</NavLink>
+            <NavLink to="/admin/gift-card-products" icon={FaGift} iconColor="text-emerald-400">Gift Card Products</NavLink>
             <NavLink to="/admin/flash-sales" icon={FaFire} iconColor="text-red-500">Flash Sales</NavLink>
             <NavLink to="/admin/banners" icon={FaDesktop} iconColor="text-violet-400">Banners</NavLink>
             <NavLink to="/admin/testimonials" icon={FaQuoteLeft} iconColor="text-cyan-400">Testimonials</NavLink>

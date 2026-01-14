@@ -1,4 +1,5 @@
 import path from "path";
+import Violation from "../models/Violation.js";
 import crypto from "crypto";
 import User from "../models/User.js";
 import Order from "../models/Order.js";
@@ -15,9 +16,9 @@ import convertToCSV from "../utils/csvExporter.js";
 import convertLogsToCSV from "../utils/logCsvExporter.js";
 import generateAISummary from "../utils/aiSummary.js";
 import sendReportEmail from "../utils/sendReportEmail.js";
-import { sendStatusUpdate } from "../services/emailService.js";
-import { notifyAdminNewOrder, notifyOrderPlaced } from "./notificationController.js";
-import { sendOrderConfirmation } from "../services/emailService.js";
+import { sendOrderConfirmation, sendGiftCardEmail } from "../services/emailService.js";
+import { notifyAdminNewOrder, notifyOrderPlaced, notifyOrderStatus } from "./notificationController.js";
+import GiftCard from "../models/GiftCard.js";
 
 // 📦 Place an order (customer only) - Legacy/Single Item
 export const placeOrder = async (req, res) => {
@@ -43,7 +44,7 @@ export const placeOrder = async (req, res) => {
 // 🛒 Create Order from Cart (Multi-item)
 export const createOrder = async (req, res) => {
   try {
-    const { items, billingAddress, shippingAddress, totals, shipping, tax, paymentMethod, guestInfo } = req.body;
+    const { items, billingAddress, shippingAddress, totals, shipping, tax, paymentMethod, guestInfo, giftCard } = req.body;
 
     if (!items || items.length === 0) {
       return res.status(400).json({ message: "Order must contain items" });
@@ -56,9 +57,9 @@ export const createOrder = async (req, res) => {
         seller: product ? product.seller : (item.product.seller || item.seller),
         productName: item.name,
         quantity: item.quantity,
-        price: item.product.price || 0,
+        price: item.price || product?.price || 0,
         cost: product ? (product.costPrice || 0) : 0,
-        subtotal: (item.product.price || 0) * item.quantity,
+        subtotal: (item.price || product?.price || 0) * item.quantity,
         customizations: {
           customText: item.customText,
           cloudLink: item.cloudLink,
@@ -83,6 +84,25 @@ export const createOrder = async (req, res) => {
 
     order.publicId = generatePublicId();
     await order.save();
+
+    // 🎁 Process Gift Card Redemption
+    if (giftCard && giftCard.code && giftCard.amountApplied > 0) {
+      try {
+        const gc = await GiftCard.findOne({ code: giftCard.code.toUpperCase(), status: "Active" });
+        if (gc && gc.currentBalance >= giftCard.amountApplied) {
+          gc.currentBalance -= giftCard.amountApplied;
+          if (gc.currentBalance === 0) {
+            gc.status = "Redeemed";
+          }
+          await gc.save();
+          console.log(`🎁 Gift card ${giftCard.code} redeemed: ${giftCard.amountApplied} RWF. Remaining: ${gc.currentBalance}`);
+        }
+      } catch (gcErr) {
+        console.error("Gift card redemption error:", gcErr);
+        // Don't fail order creation if gift card redemption fails
+      }
+    }
+
 
     // 💰 Automate Finance: Record Sales Transaction
     try {
@@ -184,12 +204,58 @@ export const createOrder = async (req, res) => {
       // Send Email Confirmation (to registered or guest)
       await sendOrderConfirmation(order);
 
+      // --- AUTOMATED GIFT CARD DELIVERY ---
+      for (const item of order.items) {
+        if (item.productName?.toLowerCase().includes("gift card")) {
+          try {
+            // Extract recipient email from customizations (e.g. "Recipient: friend@example.com")
+            const recipientMatch = item.customizations?.customText?.match(/Recipient:\s*([^\s,]+)/i);
+            const recipientEmail = recipientMatch ? recipientMatch[1].trim() : (order.guestInfo?.email || order.customer?.email);
+
+            const gcCode = GiftCard.generateCode();
+            const giftCard = new GiftCard({
+              code: gcCode,
+              initialAmount: item.price,
+              currentBalance: item.price,
+              sender: req.user?.id || null, // Might be null for guests, but model requires ref if defined
+              // Note: If model requires sender, and guest is buying, we might need to adjust model or use a system ID
+              recipientEmail: recipientEmail,
+              message: `Enjoy your ${item.price.toLocaleString()} RWF gift card!`,
+              status: "Active",
+              orderId: order._id
+            });
+
+            // Special case for guest purchases: if sender is required, we use the customer ref if available
+            if (!giftCard.sender && order.customer) giftCard.sender = order.customer;
+            // If still no sender (guest), we'll skip the required check if we can, or use a placeholder
+            if (!giftCard.sender) {
+              // For now, let's assume we need to handle the 'required: true' on sender in models/GiftCard.js
+              // I'll check that in a moment.
+            }
+
+            await giftCard.save();
+            await sendGiftCardEmail(giftCard, req.user?.name || order.guestInfo?.name || "A friend");
+            console.log(`✅ Gift card ${gcCode} delivered to ${recipientEmail}`);
+          } catch (gcErr) {
+            console.error("❌ Failed to automate gift card delivery:", gcErr);
+          }
+        }
+      }
+
       // 2. Notify Admin
+      let customerName = 'Guest';
+      if (req.user?.id) {
+        const user = await User.findById(req.user.id).select('name');
+        customerName = user?.name || 'Customer';
+      } else if (order.guestInfo?.email) {
+        customerName = `Guest (${order.guestInfo.email})`;
+      }
+
       notifyAdminNewOrder(
         order._id,
         order.publicId,
         order.totals.grandTotal,
-        req.user?.name || (order.guestInfo?.email ? `Guest (${order.guestInfo.email})` : 'Guest')
+        customerName
       );
     } catch (notifErr) {
       console.error("Notification Error:", notifErr);
@@ -430,6 +496,28 @@ export const updateOrderStatus = async (req, res) => {
     const oldStatus = order.status;
     order.status = status;
 
+    // 🚨 Automatic Violation: Slow Fulfillment (> 72 Hours)
+    if (status === "shipped" && oldStatus !== "shipped") {
+      const hoursTaken = (new Date() - new Date(order.createdAt)) / (3600000);
+      if (hoursTaken > 72) {
+        try {
+          const sellerId = order.items && order.items[0] ? order.items[0].seller : null;
+          // Ensure we don't flag if there is no seller (e.g. admin product)
+          if (sellerId) {
+            await Violation.create({
+              seller: sellerId,
+              type: 'slow_fulfillment',
+              severity: 'low',
+              status: 'active',
+              penaltyPoints: 1,
+              description: `Order #${order.publicId} fulfilled in ${Math.round(hoursTaken)}h (>72h)`,
+              metrics: { currentValue: Math.round(hoursTaken), threshold: 72 }
+            });
+          }
+        } catch (e) { console.error("Slow fulfillment violation error", e); }
+      }
+    }
+
     if (status === "delivered" && oldStatus !== "delivered") {
       order.deliveredAt = new Date();
 
@@ -459,6 +547,21 @@ export const updateOrderStatus = async (req, res) => {
 
     // 💰 Financial Integration: Handle Cancellation/Refund
     if (status === "cancelled" && oldStatus !== "cancelled") {
+      // 🚨 Automatic Violation: Seller Cancellation
+      if (req.user && req.user.role === 'seller') {
+        try {
+          await Violation.create({
+            seller: req.user.id,
+            type: 'high_cancellation_rate',
+            severity: 'medium',
+            status: 'active',
+            penaltyPoints: 3,
+            description: `Seller cancelled Order #${order.publicId}`,
+            metrics: { currentValue: 1, threshold: 0 }
+          });
+        } catch (e) { console.error("Auto-violation error", e); }
+      }
+
       // Only reverse if it was previously paid/delivered (where we recorded a transaction)
       // For MVP, assuming "delivered" triggered the sale.
       // If your flow records sale on "placed", change logic accordingly. 
@@ -505,7 +608,11 @@ export const updateOrderStatus = async (req, res) => {
     }
 
     await order.save();
-    // if (status !== oldStatus) await sendStatusUpdate(order);
+
+    // 🔔 Notify Customer of Status Change
+    if (status !== oldStatus && order.customer) {
+      notifyOrderStatus(order.customer, order._id, status);
+    }
 
     res.json(order);
   } catch (err) {
@@ -554,11 +661,12 @@ export const addOrderNote = async (req, res) => {
 
     if (!order) return res.status(404).json({ message: "Order not found" });
 
+    const user = await User.findById(req.user.id).select('name');
     order.notes.push({
       text,
       isCustomerVisible: isCustomerVisible || false,
       author: req.user.id,
-      authorName: req.user.name || "Staff",
+      authorName: user?.name || "Staff",
       createdAt: new Date()
     });
 

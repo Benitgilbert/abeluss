@@ -1,5 +1,6 @@
 import User from "../models/User.js";
 import { SELLER_TERMS_VERSION, SELLER_TERMS_CONTENT } from "../utils/sellerTerms.js";
+import { sendSellerApprovedEmail, sendSellerRejectedEmail } from "../utils/emailService.js";
 
 /**
  * Get seller terms and conditions
@@ -54,11 +55,24 @@ export const submitSellerApplication = async (req, res) => {
         }
 
         // Check if already a seller
+        // Check if already a seller with SUBMITTED documents or ACTIVE status
         if (user.role === 'seller' && user.sellerStatus !== 'rejected') {
-            return res.status(400).json({
-                success: false,
-                message: "You already have a pending or active seller account"
-            });
+            // If already active, block
+            if (user.sellerStatus === 'active') {
+                return res.status(400).json({
+                    success: false,
+                    message: "You already have an active seller account"
+                });
+            }
+
+            // If pending AND documents under review, block.
+            // But if pending and documents NOT submitted (e.g. fresh registration), ALLOW.
+            if (user.rdbVerification?.documentStatus === 'pending_review') {
+                return res.status(400).json({
+                    success: false,
+                    message: "Your seller application is already under review"
+                });
+            }
         }
 
         // Handle file uploads
@@ -66,13 +80,12 @@ export const submitSellerApplication = async (req, res) => {
         let nationalIdPath = null;
 
         if (req.files) {
-            req.files.forEach(file => {
-                if (file.fieldname === 'rdbCertificate') {
-                    rdbCertificatePath = file.path;
-                } else if (file.fieldname === 'nationalId') {
-                    nationalIdPath = file.path;
-                }
-            });
+            if (req.files.rdbCertificate && req.files.rdbCertificate[0]) {
+                rdbCertificatePath = req.files.rdbCertificate[0].path;
+            }
+            if (req.files.nationalId && req.files.nationalId[0]) {
+                nationalIdPath = req.files.nationalId[0].path;
+            }
         }
 
         if (!rdbCertificatePath) {
@@ -216,17 +229,30 @@ export const verifySeller = async (req, res) => {
             seller.sellerStatus = 'active';
             seller.approvedAt = new Date();
             seller.approvedBy = req.user.id;
+
+            // 📧 Send Approval Email
+            try {
+                await sendSellerApprovedEmail(seller);
+            } catch (emailErr) {
+                console.error("Failed to send approval email:", emailErr);
+            }
+
         } else {
             seller.rdbVerification.documentStatus = 'rejected';
             seller.rdbVerification.rejectionReason = rejectionReason;
             seller.rdbVerification.verifiedAt = new Date();
             seller.rdbVerification.verifiedBy = req.user.id;
             seller.sellerStatus = 'rejected';
+
+            // 📧 Send Rejection Email
+            try {
+                await sendSellerRejectedEmail(seller, rejectionReason);
+            } catch (emailErr) {
+                console.error("Failed to send rejection email:", emailErr);
+            }
         }
 
         await seller.save();
-
-        // TODO: Send email notification to seller
 
         res.json({
             success: true,

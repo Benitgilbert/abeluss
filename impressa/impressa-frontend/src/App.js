@@ -10,6 +10,8 @@ import AdminUsers from "./pages/AdminUsers";
 import Logout from "./pages/Logout";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminOrderDetails from "./pages/admin/AdminOrderDetails";
+import AdminGiftCards from "./pages/admin/AdminGiftCards";
+import AdminGiftCardProducts from "./pages/admin/AdminGiftCardProducts";
 import AdminProducts from "./pages/AdminProducts";
 import AdminCoupons from "./pages/AdminCoupons";
 import AdminDelivery from "./pages/AdminShipping"; // Renamed from AdminShipping
@@ -61,7 +63,9 @@ import SellerPayouts from "./pages/SellerPayouts";
 import SellerProfile from "./pages/SellerProfile";
 import SellerOrderDetails from "./pages/SellerOrderDetails";
 import AdminNotifications from "./pages/AdminNotifications";
+import SellerNotifications from "./pages/SellerNotifications";
 import OrderSuccess from "./pages/OrderSuccess";
+import GiftCards from "./pages/GiftCards";
 
 import { CartProvider } from "./context/CartContext";
 import { WishlistProvider } from "./context/WishlistContext";
@@ -73,10 +77,10 @@ import ProtectedRoute from "./components/ProtectedRoute";
 function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <CartProvider>
-          <WishlistProvider>
-            <ToastProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <CartProvider>
+            <WishlistProvider>
               <Router>
                 <Routes>
                   <Route path="/" element={<Home />} />
@@ -95,11 +99,12 @@ function App() {
                   <Route path="/terms" element={<TermsOfService />} />
                   <Route path="/faq" element={<FAQ />} />
                   <Route path="/orders" element={
-                    <ProtectedRoute allowedRoles={['user']}>
+                    <ProtectedRoute allowedRoles={['customer']}>
                       <OrderHistory />
                     </ProtectedRoute>
                   } />
                   <Route path="/daily-deals" element={<DailyDeals />} />
+                  <Route path="/gift-cards" element={<GiftCards />} />
 
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
@@ -115,7 +120,7 @@ function App() {
                     </ProtectedRoute>
                   } />
                   <Route path="/dashboard" element={
-                    <ProtectedRoute allowedRoles={['user']}>
+                    <ProtectedRoute allowedRoles={['customer']}>
                       <UserDashboard />
                     </ProtectedRoute>
                   } />
@@ -171,6 +176,16 @@ function App() {
                   <Route path="/admin/orders/:id" element={
                     <ProtectedRoute allowedRoles={['admin']}>
                       <AdminOrderDetails />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/gift-cards" element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                      <AdminGiftCards />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/gift-card-products" element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                      <AdminGiftCardProducts />
                     </ProtectedRoute>
                   } />
                   <Route path="/admin/products" element={
@@ -303,13 +318,18 @@ function App() {
                       <AdminNotifications />
                     </ProtectedRoute>
                   } />
+                  <Route path="/seller/notifications" element={
+                    <ProtectedRoute allowedRoles={['seller', 'admin']}>
+                      <SellerNotifications />
+                    </ProtectedRoute>
+                  } />
 
                 </Routes>
               </Router>
-            </ToastProvider>
-          </WishlistProvider>
-        </CartProvider>
-      </AuthProvider>
+            </WishlistProvider>
+          </CartProvider>
+        </AuthProvider>
+      </ToastProvider>
     </ThemeProvider>
   );
 }

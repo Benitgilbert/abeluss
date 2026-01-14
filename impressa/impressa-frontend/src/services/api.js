@@ -10,23 +10,18 @@ export const getCart = async () => {
   return response.data;
 };
 
-/**
- * Add item to cart
- * @param {string} productId - Product ID
- * @param {number} quantity - Quantity to add
- * @param {string} variationId - Optional variation ID
- * @param {Object|null} customizations - Optional customization data (text/cloud/etc.)
- */
 export const addToCart = async (
   productId,
   quantity = 1,
   variationId = null,
-  customizations = null
+  customizations = null,
+  price = null
 ) => {
   const payload = {
     productId,
     quantity,
     variationId,
+    price,
   };
 
   // Only send customizations if provided so the backend can attach them to the cart item
@@ -179,6 +174,112 @@ export const getMTNBalance = async () => {
   return response.data;
 };
 
+// ==================== GIFT CARD API ====================
+
+/**
+ * Check gift card balance (Public)
+ * @param {string} code - Gift card code
+ */
+export const checkGiftCardBalance = async (code) => {
+  const response = await axios.get(`/gift-cards/check/${code}`);
+  return response.data;
+};
+
+/**
+ * Validate gift card (Protected)
+ * @param {string} code - Gift card code
+ */
+export const validateGiftCard = async (code) => {
+  const response = await axios.post("/gift-cards/validate", { code });
+  return response.data;
+};
+
+/**
+ * Redeem gift card (Protected)
+ * @param {string} code - Gift card code
+ * @param {number} amount - Amount to redeem
+ */
+export const redeemGiftCard = async (code, amount) => {
+  const response = await axios.post("/gift-cards/redeem", { code, amount });
+  return response.data;
+};
+
+/**
+ * Get all gift cards (Admin only)
+ */
+export const getAdminGiftCards = async (params) => {
+  const response = await axios.get("/gift-cards/admin/all", { params });
+  return response.data;
+};
+
+/**
+ * Update gift card (Admin only)
+ */
+export const updateGiftCardStatus = async (id, data) => {
+  const response = await axios.put(`/gift-cards/admin/update/${id}`, data);
+  return response.data;
+};
+
+/**
+ * Create gift card (Admin only)
+ * @param {Object} data - { initialAmount, recipientEmail, message, expiryDate }
+ */
+export const createAdminGiftCard = async (data) => {
+  const response = await axios.post("/gift-cards/create", data);
+  return response.data;
+};
+
+/**
+ * Delete gift card (Admin only)
+ * @param {string} id - Gift card ID
+ */
+export const deleteGiftCard = async (id) => {
+  const response = await axios.delete(`/gift-cards/admin/${id}`);
+  return response.data;
+};
+
+// ==================== GIFT CARD PRODUCTS API ====================
+
+/**
+ * Get active gift card products (Public)
+ */
+export const getGiftCardProducts = async () => {
+  const response = await axios.get("/gift-card-products");
+  return response.data;
+};
+
+/**
+ * Get all gift card products (Admin)
+ */
+export const getAdminGiftCardProducts = async () => {
+  const response = await axios.get("/gift-card-products/admin/all");
+  return response.data;
+};
+
+/**
+ * Create gift card product (Admin)
+ */
+export const createGiftCardProduct = async (data) => {
+  const response = await axios.post("/gift-card-products/admin", data);
+  return response.data;
+};
+
+/**
+ * Update gift card product (Admin)
+ */
+export const updateGiftCardProduct = async (id, data) => {
+  const response = await axios.put(`/gift-card-products/admin/${id}`, data);
+  return response.data;
+};
+
+/**
+ * Delete gift card product (Admin)
+ */
+export const deleteGiftCardProduct = async (id) => {
+  const response = await axios.delete(`/gift-card-products/admin/${id}`);
+  return response.data;
+};
+
 // ==================== PRODUCT API ====================
 
 /**
@@ -286,15 +387,9 @@ export const validatePhoneNumber = (phone) => {
   return /^250\d{9}$/.test(formatted);
 };
 
-/**
- * Format currency (RWF)
- */
 export const formatCurrency = (amount) => {
-  return new Intl.NumberFormat("en-RW", {
-    style: "currency",
-    currency: "RWF",
-    minimumFractionDigits: 0,
-  }).format(amount);
+  const n = Number(amount || 0);
+  return `${n.toLocaleString()} RWF`;
 };
 
 export default {
@@ -335,9 +430,17 @@ export default {
   getCategories,
   getCategoryTree,
 
+  // Gift Cards
+  checkGiftCardBalance,
+  validateGiftCard,
+  redeemGiftCard,
+  getAdminGiftCards,
+  updateGiftCardStatus,
+  createAdminGiftCard,
+  deleteGiftCard,
+
   // Helpers
   formatPhoneNumber,
   validatePhoneNumber,
   formatCurrency,
-  calculateDelivery, // Added alias for consistency
 };

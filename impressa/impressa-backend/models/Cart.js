@@ -83,7 +83,11 @@ cartSchema.statics.generateSessionToken = function () {
 cartSchema.pre("save", function (next) {
   // Calculate item subtotals
   this.items.forEach((item) => {
-    item.subtotal = item.price * item.quantity;
+    // Fallback to product price if item price is missing or 0
+    if (!item.price && item.product && item.product.price) {
+      item.price = item.product.price;
+    }
+    item.subtotal = (item.price || 0) * item.quantity;
   });
 
   // Calculate cart subtotal

@@ -2,6 +2,7 @@ import CommissionSettings from "../models/CommissionSettings.js";
 import SellerEarning from "../models/SellerEarning.js";
 import Payout from "../models/Payout.js";
 import User from "../models/User.js";
+import mongoose from "mongoose";
 
 /**
  * Get commission settings (admin)
@@ -103,7 +104,7 @@ export const getAllEarnings = async (req, res, next) => {
  */
 export const getSellerEarningsSummary = async (req, res, next) => {
     try {
-        const sellerId = req.user.id;
+        const sellerId = new mongoose.Types.ObjectId(req.user.id);
 
         // Get pending earnings (not yet paid)
         const pendingEarnings = await SellerEarning.aggregate([

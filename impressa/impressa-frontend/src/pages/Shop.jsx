@@ -15,6 +15,16 @@ import { useWishlist } from "../context/WishlistContext";
 import { useToast } from "../context/ToastContext";
 import Breadcrumbs from "../components/Breadcrumbs";
 
+const getRating = (rating) => {
+  if (!rating) return 0;
+  if (Array.isArray(rating)) {
+    if (rating.length === 0) return 0;
+    const sum = rating.reduce((acc, r) => acc + (Number(r.rating) || 0), 0);
+    return sum / rating.length;
+  }
+  return Number(rating);
+};
+
 const WishlistButton = ({ product }) => {
   const { ids, toggle } = useWishlist();
   const isWishlisted = ids.includes(product._id);
@@ -47,6 +57,7 @@ export default function Shop() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const [q, setQ] = useState(searchParams.get("q") || searchParams.get("search") || "");
+  const [localSearch, setLocalSearch] = useState(searchParams.get("q") || searchParams.get("search") || "");
   const [sortBy, setSortBy] = useState(searchParams.get("sort") || "newest");
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "");
   const [minPrice, setMinPrice] = useState(searchParams.get("minPrice") || "");
@@ -59,7 +70,13 @@ export default function Shop() {
     const min = searchParams.get("minPrice") || "";
     const max = searchParams.get("maxPrice") || "";
 
-    if (query !== q) setQ(query);
+    if (category !== selectedCategory) setSelectedCategory(category);
+
+    // Only update local search if q matches URL (to allow typing without interference)
+    if (query !== q) {
+      setQ(query);
+      setLocalSearch(query);
+    }
     if (category !== selectedCategory) setSelectedCategory(category);
     if (sort !== sortBy) setSortBy(sort);
     if (min !== minPrice) setMinPrice(min);
@@ -78,7 +95,6 @@ export default function Shop() {
     }
     try {
       await addItem(product, { quantity: 1 });
-      showSuccess("Added to cart!");
     } catch (err) {
       showError("Failed to add to cart");
     }
@@ -207,6 +223,7 @@ export default function Shop() {
 
   const clearAllFilters = () => {
     setQ("");
+    setLocalSearch("");
     setSelectedCategory("");
     setMinPrice("");
     setMaxPrice("");
@@ -232,8 +249,8 @@ export default function Shop() {
 
   const hasActiveFilters = q || selectedCategory || minPrice || maxPrice;
 
-  // Sidebar filters component (reused for mobile and desktop)
-  const FiltersContent = () => (
+  // Sidebar filters content (rendered as function to avoid remounting/focus loss)
+  const renderFilters = () => (
     <div className="space-y-8">
       {/* Search */}
       <div>
@@ -242,12 +259,26 @@ export default function Shop() {
         </label>
         <div className="relative">
           <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Find products..."
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                setQ(localSearch);
+                setDebouncedQ(localSearch); // Trigger immediately
+              }
+            }}
+            placeholder="Find products... (Press Enter)"
             className="w-full pl-4 pr-10 py-3 bg-cream-100 dark:bg-charcoal-800 border-0 rounded-xl text-sm focus:ring-2 focus:ring-terracotta-500 outline-none transition-all dark:text-white placeholder:text-charcoal-400"
           />
-          <FaSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-charcoal-400" />
+          <button
+            onClick={() => {
+              setQ(localSearch);
+              setDebouncedQ(localSearch);
+            }}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-charcoal-400 hover:text-terracotta-500 transition-colors"
+          >
+            <FaSearch />
+          </button>
         </div>
       </div>
 
@@ -368,7 +399,7 @@ export default function Shop() {
                       <FaTimes />
                     </button>
                   </div>
-                  <FiltersContent />
+                  {renderFilters()}
                 </div>
               </div>
             )}
@@ -382,7 +413,7 @@ export default function Shop() {
                   </div>
                   Filters
                 </div>
-                <FiltersContent />
+                {renderFilters()}
               </div>
             </aside>
 
@@ -462,9 +493,9 @@ export default function Shop() {
                       {/* Image Container */}
                       <div className="relative aspect-square bg-cream-100 dark:bg-charcoal-700 overflow-hidden">
                         <Link to={`/product/${p._id}`} className="block h-full">
-                          {p.image ? (
+                          {(p.image || p.images?.[0]) ? (
                             <img
-                              src={assetUrl(p.image)}
+                              src={assetUrl(p.image || p.images?.[0])}
                               alt={p.name}
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                             />
@@ -479,8 +510,24 @@ export default function Shop() {
                         <WishlistButton product={p} />
 
                         {/* Price Badge */}
-                        <div className="absolute top-4 left-4 bg-gradient-to-r from-terracotta-500 to-terracotta-600 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
-                          {formatRwf(p.price)}
+                        <div className="absolute top-4 left-4 flex flex-col gap-1 items-start z-10">
+                          {p.flashSaleInfo ? (
+                            <>
+                              <div className="bg-gradient-to-r from-terracotta-500 to-terracotta-600 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
+                                {formatRwf(p.flashSaleInfo.flashSalePrice)}
+                              </div>
+                              <div className="bg-white/90 backdrop-blur-sm text-charcoal-400 px-2 py-0.5 rounded-full text-[10px] font-bold line-through shadow-sm">
+                                {formatRwf(p.price)}
+                              </div>
+                              <div className="bg-amber-400 text-charcoal-900 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-sm">
+                                FLASH SALE
+                              </div>
+                            </>
+                          ) : (
+                            <div className="bg-gradient-to-r from-terracotta-500 to-terracotta-600 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
+                              {formatRwf(p.price)}
+                            </div>
+                          )}
                         </div>
 
                         {/* Quick Add Overlay */}
@@ -513,10 +560,11 @@ export default function Shop() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1">
                             <div className="flex text-sand-400 text-sm">
-                              <FaStar /><FaStar /><FaStar /><FaStar />
-                              <FaStarHalfAlt className="text-sand-300" />
+                              {[...Array(5)].map((_, i) => (
+                                <FaStar key={i} className={i < getRating(p.averageRating) ? "text-sand-400" : "text-charcoal-200 dark:text-charcoal-700"} />
+                              ))}
                             </div>
-                            <span className="text-xs text-charcoal-400 ml-1">(4.5)</span>
+                            <span className="text-xs text-charcoal-400 ml-1">({getRating(p.averageRating).toFixed(1)})</span>
                           </div>
                           <Link
                             to={`/product/${p._id}`}

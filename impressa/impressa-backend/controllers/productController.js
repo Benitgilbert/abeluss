@@ -1,6 +1,49 @@
 import Product from "../models/Product.js";
+import FlashSale from "../models/FlashSale.js";
+import Category from "../models/Category.js";
+import mongoose from "mongoose";
 import Fuse from "fuse.js";
-import { notifyProductAdded } from "./notificationController.js";
+import { notifyProductAdded, notifyProductDeleted } from "./notificationController.js";
+import User from "../models/User.js";
+
+// Helper to attach flash sale info to products
+const attachFlashSaleInfo = async (products) => {
+  const isArray = Array.isArray(products);
+  const items = isArray ? products : [products];
+  if (items.length === 0) return products;
+
+  const now = new Date();
+  const activeSales = await FlashSale.find({
+    isActive: true,
+    startDate: { $lte: now },
+    endDate: { $gte: now }
+  });
+
+  const productSaleMap = new Map();
+  activeSales.forEach(sale => {
+    sale.products.forEach(sp => {
+      productSaleMap.set(sp.product.toString(), {
+        flashSalePrice: sp.flashSalePrice,
+        stockLimit: sp.stockLimit,
+        soldCount: sp.soldCount,
+        saleId: sale._id,
+        saleName: sale.name,
+        endDate: sale.endDate
+      });
+    });
+  });
+
+  const results = items.map(p => {
+    const plain = p.toObject ? p.toObject() : p;
+    const saleInfo = productSaleMap.get(plain._id.toString());
+    if (saleInfo) {
+      plain.flashSaleInfo = saleInfo;
+    }
+    return plain;
+  });
+
+  return isArray ? results : results[0];
+};
 
 // Create product (seller only)
 export const createProduct = async (req, res) => {
@@ -50,7 +93,8 @@ export const createProduct = async (req, res) => {
     // 🔔 Notify Admin
     try {
       if (req.user.role === 'seller') {
-        notifyProductAdded(req.user.name, product.name);
+        const user = await User.findById(req.user.id).select('name');
+        notifyProductAdded(user?.name || "Seller", product.name);
       }
     } catch (e) { console.error("Notification failed", e); }
 
@@ -78,7 +122,10 @@ export const getSellerProducts = async (req, res) => {
 // Get all products (public)
 export const getAllProducts = async (req, res) => {
   try {
-    const q = {};
+    const q = {
+      visibility: "public",
+      approvalStatus: "approved"
+    };
     if (typeof req.query.featured !== 'undefined') q.featured = req.query.featured === 'true';
     if (req.query.tags) q.tags = { $in: req.query.tags.split(',') };
     // Filter by seller (optional)
@@ -86,7 +133,25 @@ export const getAllProducts = async (req, res) => {
 
     // Category
     if (req.query.category) {
-      q.category = req.query.category;
+      if (mongoose.Types.ObjectId.isValid(req.query.category)) {
+        // It's an ID
+        // 1. Try to find products linked relationally
+        // 2. Also try to find products with the matching Category Name string
+        const category = await Category.findById(req.query.category);
+        if (category) {
+          q.$or = [
+            { categories: req.query.category },
+            { category: category.name },
+            // Handle case where category field might store the ID as string
+            { category: req.query.category }
+          ];
+        } else {
+          q.categories = req.query.category;
+        }
+      } else {
+        // It's a string name
+        q.category = req.query.category;
+      }
     }
 
     // Price Range
@@ -124,7 +189,8 @@ export const getAllProducts = async (req, res) => {
 
     if (limit) products = products.slice(0, limit);
 
-    res.json(products);
+    const enriched = await attachFlashSaleInfo(products);
+    res.json(enriched);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -137,7 +203,10 @@ export const getSuggestions = async (req, res) => {
     if (!q) return res.json([]);
 
     // Get only approved/active products for suggestions
-    const products = await Product.find({ visibility: 'public' })
+    const products = await Product.find({
+      visibility: 'public',
+      approvalStatus: 'approved'
+    })
       .select("name price image _id")
       .limit(100); // Fetch a reasonable amount for fuse to search locally
 
@@ -159,11 +228,17 @@ export const getSuggestions = async (req, res) => {
 export const getFeaturedProducts = async (req, res) => {
   try {
     const limit = Math.min(parseInt(req.query.limit) || 8, 50);
-    const products = await Product.find({ featured: true })
+    const products = await Product.find({
+      featured: true,
+      visibility: "public",
+      approvalStatus: "approved"
+    })
       .populate("seller", "name storeName")
       .sort({ createdAt: -1 })
       .limit(limit);
-    res.json(products);
+
+    const enriched = await attachFlashSaleInfo(products);
+    res.json(enriched);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -173,9 +248,14 @@ export const getProductsByIds = async (req, res) => {
   try {
     const ids = (req.query.ids || '').split(',').filter(Boolean);
     if (!ids.length) return res.json([]);
-    const products = await Product.find({ _id: { $in: ids } })
-      .populate("seller", "name storeName");
-    res.json(products);
+    const products = await Product.find({
+      _id: { $in: ids },
+      visibility: "public",
+      approvalStatus: "approved"
+    }).populate("seller", "name storeName");
+
+    const enriched = await attachFlashSaleInfo(products);
+    res.json(enriched);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -185,7 +265,6 @@ export const getTrendingProducts = async (req, res) => {
   try {
     const days = Math.min(parseInt(req.query.days) || 30, 180);
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-    // aggregate orders to find top products
     const Order = (await import('../models/Order.js')).default;
     const top = await Order.aggregate([
       { $match: { createdAt: { $gte: since } } },
@@ -194,26 +273,41 @@ export const getTrendingProducts = async (req, res) => {
       { $limit: Math.min(parseInt(req.query.limit) || 8, 50) },
     ]);
     const ids = top.map(t => t._id).filter(Boolean);
-    const products = await Product.find({ _id: { $in: ids } })
-      .populate("seller", "name storeName");
+    const products = await Product.find({
+      _id: { $in: ids },
+      visibility: "public",
+      approvalStatus: "approved"
+    }).populate("seller", "name storeName");
     // maintain ranking order
     const map = new Map(products.map(p => [String(p._id), p]));
     const ordered = ids.map(id => map.get(String(id))).filter(Boolean);
 
     if (ordered.length === 0) {
-      const fallback = await Product.find({ featured: true })
+      const fallback = await Product.find({
+        featured: true,
+        visibility: "public",
+        approvalStatus: "approved"
+      })
         .populate("seller", "name storeName")
         .limit(5);
-      if (fallback.length > 0) return res.json(fallback);
+      if (fallback.length > 0) {
+        const enriched = await attachFlashSaleInfo(fallback);
+        return res.json(enriched);
+      }
 
-      const latest = await Product.find()
+      const latest = await Product.find({
+        visibility: "public",
+        approvalStatus: "approved"
+      })
         .populate("seller", "name storeName")
         .sort({ createdAt: -1 })
         .limit(5);
-      return res.json(latest);
+      const enriched = await attachFlashSaleInfo(latest);
+      return res.json(enriched);
     }
 
-    res.json(ordered);
+    const enriched = await attachFlashSaleInfo(ordered);
+    res.json(enriched);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -228,7 +322,9 @@ export const getProductById = async (req, res) => {
       .populate("seller", "name storeName storeDescription storeLogo sellerStatus");
 
     if (!product) return res.status(404).json({ message: "Product not found" });
-    res.json(product);
+
+    const enriched = await attachFlashSaleInfo(product);
+    res.json(enriched);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -294,7 +390,19 @@ export const deleteProduct = async (req, res) => {
       return res.status(403).json({ message: "Access denied: You do not own this product" });
     }
 
+    // Capture details before deletion
+    const productName = product.name;
+
     await product.deleteOne();
+
+    // 🔔 Notify Admin if deleted by Seller
+    try {
+      if (req.user.role === 'seller') {
+        const user = await User.findById(req.user.id).select('name');
+        notifyProductDeleted(user?.name || "Seller", productName);
+      }
+    } catch (e) { }
+
     res.json({ message: "Product deleted" });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -311,6 +419,8 @@ export const getRelatedProducts = async (req, res) => {
     const related = await Product.find({
       $and: [
         { _id: { $ne: product._id } },
+        { visibility: "public" },
+        { approvalStatus: "approved" },
         {
           $or: [
             { category: product.category },

@@ -29,7 +29,8 @@ const SellerOrderDetails = () => {
     };
 
     const handleStatusUpdate = async (newStatus) => {
-        if (!window.confirm(`Are you sure you want to change status to "${newStatus}"?`)) return;
+        // Removed window.confirm to fix popup issue
+        // if (!window.confirm(`Are you sure you want to change status to "${newStatus}"?`)) return;
 
         setUpdating(true);
         try {

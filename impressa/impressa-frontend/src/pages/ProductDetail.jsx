@@ -124,19 +124,17 @@ export default function ProductDetail() {
 
     if (product.type === 'variable') {
       if (!currentVariation) {
-        showError("Please select all options first."); // Replaced alert with showError
+        showError("Please select all options first.");
         return;
       }
       if (currentVariation.stock < quantity) {
-        showError("Not enough stock for this variation"); // Replaced alert with showError
+        showError("Not enough stock for this variation");
         return;
       }
 
-      // Add variation to cart
       addItem({
         ...product,
-        _id: product._id, // Keep main product ID
-        variationId: currentVariation.sku, // Use SKU as ID for now or generate one
+        variationId: currentVariation.sku,
         price: currentVariation.price,
         name: `${product.name} - ${Object.values(currentVariation.attributes).join(" / ")}`,
         image: currentVariation.image || product.image
@@ -223,11 +221,30 @@ export default function ProductDetail() {
                   )}
                 </div>
 
-                <div className="text-4xl font-bold text-violet-600 dark:text-violet-400">
-                  {product.type === 'variable' && !currentVariation ? (
-                    <span className="text-2xl text-gray-500">From {formatRwf(product.price)}</span>
+                <div>
+                  {product.flashSaleInfo ? (
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-4">
+                        <span className="text-4xl font-bold text-terracotta-500">
+                          {formatRwf(product.flashSaleInfo.flashSalePrice)}
+                        </span>
+                        <span className="text-xl text-gray-400 line-through">
+                          {formatRwf(product.price)}
+                        </span>
+                      </div>
+                      <div className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-3 py-1 rounded-lg text-sm font-bold w-fit border border-amber-200 dark:border-amber-800 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                        ACTIVE FLASH SALE
+                      </div>
+                    </div>
                   ) : (
-                    formatRwf(displayPrice)
+                    <div className="text-4xl font-bold text-violet-600 dark:text-violet-400">
+                      {product.type === 'variable' && !currentVariation ? (
+                        <span className="text-2xl text-gray-500">From {formatRwf(product.price)}</span>
+                      ) : (
+                        formatRwf(displayPrice)
+                      )}
+                    </div>
                   )}
                 </div>
 

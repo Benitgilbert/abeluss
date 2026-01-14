@@ -27,7 +27,7 @@ export const validateRegister = [
     .withMessage("Name is required")
     .isLength({ min: 2, max: 50 })
     .withMessage("Name must be between 2 and 50 characters"),
-  
+
   body("email")
     .trim()
     .notEmpty()
@@ -35,26 +35,26 @@ export const validateRegister = [
     .isEmail()
     .withMessage("Must be a valid email address")
     .normalizeEmail(),
-  
+
   body("password")
     .notEmpty()
     .withMessage("Password is required")
-    .isLength({ min: 8 })
-    .withMessage("Password must be at least 8 characters long")
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage("Password must contain at least one uppercase letter, one lowercase letter, and one number"),
-  
+    .isLength({ min: 6 })
+    .withMessage("Password must be at least 6 characters long"),
+  //.matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+  //.withMessage("Password must contain at least one uppercase letter, one lowercase letter, and one number"),
+
   body("phone")
     .optional()
     .trim()
     .matches(/^(\+?25)?(078|079|072|073)\d{7}$/)
     .withMessage("Must be a valid Rwandan phone number"),
-  
+
   body("role")
     .optional()
-    .isIn(["customer", "admin", "staff"])
-    .withMessage("Role must be customer, admin, or staff"),
-  
+    .isIn(["admin", "cashier", "inventory", "delivery", "customer", "guest", "seller"])
+    .withMessage("Role must be a valid system role"),
+
   handleValidationErrors,
 ];
 
@@ -69,11 +69,11 @@ export const validateLogin = [
     .isEmail()
     .withMessage("Must be a valid email address")
     .normalizeEmail(),
-  
+
   body("password")
     .notEmpty()
     .withMessage("Password is required"),
-  
+
   handleValidationErrors,
 ];
 
@@ -88,11 +88,11 @@ export const validateAdminLoginStep1 = [
     .isEmail()
     .withMessage("Must be a valid email address")
     .normalizeEmail(),
-  
+
   body("password")
     .notEmpty()
     .withMessage("Password is required"),
-  
+
   handleValidationErrors,
 ];
 
@@ -107,7 +107,7 @@ export const validateAdminLoginStep2 = [
     .isEmail()
     .withMessage("Must be a valid email address")
     .normalizeEmail(),
-  
+
   body("otp")
     .notEmpty()
     .withMessage("OTP is required")
@@ -115,7 +115,7 @@ export const validateAdminLoginStep2 = [
     .withMessage("OTP must be 6 digits")
     .isNumeric()
     .withMessage("OTP must be numeric"),
-  
+
   handleValidationErrors,
 ];
 
@@ -130,7 +130,7 @@ export const validatePasswordResetRequest = [
     .isEmail()
     .withMessage("Must be a valid email address")
     .normalizeEmail(),
-  
+
   handleValidationErrors,
 ];
 
@@ -145,19 +145,19 @@ export const validatePasswordResetConfirm = [
     .isEmail()
     .withMessage("Must be a valid email address")
     .normalizeEmail(),
-  
+
   body("resetToken")
     .notEmpty()
     .withMessage("Reset token is required"),
-  
+
   body("newPassword")
     .notEmpty()
     .withMessage("New password is required")
-    .isLength({ min: 8 })
-    .withMessage("Password must be at least 8 characters long")
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage("Password must contain at least one uppercase letter, one lowercase letter, and one number"),
-  
+    .isLength({ min: 6 })
+    .withMessage("Password must be at least 6 characters long"),
+  //.matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+  //.withMessage("Password must contain at least one uppercase letter, one lowercase letter, and one number"),
+
   handleValidationErrors,
 ];
 
@@ -170,25 +170,25 @@ export const validateUpdateUser = [
     .trim()
     .isLength({ min: 2, max: 50 })
     .withMessage("Name must be between 2 and 50 characters"),
-  
+
   body("email")
     .optional()
     .trim()
     .isEmail()
     .withMessage("Must be a valid email address")
     .normalizeEmail(),
-  
+
   body("phone")
     .optional()
     .trim()
     .matches(/^(\+?25)?(078|079|072|073)\d{7}$/)
     .withMessage("Must be a valid Rwandan phone number"),
-  
+
   body("role")
     .optional()
-    .isIn(["customer", "admin", "staff"])
-    .withMessage("Role must be customer, admin, or staff"),
-  
+    .isIn(["admin", "cashier", "inventory", "delivery", "customer", "guest", "seller"])
+    .withMessage("Role must be a valid system role"),
+
   handleValidationErrors,
 ];
 
@@ -203,6 +203,6 @@ export const validateResendOTP = [
     .isEmail()
     .withMessage("Must be a valid email address")
     .normalizeEmail(),
-  
+
   handleValidationErrors,
 ];

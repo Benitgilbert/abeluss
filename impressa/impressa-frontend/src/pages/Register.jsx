@@ -214,7 +214,7 @@ function Register() {
                     name: formData.name,
                     email: formData.email,
                     password: formData.password,
-                    role: "pending_seller" // Pending until RDB approved
+                    role: "seller" // Pending until RDB approved
                 };
 
                 const registerRes = await api.post("/auth/register", registerPayload);
@@ -260,7 +260,50 @@ function Register() {
                 navigate("/login");
             }
         } catch (err) {
-            setError(err.response?.data?.message || "Registration failed");
+            const errorMsg = err.response?.data?.message;
+
+            // 🔄 Auto-Recovery: If account exists (from failed previous attempt), try to login and resume
+            if (errorMsg === "User already exists" && isSeller) {
+                try {
+                    const loginRes = await api.post("/auth/login", {
+                        email: formData.email,
+                        password: formData.password
+                    });
+
+                    const { accessToken } = loginRes.data;
+                    localStorage.setItem("authToken", accessToken);
+
+                    // Resume Step 2: Submit seller verification
+                    const sellerData = new FormData();
+                    sellerData.append("storeName", formData.storeName);
+                    sellerData.append("storeDescription", formData.storeDescription);
+                    sellerData.append("storePhone", formData.storePhone);
+                    sellerData.append("tinNumber", formData.tinNumber);
+                    sellerData.append("businessName", formData.businessName);
+                    sellerData.append("businessType", formData.businessType);
+                    sellerData.append("termsAccepted", formData.termsAccepted);
+                    sellerData.append("digitalSignature", formData.digitalSignature);
+                    sellerData.append("rdbCertificate", formData.rdbCertificate);
+                    if (formData.nationalId) {
+                        sellerData.append("nationalId", formData.nationalId);
+                    }
+
+                    await api.post("/seller-verification/apply", sellerData, {
+                        headers: {
+                            "Content-Type": "multipart/form-data",
+                            Authorization: `Bearer ${accessToken}`
+                        }
+                    });
+
+                    setSuccess(true);
+                    return; // Exit successfully
+                } catch (recoveryErr) {
+                    // If login also fails (e.g. wrong password), show original error
+                    setError("Account already exists. Please login to continue your application.");
+                }
+            } else {
+                setError(errorMsg || "Registration failed");
+            }
         } finally {
             setLoading(false);
         }

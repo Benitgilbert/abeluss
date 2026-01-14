@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Cart from "../models/Cart.js";
 import Product from "../models/Product.js";
+import FlashSale from "../models/FlashSale.js";
 import logger from "../config/logger.js";
 
 /**
@@ -52,7 +53,7 @@ export const addToCart = async (req, res, next) => {
       return next(error);
     }
 
-    const { productId, quantity = 1, variationId, customizations = {} } = itemData;
+    const { productId, quantity = 1, variationId, customizations = {}, price: priceOverride } = itemData;
 
     if (!productId) {
       const error = new Error("Product ID is required");
@@ -85,7 +86,7 @@ export const addToCart = async (req, res, next) => {
       return next(error);
     }
 
-    let price = product.price;
+    let price = (priceOverride !== undefined && priceOverride !== null) ? Number(priceOverride) : product.price;
     let name = product.name;
     let image = product.image;
 
@@ -107,6 +108,50 @@ export const addToCart = async (req, res, next) => {
       // Check variation stock if needed
       // if (variation.stock < quantity) ...
     }
+
+    // --- FLASH SALE CHECK ---
+    const now = new Date();
+    const activeFlashSale = await FlashSale.findOne({
+      isActive: true,
+      startDate: { $lte: now },
+      endDate: { $gte: now },
+      "products.product": productId
+    });
+
+    if (activeFlashSale) {
+      const saleProduct = activeFlashSale.products.find(
+        (p) => p.product.toString() === productId.toString()
+      );
+
+      if (saleProduct) {
+        // Enforce Flash Sale Stock Limit (null or undefined means unlimited)
+        const limit = saleProduct.stockLimit;
+        const hasLimit = limit !== null && limit !== undefined;
+
+        if (hasLimit) {
+          const limitVal = Number(limit);
+          const soldVal = Number(saleProduct.soldCount || 0);
+          const remaining = Math.max(0, limitVal - soldVal);
+
+          // Check if already in cart to see total requested
+          const existingCartItem = cart.items.find(item => item.product.toString() === productId.toString());
+          const alreadyInCartQuery = existingCartItem ? existingCartItem.quantity : 0;
+
+          if (quantity + alreadyInCartQuery > remaining) {
+            const error = new Error(`Flash sale limit reached. Only ${remaining} items allowed (You have ${alreadyInCartQuery} in cart).`);
+            error.statusCode = 400;
+            return next(error);
+          }
+        }
+
+        // Use Flash Sale Price (ensure it's a valid number)
+        if (saleProduct.flashSalePrice !== undefined && saleProduct.flashSalePrice !== null) {
+          price = Number(saleProduct.flashSalePrice);
+          logger.info({ productId, price }, "Applying flash sale price to cart item");
+        }
+      }
+    }
+    // ------------------------
 
     // Add item to cart
     await cart.addItem({
@@ -179,6 +224,45 @@ export const updateCartItem = async (req, res, next) => {
         error.statusCode = 400;
         return next(error);
       }
+
+      // --- FLASH SALE CHECK FOR UPDATE ---
+      const now = new Date();
+      const activeFlashSale = await FlashSale.findOne({
+        isActive: true,
+        startDate: { $lte: now },
+        endDate: { $gte: now },
+        "products.product": productId
+      });
+
+      if (activeFlashSale) {
+        const saleProduct = activeFlashSale.products.find(
+          (p) => p.product.toString() === productId.toString()
+        );
+
+        if (saleProduct) {
+          const hasLimit = saleProduct.stockLimit !== null && saleProduct.stockLimit !== undefined;
+          if (hasLimit) {
+            const limit = Number(saleProduct.stockLimit);
+            const sold = Number(saleProduct.soldCount || 0);
+            const remaining = limit - sold;
+            if (quantity > remaining) {
+              const error = new Error(`Flash sale limit reached. Only ${remaining} items allowed.`);
+              error.statusCode = 400;
+              return next(error);
+            }
+          }
+
+          // Also update the price in case it changed or was added before sale
+          if (saleProduct.flashSalePrice !== undefined && saleProduct.flashSalePrice !== null) {
+            const item = cart.items.find((it) => it.product.toString() === productId.toString());
+            if (item) {
+              item.price = Number(saleProduct.flashSalePrice);
+              logger.info({ productId, price: item.price }, "Updating flash sale price during cart update");
+            }
+          }
+        }
+      }
+      // ------------------------------------
     }
 
     await cart.updateItemQuantity(productId, quantity);

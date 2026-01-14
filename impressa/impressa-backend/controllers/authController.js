@@ -59,6 +59,11 @@ export const register = async (req, res) => {
       approvalResult = await processSellerAutoApproval(user._id);
     }
 
+    // Generate tokens for auto-login
+    const { accessToken, refreshToken } = generateTokens(user);
+    user.refreshToken = refreshToken;
+    await user.save();
+
     // 🔔 Notify Admin
     try {
       notifyUserRegistered(user.name, user.role);
@@ -66,6 +71,15 @@ export const register = async (req, res) => {
 
     res.status(201).json({
       message: "User registered successfully",
+      token: accessToken, // Frontend expects 'token'
+      accessToken,
+      refreshToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      },
       ...(approvalResult && {
         sellerApproval: {
           approved: approvalResult.approved,

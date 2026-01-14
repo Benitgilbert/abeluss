@@ -30,36 +30,17 @@ export default function AdminViolations() {
     const fetchViolations = async () => {
         setLoading(true);
         try {
-            // Mock data for now
-            const mockViolations = [
-                {
-                    _id: '1',
-                    seller: { _id: 's1', name: 'Demo Seller', email: 'seller@demo.com', storeName: 'Demo Store' },
-                    type: 'high_cancellation_rate',
-                    severity: 'high',
-                    status: 'active',
-                    penaltyPoints: 5,
-                    metrics: { currentValue: 25, threshold: 20 },
-                    description: 'Cancellation rate (25%) exceeds threshold (20%)',
-                    createdAt: new Date().toISOString()
-                },
-                {
-                    _id: '2',
-                    seller: { _id: 's2', name: 'Another Store', email: 'another@demo.com', storeName: 'Another Shop' },
-                    type: 'slow_fulfillment',
-                    severity: 'medium',
-                    status: 'warning',
-                    penaltyPoints: 3,
-                    metrics: { currentValue: 80, threshold: 72 },
-                    description: 'Average fulfillment time (80h) exceeds threshold (72h)',
-                    createdAt: new Date(Date.now() - 86400000).toISOString()
-                }
-            ];
+            const token = localStorage.getItem('authToken');
+            const res = await fetch(`${API_URL}/violations?status=${statusFilter}&type=${typeFilter}&page=${currentPage}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
 
-            setViolations(mockViolations);
-            setStats({ total: 2, active: 1, warning: 1, review: 0, suspension: 0 });
-            setTotalPages(1);
+            setViolations(data.violations || []);
+            setStats(data.stats || { total: 0, active: 0, warning: 0, review: 0, suspension: 0 });
+            setTotalPages(data.totalPages || 1);
         } catch (err) {
+            console.error(err);
             setError('Failed to fetch violations');
         } finally {
             setLoading(false);
@@ -69,8 +50,22 @@ export default function AdminViolations() {
     const handleDismiss = async (id) => {
         if (!window.confirm('Dismiss this violation? This will remove penalty points from the seller.')) return;
         try {
-            setSuccess('Violation dismissed');
-            fetchViolations();
+            const token = localStorage.getItem('authToken');
+            const res = await fetch(`${API_URL}/violations/${id}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ status: 'dismissed' })
+            });
+
+            if (res.ok) {
+                setSuccess('Violation dismissed');
+                fetchViolations();
+            } else {
+                setError('Failed to dismiss violation');
+            }
         } catch (err) {
             setError('Failed to dismiss violation');
         }
@@ -79,12 +74,28 @@ export default function AdminViolations() {
     const handleEscalate = async (id) => {
         if (!window.confirm('Escalate this violation? This may lead to seller suspension.')) return;
         try {
-            setSuccess('Violation escalated');
-            fetchViolations();
+            const token = localStorage.getItem('authToken');
+            const res = await fetch(`${API_URL}/violations/${id}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ status: 'suspension' })
+            });
+
+            if (res.ok) {
+                setSuccess('Violation escalated');
+                fetchViolations();
+            } else {
+                setError('Failed to escalate violation');
+            }
         } catch (err) {
             setError('Failed to escalate violation');
         }
     };
+
+
 
     const getTypeBadge = (type) => {
         const types = {

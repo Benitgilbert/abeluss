@@ -37,7 +37,7 @@ export const getRecentOrders = async (req, res) => {
   try {
     const recentOrders = await Order.find()
       .sort({ createdAt: -1 })
-      .limit(10)
+      .limit(5)
       .populate("items.product customer");
 
     res.json(recentOrders);
@@ -98,7 +98,7 @@ export const getTopProducts = async (req, res) => {
       },
       { $unwind: { path: "$product", preserveNullAndEmptyArrays: true } },
       { $sort: { totalQuantity: -1 } },
-      { $limit: 10 },
+      { $limit: 5 },
       {
         $project: {
           _id: 1,

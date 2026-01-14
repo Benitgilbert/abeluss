@@ -12,12 +12,13 @@ const notificationSchema = new mongoose.Schema(
             type: String,
             enum: [
                 "order_placed", "order_status", "order_shipped", "order_delivered",
-                "payment_received", "payment_failed",
-                "product_approved", "product_rejected", "low_stock",
-                "review_received", "review_reply",
+                "payment_received", "payment_failed", "new_order",
+                "product_approved", "product_rejected", "low_stock", "product_added",
+                "review_received", "review_reply", "new_review",
                 "ticket_reply", "ticket_resolved",
-                "payout_processed", "payout_rejected",
+                "payout_processed", "payout_rejected", "payout_request",
                 "seller_approved", "seller_rejected",
+                "violation_report", "new_subscriber", "user_register", "flash_sale_update",
                 "system", "promotion"
             ],
             required: true,

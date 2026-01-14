@@ -28,10 +28,12 @@ const AdminOrders = () => {
 
     useEffect(() => {
         fetchOrders();
+        const interval = setInterval(() => fetchOrders(true), 10000); // 10s polling
+        return () => clearInterval(interval);
     }, [page, statusFilter, debouncedSearch]);
 
-    const fetchOrders = async () => {
-        setLoading(true);
+    const fetchOrders = async (isPolling = false) => {
+        if (!isPolling) setLoading(true);
         try {
             const params = {
                 page,

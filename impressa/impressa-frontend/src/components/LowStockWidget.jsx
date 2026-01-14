@@ -28,6 +28,17 @@ function LowStockWidget() {
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400';
     };
 
+    const getImageUrl = (imagePath) => {
+        if (!imagePath) return null;
+        if (imagePath.startsWith('http')) return imagePath;
+
+        // Ensure we don't have double slashes or missing slashes
+        const baseUrl = process.env.REACT_APP_API_URL?.replace(/\/api\/?$/, '') || 'http://localhost:5000';
+        const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+
+        return `${baseUrl}${cleanPath}`;
+    };
+
     if (loading) {
         return (
             <div className="bg-white dark:bg-charcoal-800 rounded-xl shadow-sm border border-cream-100 dark:border-charcoal-700 p-6 h-full">
@@ -67,9 +78,13 @@ function LowStockWidget() {
                                 <div className="w-10 h-10 rounded-lg bg-white dark:bg-charcoal-600 border border-gray-100 dark:border-charcoal-500 overflow-hidden flex-shrink-0">
                                     {product.image ? (
                                         <img
-                                            src={`${process.env.REACT_APP_API_URL?.replace(/\/api$/, '') || 'http://localhost:5000'}${product.image}`}
+                                            src={getImageUrl(product.image)}
                                             alt={product.name}
                                             className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                                e.target.onerror = null;
+                                                e.target.src = "https://via.placeholder.com/150?text=No+Img";
+                                            }}
                                         />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -82,7 +97,7 @@ function LowStockWidget() {
                                         {product.name}
                                     </p>
                                     <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                        {product.seller?.storeName || 'Unknown seller'}
+                                        {product.seller?.storeName || product.seller?.name || 'Unknown seller'}
                                     </p>
                                 </div>
                             </div>

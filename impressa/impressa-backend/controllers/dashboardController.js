@@ -101,7 +101,10 @@ export const getDashboardAnalytics = async (req, res) => {
     const revenueThisMonthAgg = await Order.aggregate([
       {
         $match: {
-          status: "delivered",
+          $or: [
+            { status: "delivered" },
+            { "payment.status": "completed" }
+          ],
           createdAt: { $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) }
         }
       },
@@ -130,11 +133,21 @@ export const getDashboardAnalytics = async (req, res) => {
       Order.countDocuments({ createdAt: { $gte: startOfThisWeek } }),
       Order.countDocuments({ createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek } }),
       Order.aggregate([
-        { $match: { status: "delivered", createdAt: { $gte: startOfThisWeek } } },
+        {
+          $match: {
+            $or: [{ status: "delivered" }, { "payment.status": "completed" }],
+            createdAt: { $gte: startOfThisWeek }
+          }
+        },
         { $group: { _id: null, total: { $sum: "$totals.grandTotal" } } }
       ]),
       Order.aggregate([
-        { $match: { status: "delivered", createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek } } },
+        {
+          $match: {
+            $or: [{ status: "delivered" }, { "payment.status": "completed" }],
+            createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek }
+          }
+        },
         { $group: { _id: null, total: { $sum: "$totals.grandTotal" } } }
       ]),
       User.countDocuments({ createdAt: { $gte: startOfThisWeek } }),
@@ -366,9 +379,9 @@ export const getDashboardAnalytics = async (req, res) => {
     // Low Stock Alerts (products with stock < 10)
     const lowStockProducts = await Product.find({ stock: { $gt: 0, $lte: 10 }, visibility: 'public' })
       .select('name stock image seller')
-      .populate('seller', 'storeName')
+      .populate('seller', 'storeName name')
       .sort({ stock: 1 })
-      .limit(10);
+      .limit(5);
 
     // Out of Stock count
     const outOfStockCount = await Product.countDocuments({ stock: 0, visibility: 'public' });

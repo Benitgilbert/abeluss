@@ -2,16 +2,21 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import LandingFooter from '../components/LandingFooter';
-import { FaClock, FaFire, FaShoppingCart, FaPercent } from 'react-icons/fa';
+import { FaClock, FaFire, FaShoppingCart, FaPercent, FaStar } from 'react-icons/fa';
 import { formatRwf } from '../utils/currency';
 import { useCart } from '../context/CartContext';
 import axiosInstance from '../utils/axiosInstance';
 
-const getImageUrl = (path) => {
-    if (!path) return '';
-    if (path.startsWith('http')) return path;
-    if (path.startsWith('/uploads/')) return `${process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000'}${path}`;
-    return process.env.PUBLIC_URL + path;
+import assetUrl from "../utils/assetUrl";
+
+const getRating = (rating) => {
+    if (!rating) return 0;
+    if (Array.isArray(rating)) {
+        if (rating.length === 0) return 0;
+        const sum = rating.reduce((acc, r) => acc + (Number(r.rating) || 0), 0);
+        return sum / rating.length;
+    }
+    return Number(rating);
 };
 
 export default function DailyDeals() {
@@ -94,13 +99,13 @@ export default function DailyDeals() {
         return () => clearInterval(timer);
     }, [activeSale, serverTimeOffset]);
 
-    const handleAddToCart = (product) => {
-        addItem({
-            _id: product._id,
-            name: product.name,
-            price: product.flashSalePrice,
-            image: product.images?.[0]
-        }, { quantity: 1 });
+    const handleAddToCart = async (product) => {
+        try {
+            await addItem(product, { quantity: 1 });
+            // addItem already handles success toast via its internal logic or caller
+        } catch (error) {
+            console.error("Cart error:", error);
+        }
     };
 
     // Get all products from all active sales
@@ -179,7 +184,7 @@ export default function DailyDeals() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                         {allProducts.map((product, index) => {
                             const isAvailable = product.isAvailable;
-                            const imageUrl = getImageUrl(product.images?.[0]);
+                            const imageUrl = assetUrl(product.image || product.images?.[0]);
 
                             return (
                                 <div key={`${product._id}-${index}`} className="group bg-white dark:bg-charcoal-800 rounded-3xl shadow-sm hover:shadow-2xl border border-cream-200 dark:border-charcoal-700 transition-all duration-500 overflow-hidden flex flex-col h-full transform hover:-translate-y-2">
@@ -214,6 +219,13 @@ export default function DailyDeals() {
                                     </div>
 
                                     <div className="p-6 flex flex-col flex-grow">
+                                        <div className="flex items-center gap-1 mb-2">
+                                            {[...Array(5)].map((_, i) => (
+                                                <FaStar key={i} className={`${i < getRating(product.averageRating) ? "text-sand-400" : "text-charcoal-200 dark:text-charcoal-700"} text-xs`} />
+                                            ))}
+                                            <span className="text-xs text-charcoal-400 ml-1">({getRating(product.averageRating).toFixed(1)})</span>
+                                        </div>
+
                                         <Link to={`/product/${product._id}`} className="block mb-2 group/title">
                                             <h3 className="text-xl font-bold text-gray-900 dark:text-white line-clamp-1 group-hover/title:text-red-500 transition-colors">{product.name}</h3>
                                         </Link>

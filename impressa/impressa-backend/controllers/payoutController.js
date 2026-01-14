@@ -4,13 +4,15 @@ import CommissionSettings from "../models/CommissionSettings.js";
 import { recordTransaction } from "./financeController.js";
 import Account from "../models/Account.js";
 import { notifyPayoutRequest, notifyPayoutProcessed } from "./notificationController.js";
+import mongoose from "mongoose";
+import User from "../models/User.js";
 
 /**
  * Request a payout (seller)
  */
 export const requestPayout = async (req, res, next) => {
     try {
-        const sellerId = req.user.id;
+        const sellerId = new mongoose.Types.ObjectId(req.user.id);
         const { paymentMethod, paymentDetails } = req.body;
 
         // Get commission settings
@@ -28,7 +30,7 @@ export const requestPayout = async (req, res, next) => {
         if (availableBalance < settings.minimumPayoutAmount) {
             return res.status(400).json({
                 success: false,
-                message: `Minimum payout amount is RWF ${settings.minimumPayoutAmount.toLocaleString()}`
+                message: `Minimum payout amount is RWF ${settings.minimumPayoutAmount.toLocaleString()}. Your balance: RWF ${availableBalance.toLocaleString()}`
             });
         }
 
@@ -46,7 +48,10 @@ export const requestPayout = async (req, res, next) => {
         }
 
         // Create payout request
+        const payoutId = `PAY-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
         const payout = await Payout.create({
+            payoutId,
             seller: sellerId,
             amount: availableBalance,
             paymentMethod: paymentMethod || "mobile_money",
@@ -63,7 +68,8 @@ export const requestPayout = async (req, res, next) => {
 
         // 🔔 Notify Admin
         try {
-            notifyPayoutRequest(req.user.name, payout.amount);
+            const user = await User.findById(sellerId).select('name');
+            notifyPayoutRequest(user?.name || "Seller", payout.amount);
         } catch (e) { }
 
         res.status(201).json({
@@ -81,7 +87,7 @@ export const requestPayout = async (req, res, next) => {
  */
 export const getMyPayouts = async (req, res, next) => {
     try {
-        const sellerId = req.user.id;
+        const sellerId = new mongoose.Types.ObjectId(req.user.id);
         const { status, page = 1, limit = 10 } = req.query;
 
         const filter = { seller: sellerId };

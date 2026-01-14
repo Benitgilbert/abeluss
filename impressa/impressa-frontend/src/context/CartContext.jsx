@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import * as api from "../services/api";
+import { useToast } from "./ToastContext";
 
 const CartContext = createContext(null);
 
@@ -7,6 +8,7 @@ export function CartProvider({ children }) {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { showSuccess, showError } = useToast();
   // Local-only mapping of files per cart line item index
   const [files, setFiles] = useState([]);
 
@@ -51,6 +53,7 @@ export function CartProvider({ children }) {
       customText,
       cloudLink,
       cloudPassword,
+      price,
     } = options;
 
     const productId =
@@ -70,9 +73,11 @@ export function CartProvider({ children }) {
         productId,
         quantity,
         variationId,
-        Object.keys(customizations).length ? customizations : null
+        Object.keys(customizations).length ? customizations : null,
+        price
       );
       setCartSafe(payload.data || null);
+      showSuccess(`${productOrId?.name || "Product"} added to cart`);
       return payload;
     } catch (err) {
       // Log full backend error details to understand 400 responses
@@ -157,7 +162,9 @@ export function CartProvider({ children }) {
   const items = rawItems.map((it) => ({
     product: it.product,
     name: it.productName || it.product?.name,
+    price: it.price || it.product?.price || 0,
     quantity: it.quantity,
+    subtotal: it.subtotal || (it.price * it.quantity) || 0,
     customText: it.customizations?.customText || "",
     cloudLink: it.customizations?.cloudLink || "",
     cloudPassword: it.customizations?.cloudPassword || "",

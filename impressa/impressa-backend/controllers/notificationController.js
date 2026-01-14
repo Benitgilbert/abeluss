@@ -261,6 +261,16 @@ export const notifyProductAdded = (sellerName, productName) => {
     });
 };
 
+export const notifyProductDeleted = (sellerName, productName) => {
+    return notifyAdmins({
+        type: 'product_deleted',
+        title: 'Product Deleted',
+        message: `${sellerName} deleted "${productName}".`,
+        link: `/admin/products`,
+        priority: 'normal'
+    });
+};
+
 export const notifyViolation = (type, reporterName) => {
     return notifyAdmins({
         type: 'violation_report',

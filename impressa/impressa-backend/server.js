@@ -123,6 +123,7 @@ const startServer = async () => {
     const brandPartnerRoutes = (await import("./routes/brandPartnerRoutes.js")).default;
     const siteSettingsRoutes = (await import("./routes/siteSettingsRoutes.js")).default;
     const newsletterRoutes = (await import("./routes/newsletterRoutes.js")).default;
+    const giftCardRoutes = (await import("./routes/giftCardRoutes.js")).default;
 
     // ✅ Register health checks first (no auth required)
     app.use("/", healthRoutes);
@@ -157,6 +158,9 @@ const startServer = async () => {
     app.use("/api/brand-partners", brandPartnerRoutes);
     app.use("/api/site-settings", siteSettingsRoutes);
     app.use("/api/newsletter", newsletterRoutes);
+    app.use("/api/gift-cards", giftCardRoutes);
+    const giftCardProductRoutes = (await import("./routes/giftCardProductRoutes.js")).default;
+    app.use("/api/gift-card-products", giftCardProductRoutes);
     const sellerRoutes = (await import("./routes/sellerRoutes.js")).default;
     app.use("/api/sellers", sellerRoutes);
     const commissionRoutes = (await import("./routes/commissionRoutes.js")).default;
@@ -173,6 +177,8 @@ const startServer = async () => {
     app.use("/api/seller-verification", sellerVerificationRoutes);
     const uploadRoutes = (await import("./routes/uploadRoutes.js")).default;
     app.use("/api/upload", uploadRoutes);
+    const violationRoutes = (await import("./routes/violationRoutes.js")).default;
+    app.use("/api/violations", violationRoutes);
 
 
     app.get("/api", (req, res) => {

@@ -1,5 +1,6 @@
 import { FaBell, FaCheck, FaBox, FaDollarSign, FaStar, FaTicketAlt, FaUser, FaBars, FaMoon, FaSun } from "react-icons/fa";
 import { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import api from "../utils/axiosInstance";
 import RoleSwitcher from "./RoleSwitcher";
@@ -15,6 +16,10 @@ function Topbar({ onMenuClick, title }) {
   useEffect(() => {
     api.get("/auth/me").then(res => setUser(res.data)).catch(err => console.error(err));
     fetchNotifications();
+
+    // Poll for new notifications every 10 seconds
+    const interval = setInterval(fetchNotifications, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchNotifications = async () => {
@@ -195,12 +200,12 @@ function Topbar({ onMenuClick, title }) {
 
               {/* Footer */}
               <div className="px-4 py-3 border-t border-cream-200 dark:border-charcoal-700 bg-cream-50 dark:bg-charcoal-900">
-                <a
-                  href="/admin/notifications"
+                <Link
+                  to={user?.role === 'seller' ? "/seller/notifications" : "/admin/notifications"}
                   className="text-sm font-medium text-terracotta-500 hover:text-terracotta-600 dark:text-terracotta-400 transition-colors"
                 >
                   View all notifications
-                </a>
+                </Link>
               </div>
             </div>
           )}

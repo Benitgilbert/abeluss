@@ -1,5 +1,6 @@
 import Review from "../models/Review.js";
 import Product from "../models/Product.js";
+import Violation from "../models/Violation.js";
 import { notifyReviewCreated } from "./notificationController.js";
 
 // Add a review
@@ -31,6 +32,25 @@ export const addReview = async (req, res) => {
         });
 
         await review.save();
+
+        // 🚨 Automatic Violation Trigger: Low Rating
+        if (Number(rating) <= 2) {
+            try {
+                // Check if we should create a violation
+                // We only create if it's really low (<=2)
+                await Violation.create({
+                    seller: product.seller, // Assuming product has seller field
+                    type: 'low_rating',
+                    severity: Number(rating) === 1 ? 'high' : 'medium',
+                    status: 'active',
+                    penaltyPoints: Number(rating) === 1 ? 5 : 2,
+                    description: `Received a ${rating}-star review on product "${product.name}"`,
+                    metrics: { currentValue: Number(rating), threshold: 3 }
+                });
+            } catch (err) {
+                console.error("Failed to auto-create violation:", err);
+            }
+        }
 
         // 🔔 Notify Admin
         try {

@@ -20,7 +20,7 @@ const SellerPayouts = () => {
             setLoading(true);
             const [earningRes, payoutRes] = await Promise.all([
                 api.get("/commissions/my-earnings"),
-                api.get("/params/payouts/history")
+                api.get("/commissions/my-payouts")
             ]);
 
             if (earningRes.data.success) {
@@ -36,18 +36,36 @@ const SellerPayouts = () => {
         }
     };
 
-    const handleRequestPayout = async () => {
-        if (!window.confirm("Request payout for your available balance?")) return;
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
 
+    const handleRequestClick = () => {
+        setShowConfirmModal(true);
+    };
+
+    const confirmPayout = async () => {
+        setShowConfirmModal(false);
         setRequesting(true);
         try {
-            const res = await api.post("/payouts/request");
+            // Send default payment method
+            const res = await api.post("/commissions/my-payouts", {
+                paymentMethod: 'mobile_money'
+            });
+
             if (res.data.success) {
                 setMessage({ type: 'success', text: 'Payout requested successfully!' });
                 fetchData(); // Refresh data
             }
         } catch (err) {
-            setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to request payout' });
+            console.error("Payout request failed details:", err);
+            const errorMsg = err.response?.data?.message
+                || err.response?.data?.error?.message
+                || err.message
+                || "Unknown error occurred";
+
+            setMessage({
+                type: 'error',
+                text: `Failed: ${errorMsg}`
+            });
         } finally {
             setRequesting(false);
         }
@@ -67,7 +85,7 @@ const SellerPayouts = () => {
             <SellerSidebar />
             <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
                 <Header />
-                <main className="flex-1 overflow-y-auto p-8">
+                <main className="flex-1 overflow-y-auto p-8 relative">
                     <div className="max-w-7xl mx-auto">
                         {/* Header */}
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -77,7 +95,7 @@ const SellerPayouts = () => {
                             </div>
                             {summary?.availableBalance >= (summary?.minimumPayout || 0) && (
                                 <button
-                                    onClick={handleRequestPayout}
+                                    onClick={handleRequestClick}
                                     disabled={requesting}
                                     className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-lg font-bold shadow-lg shadow-green-600/20 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                                 >
@@ -182,6 +200,40 @@ const SellerPayouts = () => {
                             )}
                         </div>
                     </div>
+
+                    {/* Custom Confirmation Modal */}
+                    {showConfirmModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
+                                <div className="flex flex-col items-center text-center">
+                                    <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-4">
+                                        <FaMoneyBillWave className="text-3xl text-green-600 dark:text-green-500" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                                        Request Payout?
+                                    </h3>
+                                    <p className="text-gray-500 dark:text-gray-300 mb-6">
+                                        Are you sure you want to request a payout for your available balance of <span className="font-bold text-gray-900 dark:text-white">RWF {summary?.availableBalance?.toLocaleString()}</span>?
+                                    </p>
+
+                                    <div className="flex gap-3 w-full">
+                                        <button
+                                            onClick={() => setShowConfirmModal(false)}
+                                            className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 rounded-lg font-medium transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={confirmPayout}
+                                            className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium shadow-lg shadow-green-600/20 transition-colors"
+                                        >
+                                            Confirm Request
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </main>
             </div>
         </div>

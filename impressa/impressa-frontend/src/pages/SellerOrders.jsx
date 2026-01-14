@@ -12,10 +12,13 @@ const SellerOrders = () => {
 
     useEffect(() => {
         fetchOrders();
+        const interval = setInterval(() => fetchOrders(true), 10000); // 10s polling
+        return () => clearInterval(interval);
     }, []);
 
-    const fetchOrders = async () => {
+    const fetchOrders = async (isPolling = false) => {
         try {
+            if (!isPolling) setLoading(true);
             const res = await api.get("/orders/seller/my-orders");
             if (res.data.success) {
                 setOrders(res.data.data);
@@ -23,7 +26,7 @@ const SellerOrders = () => {
         } catch (err) {
             console.error("Failed to fetch orders", err);
         } finally {
-            setLoading(false);
+            if (!isPolling) setLoading(false);
         }
     };
 

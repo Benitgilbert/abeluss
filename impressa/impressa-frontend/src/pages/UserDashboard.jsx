@@ -44,7 +44,7 @@ function UserDashboard() {
       ]);
 
       setUser(profileRes.data);
-      setOrders(ordersRes.data);
+      setOrders(ordersRes.data.data || []);
 
       // Init forms
       setProfileForm({ name: profileRes.data.name, email: profileRes.data.email, password: "", profileImage: null });
@@ -170,13 +170,13 @@ function UserDashboard() {
   if (loading) return <div className="p-10 text-center">Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
+    <div className="min-h-screen bg-gray-50 dark:bg-charcoal-900 transition-colors duration-300 font-sans">
       <Header />
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row gap-8">
           {/* Sidebar */}
           <div className="w-full md:w-64 flex-shrink-0">
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-white dark:bg-charcoal-800 rounded-lg shadow p-6 border border-gray-100 dark:border-charcoal-700">
               <div className="mb-6 text-center">
                 <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 text-blue-600 text-2xl font-bold overflow-hidden">
                   {user?.profileImage ? (
@@ -185,32 +185,32 @@ function UserDashboard() {
                     user?.name?.charAt(0).toUpperCase()
                   )}
                 </div>
-                <h2 className="font-bold text-gray-800">{user?.name}</h2>
-                <p className="text-sm text-gray-500">{user?.email}</p>
+                <h2 className="font-bold text-gray-800 dark:text-white">{user?.name}</h2>
+                <p className="text-sm text-gray-500 dark:text-charcoal-400">{user?.email}</p>
               </div>
 
               <nav className="space-y-2">
                 <button
                   onClick={() => setActiveTab("orders")}
-                  className={`w-full flex items-center gap-3 px-4 py-2 rounded-md transition-colors ${activeTab === "orders" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-50"}`}
+                  className={`w-full flex items-center gap-3 px-4 py-2 rounded-md transition-colors ${activeTab === "orders" ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-charcoal-700"}`}
                 >
                   <FaBox /> Orders
                 </button>
                 <button
                   onClick={() => setActiveTab("addresses")}
-                  className={`w-full flex items-center gap-3 px-4 py-2 rounded-md transition-colors ${activeTab === "addresses" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-50"}`}
+                  className={`w-full flex items-center gap-3 px-4 py-2 rounded-md transition-colors ${activeTab === "addresses" ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-charcoal-700"}`}
                 >
                   <FaMapMarkerAlt /> Addresses
                 </button>
                 <button
                   onClick={() => setActiveTab("account")}
-                  className={`w-full flex items-center gap-3 px-4 py-2 rounded-md transition-colors ${activeTab === "account" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-50"}`}
+                  className={`w-full flex items-center gap-3 px-4 py-2 rounded-md transition-colors ${activeTab === "account" ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-charcoal-700"}`}
                 >
                   <FaUser /> Account Details
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-4 py-2 rounded-md text-red-600 hover:bg-red-50 transition-colors mt-4"
+                  className="w-full flex items-center gap-3 px-4 py-2 rounded-md text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors mt-4"
                 >
                   <FaSignOutAlt /> Logout
                 </button>
@@ -221,21 +221,21 @@ function UserDashboard() {
           {/* Main Content */}
           <div className="flex-1">
             {activeTab === "orders" && (
-              <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-xl font-bold mb-6">My Orders</h2>
+              <div className="bg-white dark:bg-charcoal-800 rounded-lg shadow p-6 border border-gray-100 dark:border-charcoal-700">
+                <h2 className="text-xl font-bold mb-6 text-gray-900 dark:text-white">My Orders</h2>
                 {orders.length === 0 ? (
-                  <p className="text-gray-500">No orders found.</p>
+                  <p className="text-gray-500 dark:text-gray-400">No orders found.</p>
                 ) : (
                   <div className="space-y-4">
                     {orders.map(order => (
-                      <div key={order._id} className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                      <div key={order._id} className="border dark:border-charcoal-700 rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gray-50 dark:bg-charcoal-900/50">
                         <div>
-                          <p className="font-semibold text-gray-800">Order #{order.publicId}</p>
-                          <p className="text-sm text-gray-500">{new Date(order.createdAt).toLocaleDateString()}</p>
+                          <p className="font-semibold text-gray-800 dark:text-white">Order #{order.publicId}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">{new Date(order.createdAt).toLocaleDateString()}</p>
                           <div className="mt-2 space-y-2">
                             {order.items?.map((item, idx) => (
                               <div key={idx} className="flex flex-wrap items-center gap-2">
-                                <span className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
+                                <span className="inline-block bg-white dark:bg-charcoal-700 border dark:border-charcoal-600 text-gray-700 dark:text-gray-200 text-xs px-2 py-1 rounded">
                                   {item.productName} x{item.quantity}
                                 </span>
                                 {item.product?.isDigital && item.product?.downloadLink && (
@@ -259,7 +259,7 @@ function UserDashboard() {
                                 'bg-yellow-100 text-yellow-800'}`}>
                             {order.status.toUpperCase()}
                           </span>
-                          <p className="font-bold text-gray-900">
+                          <p className="font-bold text-gray-900 dark:text-white">
                             {order.totals?.grandTotal?.toLocaleString()} Rwf
                           </p>
                         </div>
@@ -271,17 +271,17 @@ function UserDashboard() {
             )}
 
             {activeTab === "addresses" && (
-              <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-xl font-bold mb-6">Addresses</h2>
+              <div className="bg-white dark:bg-charcoal-800 rounded-lg shadow p-6 border border-gray-100 dark:border-charcoal-700">
+                <h2 className="text-xl font-bold mb-6 text-gray-900 dark:text-white">Addresses</h2>
                 <form onSubmit={updateProfile}>
                   <div className="grid md:grid-cols-2 gap-8">
                     {/* Billing Address */}
                     <div>
-                      <h3 className="font-semibold text-gray-700 mb-4 border-b pb-2">Billing Address</h3>
+                      <h3 className="font-semibold text-gray-700 dark:text-charcoal-300 mb-4 border-b dark:border-charcoal-700 pb-2">Billing Address</h3>
                       <div className="space-y-3">
                         {/* Province */}
                         <select
-                          className="w-full border p-2 rounded"
+                          className="w-full border dark:border-charcoal-600 p-2 rounded bg-white dark:bg-charcoal-700 text-gray-900 dark:text-white"
                           value={billingAddress.province}
                           onChange={e => handleAddressChange('billing', 'province', e.target.value)}
                         >
@@ -290,7 +290,7 @@ function UserDashboard() {
                         </select>
                         {/* District */}
                         <select
-                          className="w-full border p-2 rounded bg-white disabled:bg-gray-100"
+                          className="w-full border dark:border-charcoal-600 p-2 rounded bg-white dark:bg-charcoal-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-charcoal-900 disabled:text-gray-500"
                           value={billingAddress.district}
                           disabled={!billingAddress.province}
                           onChange={e => handleAddressChange('billing', 'district', e.target.value)}
@@ -300,7 +300,7 @@ function UserDashboard() {
                         </select>
                         {/* Sector */}
                         <select
-                          className="w-full border p-2 rounded bg-white disabled:bg-gray-100"
+                          className="w-full border dark:border-charcoal-600 p-2 rounded bg-white dark:bg-charcoal-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-charcoal-900 disabled:text-gray-500"
                           value={billingAddress.sector}
                           disabled={!billingAddress.district}
                           onChange={e => handleAddressChange('billing', 'sector', e.target.value)}
@@ -310,7 +310,7 @@ function UserDashboard() {
                         </select>
                         {/* Cell */}
                         <select
-                          className="w-full border p-2 rounded bg-white disabled:bg-gray-100"
+                          className="w-full border dark:border-charcoal-600 p-2 rounded bg-white dark:bg-charcoal-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-charcoal-900 disabled:text-gray-500"
                           value={billingAddress.cell}
                           disabled={!billingAddress.sector}
                           onChange={e => handleAddressChange('billing', 'cell', e.target.value)}
@@ -319,19 +319,19 @@ function UserDashboard() {
                           {locationOptions.billing.cells.map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
 
-                        <input type="text" placeholder="Street Address / Village" className="w-full border p-2 rounded" value={billingAddress.street} onChange={e => setBillingAddress({ ...billingAddress, street: e.target.value })} />
-                        <input type="text" placeholder="Country" className="w-full border p-2 rounded bg-gray-50" value={billingAddress.country} readOnly />
-                        <input type="text" placeholder="Phone" className="w-full border p-2 rounded" value={billingAddress.phone} onChange={e => setBillingAddress({ ...billingAddress, phone: e.target.value })} />
+                        <input type="text" placeholder="Street Address / Village" className="w-full border dark:border-charcoal-600 p-2 rounded bg-white dark:bg-charcoal-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500" value={billingAddress.street} onChange={e => setBillingAddress({ ...billingAddress, street: e.target.value })} />
+                        <input type="text" placeholder="Country" className="w-full border dark:border-charcoal-600 p-2 rounded bg-gray-50 dark:bg-charcoal-900 text-gray-900 dark:text-white" value={billingAddress.country} readOnly />
+                        <input type="text" placeholder="Phone" className="w-full border dark:border-charcoal-600 p-2 rounded bg-white dark:bg-charcoal-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500" value={billingAddress.phone} onChange={e => setBillingAddress({ ...billingAddress, phone: e.target.value })} />
                       </div>
                     </div>
 
                     {/* Delivery Address */}
                     <div>
-                      <h3 className="font-semibold text-gray-700 mb-4 border-b pb-2">Delivery Address</h3>
+                      <h3 className="font-semibold text-gray-700 dark:text-charcoal-300 mb-4 border-b dark:border-charcoal-700 pb-2">Delivery Address</h3>
                       <div className="space-y-3">
                         {/* Province */}
                         <select
-                          className="w-full border p-2 rounded"
+                          className="w-full border dark:border-charcoal-600 p-2 rounded bg-white dark:bg-charcoal-700 text-gray-900 dark:text-white"
                           value={shippingAddress.province}
                           onChange={e => handleAddressChange('shipping', 'province', e.target.value)}
                         >
@@ -340,7 +340,7 @@ function UserDashboard() {
                         </select>
                         {/* District */}
                         <select
-                          className="w-full border p-2 rounded bg-white disabled:bg-gray-100"
+                          className="w-full border dark:border-charcoal-600 p-2 rounded bg-white dark:bg-charcoal-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-charcoal-900 disabled:text-gray-500"
                           value={shippingAddress.district}
                           disabled={!shippingAddress.province}
                           onChange={e => handleAddressChange('shipping', 'district', e.target.value)}
@@ -350,7 +350,7 @@ function UserDashboard() {
                         </select>
                         {/* Sector */}
                         <select
-                          className="w-full border p-2 rounded bg-white disabled:bg-gray-100"
+                          className="w-full border dark:border-charcoal-600 p-2 rounded bg-white dark:bg-charcoal-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-charcoal-900 disabled:text-gray-500"
                           value={shippingAddress.sector}
                           disabled={!shippingAddress.district}
                           onChange={e => handleAddressChange('shipping', 'sector', e.target.value)}
@@ -360,7 +360,7 @@ function UserDashboard() {
                         </select>
                         {/* Cell */}
                         <select
-                          className="w-full border p-2 rounded bg-white disabled:bg-gray-100"
+                          className="w-full border dark:border-charcoal-600 p-2 rounded bg-white dark:bg-charcoal-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-charcoal-900 disabled:text-gray-500"
                           value={shippingAddress.cell}
                           disabled={!shippingAddress.sector}
                           onChange={e => handleAddressChange('shipping', 'cell', e.target.value)}
@@ -369,9 +369,9 @@ function UserDashboard() {
                           {locationOptions.shipping.cells.map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
 
-                        <input type="text" placeholder="Street Address / Village" className="w-full border p-2 rounded" value={shippingAddress.street} onChange={e => setShippingAddress({ ...shippingAddress, street: e.target.value })} />
-                        <input type="text" placeholder="Country" className="w-full border p-2 rounded bg-gray-50" value={shippingAddress.country} readOnly />
-                        <input type="text" placeholder="Phone" className="w-full border p-2 rounded" value={shippingAddress.phone} onChange={e => setShippingAddress({ ...shippingAddress, phone: e.target.value })} />
+                        <input type="text" placeholder="Street Address / Village" className="w-full border dark:border-charcoal-600 p-2 rounded bg-white dark:bg-charcoal-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500" value={shippingAddress.street} onChange={e => setShippingAddress({ ...shippingAddress, street: e.target.value })} />
+                        <input type="text" placeholder="Country" className="w-full border dark:border-charcoal-600 p-2 rounded bg-gray-50 dark:bg-charcoal-900 text-gray-900 dark:text-white" value={shippingAddress.country} readOnly />
+                        <input type="text" placeholder="Phone" className="w-full border dark:border-charcoal-600 p-2 rounded bg-white dark:bg-charcoal-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500" value={shippingAddress.phone} onChange={e => setShippingAddress({ ...shippingAddress, phone: e.target.value })} />
                       </div>
                     </div>
                   </div>
@@ -383,25 +383,25 @@ function UserDashboard() {
             )}
 
             {activeTab === "account" && (
-              <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-xl font-bold mb-6">Account Details</h2>
+              <div className="bg-white dark:bg-charcoal-800 rounded-lg shadow p-6 border border-gray-100 dark:border-charcoal-700">
+                <h2 className="text-xl font-bold mb-6 text-gray-900 dark:text-white">Account Details</h2>
                 <form onSubmit={updateProfile} className="max-w-md">
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Display Name</label>
-                      <input type="text" className="w-full border p-2 rounded" value={profileForm.name} onChange={e => setProfileForm({ ...profileForm, name: e.target.value })} />
+                      <label className="block text-sm font-medium text-gray-700 dark:text-charcoal-300 mb-1">Display Name</label>
+                      <input type="text" className="w-full border dark:border-charcoal-600 p-2 rounded bg-white dark:bg-charcoal-700 text-gray-900 dark:text-white" value={profileForm.name} onChange={e => setProfileForm({ ...profileForm, name: e.target.value })} />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                      <input type="email" className="w-full border p-2 rounded" value={profileForm.email} onChange={e => setProfileForm({ ...profileForm, email: e.target.value })} />
+                      <label className="block text-sm font-medium text-gray-700 dark:text-charcoal-300 mb-1">Email Address</label>
+                      <input type="email" className="w-full border dark:border-charcoal-600 p-2 rounded bg-white dark:bg-charcoal-700 text-gray-900 dark:text-white" value={profileForm.email} onChange={e => setProfileForm({ ...profileForm, email: e.target.value })} />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">New Password (leave blank to keep current)</label>
-                      <input type="password" className="w-full border p-2 rounded" placeholder="New Password" value={profileForm.password} onChange={e => setProfileForm({ ...profileForm, password: e.target.value })} />
+                      <label className="block text-sm font-medium text-gray-700 dark:text-charcoal-300 mb-1">New Password (leave blank to keep current)</label>
+                      <input type="password" className="w-full border dark:border-charcoal-600 p-2 rounded bg-white dark:bg-charcoal-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500" placeholder="New Password" value={profileForm.password} onChange={e => setProfileForm({ ...profileForm, password: e.target.value })} />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Profile Picture</label>
-                      <input type="file" className="w-full border p-2 rounded" accept="image/*" onChange={e => setProfileForm({ ...profileForm, profileImage: e.target.files[0] })} />
+                      <label className="block text-sm font-medium text-gray-700 dark:text-charcoal-300 mb-1">Profile Picture</label>
+                      <input type="file" className="w-full border dark:border-charcoal-600 p-2 rounded bg-white dark:bg-charcoal-700 text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-900/30 dark:file:text-blue-400 hover:file:bg-blue-100" accept="image/*" onChange={e => setProfileForm({ ...profileForm, profileImage: e.target.files[0] })} />
                     </div>
                     <div className="pt-4">
                       <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">Save Changes</button>

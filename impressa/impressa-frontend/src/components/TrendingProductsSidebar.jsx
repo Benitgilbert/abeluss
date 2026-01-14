@@ -4,6 +4,16 @@ import api from "../utils/axiosInstance";
 import assetUrl from "../utils/assetUrl";
 import { FaStar, FaArrowRight } from "react-icons/fa";
 
+const getRating = (rating) => {
+    if (!rating) return 0;
+    if (Array.isArray(rating)) {
+        if (rating.length === 0) return 0;
+        const sum = rating.reduce((acc, r) => acc + (Number(r.rating) || 0), 0);
+        return sum / rating.length;
+    }
+    return Number(rating);
+};
+
 function TrendingProductsSidebar() {
     const [products, setProducts] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -60,10 +70,13 @@ function TrendingProductsSidebar() {
                     <div className="bg-white/10 backdrop-blur-xl px-6 py-2.5 rounded-full border border-white/20 text-[10px] font-black uppercase tracking-[0.2em]">
                         Trending Now
                     </div>
-                    <div className="flex gap-1 text-amber-400">
-                        {[...Array(5)].map((_, i) => (
-                            <FaStar key={i} className="text-sm" />
-                        ))}
+                    <div className="flex flex-col items-end gap-1">
+                        <div className="flex gap-1 text-amber-400">
+                            {[...Array(5)].map((_, i) => (
+                                <FaStar key={i} className={`${i < getRating(currentProduct.averageRating) ? "text-amber-400" : "text-white/20"} text-sm`} />
+                            ))}
+                        </div>
+                        <span className="text-[10px] text-white/60 font-medium">({getRating(currentProduct.averageRating).toFixed(1)})</span>
                     </div>
                 </div>
 

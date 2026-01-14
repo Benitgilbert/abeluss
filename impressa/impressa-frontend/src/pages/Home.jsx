@@ -10,12 +10,16 @@ import LandingFooter from "../components/LandingFooter";
 import Header from "../components/Header";
 import { useWishlist } from "../context/WishlistContext";
 
-const getImageUrl = (path) => {
-  if (!path) return '';
-  if (!path) return '';
-  if (path.startsWith('http')) return path;
-  if (path.startsWith('/uploads/')) return `${process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000'}${path}`;
-  return process.env.PUBLIC_URL + path;
+import assetUrl from "../utils/assetUrl";
+
+const getRating = (rating) => {
+  if (!rating) return 0;
+  if (Array.isArray(rating)) {
+    if (rating.length === 0) return 0;
+    const sum = rating.reduce((acc, r) => acc + (Number(r.rating) || 0), 0);
+    return sum / rating.length;
+  }
+  return Number(rating);
 };
 
 // Product Card Component
@@ -33,9 +37,10 @@ const ProductCard = ({ product }) => {
     <div className="group bg-white dark:bg-charcoal-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-cream-300 dark:border-charcoal-600">
       <div className="relative aspect-square bg-cream-100 dark:bg-charcoal-900 overflow-hidden">
         <Link to={`/product/${product._id}`}>
-          {product.image ? (
+          {(product.image || product.images?.[0]) ? (
             <img
-              src={getImageUrl(product.image)}
+              src={assetUrl(
+                product.image || product.images?.[0])}
               alt={product.name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
@@ -56,12 +61,23 @@ const ProductCard = ({ product }) => {
         </Link>
         <div className="flex items-center gap-1 mb-2">
           {[...Array(5)].map((_, i) => (
-            <FaStar key={i} className="text-sand-400 text-xs" />
+            <FaStar key={i} className={`${i < getRating(product.averageRating)
+              ? "text-sand-400" : "text-charcoal-200 dark:text-charcoal-700"} text-xs`} />
           ))}
-          <span className="text-xs text-charcoal-400 ml-1">(24)</span>
+          <span className="text-xs text-charcoal-400 ml-1">({getRating(product.averageRating).toFixed(1)})</span>
         </div>
-        <div className="flex items-center justify-between">
-          <span className="text-xl font-bold text-charcoal-900 dark:text-white">{formatRwf(product.price)}</span>
+        <div className="flex flex-col gap-1">
+          {product.flashSaleInfo ? (
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <span className="text-xl font-bold text-terracotta-500">{formatRwf(product.flashSaleInfo.flashSalePrice)}</span>
+                <span className="text-sm text-charcoal-400 line-through">{formatRwf(product.price)}</span>
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-terracotta-600 bg-terracotta-50 px-1.5 py-0.5 rounded w-fit">Flash Sale</span>
+            </div>
+          ) : (
+            <span className="text-xl font-bold text-charcoal-900 dark:text-white">{formatRwf(product.price)}</span>
+          )}
           <Link
             to={`/product/${product._id}`}
             className="text-terracotta-500 dark:text-terracotta-400 hover:text-terracotta-600 dark:hover:text-terracotta-300 text-sm font-medium"

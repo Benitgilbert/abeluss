@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import DashboardCards from "../components/DashboardCards";
@@ -14,6 +14,15 @@ import OrderStatusChart from "../components/OrderStatusChart";
 
 function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    // Poll every 15 seconds
+    const interval = setInterval(() => {
+      setRefreshKey(prev => prev + 1);
+    }, 15000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="min-h-screen bg-cream-100 dark:bg-charcoal-900 transition-colors duration-300">
@@ -30,7 +39,7 @@ function AdminDashboard() {
 
           {/* Metrics Cards */}
           <section className="mb-8">
-            <DashboardCards />
+            <DashboardCards refreshKey={refreshKey} />
           </section>
 
           {/* Performance Analytics */}
@@ -73,7 +82,7 @@ function AdminDashboard() {
                 <LowStockWidget />
               </div>
               <div className="bg-white dark:bg-charcoal-800 rounded-2xl p-6 shadow-sm border border-cream-200 dark:border-charcoal-700 hover:shadow-lg transition-shadow">
-                <RecentOrderTable />
+                <RecentOrderTable refreshKey={refreshKey} />
               </div>
             </div>
           </section>

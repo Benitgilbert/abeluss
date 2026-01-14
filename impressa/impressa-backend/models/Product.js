@@ -91,6 +91,10 @@ const productSchema = new mongoose.Schema(
       default: [],
       index: true,
     },
+    category: {
+      type: String,
+      index: true,
+    },
     type: {
       type: String,
       enum: ["simple", "variable"],
