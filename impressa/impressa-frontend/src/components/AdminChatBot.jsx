@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import api from "../utils/axiosInstance";
-import { FaPaperPlane, FaTimes, FaTrashAlt, FaCommentDots, FaSparkles } from "react-icons/fa";
+import { FaPaperPlane, FaTimes, FaTrashAlt, FaCommentDots, FaMagic } from "react-icons/fa";
 
 function AdminChatbot({ storageKey = "adminChatMessages", title = "AI Assistant", endpoint = "/dashboard/chatbot" }) {
   const [question, setQuestion] = useState("");
@@ -81,7 +81,7 @@ function AdminChatbot({ storageKey = "adminChatMessages", title = "AI Assistant"
           <div className="flex items-center gap-3">
             <div className="relative">
               <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 text-white">
-                <FaSparkles size={18} />
+                <FaMagic size={18} />
               </div>
               <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-terracotta-500 rounded-full"></span>
             </div>

@@ -7,35 +7,7 @@ import Fuse from "fuse.js";
 import { notifyProductAdded, notifyProductDeleted } from "./notificationController.js";
 import User from "../models/User.js";
 
-// ... existing code ...
 
-// Get related products (same category or seller)
-export const getRelatedProducts = async (req, res) => {
-  try {
-    const product = await Product.findById(req.params.id);
-    if (!product) return res.status(404).json({ message: "Product not found" });
-
-    const related = await Product.find({
-      $and: [
-        { _id: { $ne: product._id } },
-        { visibility: "public" },
-        { approvalStatus: "approved" },
-        {
-          $or: [
-            { category: product.category },
-            { seller: product.seller }
-          ]
-        }
-      ]
-    })
-      .limit(4)
-      .populate("seller", "name storeName");
-
-    res.json(related);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
 
 /**
  * Smart Recommendation Engine

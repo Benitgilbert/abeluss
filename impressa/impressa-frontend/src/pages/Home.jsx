@@ -8,8 +8,6 @@ import { formatRwf } from "../utils/currency";
 import api from "../utils/axiosInstance";
 import LandingFooter from "../components/LandingFooter";
 import Header from "../components/Header";
-import LandingFooter from "../components/LandingFooter";
-import Header from "../components/Header";
 import { useWishlist } from "../context/WishlistContext";
 import AIChatWidget from "../components/AdminChatBot"; // Using the generic Chatbot
 
