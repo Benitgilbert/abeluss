@@ -679,7 +679,7 @@ export default function Home() {
       </main>
 
       <LandingFooter />
-      <AIChatWidget endpoint="/api/chatbot/public" title="Client Support" storageKey="publicChat" />
+      <AIChatWidget endpoint="/chatbot/public" title="Client Support" storageKey="publicChat" />
     </div >
   );
 }
