@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     FaClipboardCheck, FaSearch, FaCheck, FaTimes, FaEye,
     FaClock, FaCheckCircle, FaTimesCircle, FaImage,
@@ -34,9 +34,7 @@ export default function AdminProductApproval() {
         return `${BASE_URL}${image.startsWith('/') ? '' : '/'}${image}`;
     };
 
-    useEffect(() => { fetchProducts(); }, [currentPage, statusFilter]);
-
-    const fetchProducts = async () => {
+    const fetchProducts = useCallback(async () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('authToken');
@@ -46,7 +44,9 @@ export default function AdminProductApproval() {
             if (data.success) { setProducts(data.data); setStats(data.stats); setTotalPages(data.pagination.pages); }
         } catch (err) { setError('Failed to fetch products'); }
         finally { setLoading(false); }
-    };
+    }, [currentPage, statusFilter, searchTerm, API_URL]);
+
+    useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
     const handleSearch = (e) => { e.preventDefault(); setCurrentPage(1); fetchProducts(); };
 
@@ -115,7 +115,6 @@ export default function AdminProductApproval() {
     const toggleSelect = (id) => setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
     const toggleSelectAll = () => selectedIds.length === products.length ? setSelectedIds([]) : setSelectedIds(products.map(p => p._id));
     const formatCurrency = (amount) => `RWF ${amount?.toLocaleString() || 0}`;
-    const formatDate = (date) => new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 
     const getStatusBadge = (status) => {
         const badges = {

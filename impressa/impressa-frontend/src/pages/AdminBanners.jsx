@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     FaPlus, FaEdit, FaTrash, FaTimes,
     FaDesktop, FaCalendarAlt, FaLink, FaToggleOn, FaToggleOff
@@ -33,10 +33,7 @@ export default function AdminBanners() {
         { from: '#6b7280', to: '#374151', label: 'Dark Slate' },
     ];
 
-    useEffect(() => { fetchBanners(); }, []);
-    useEffect(() => { if (error || success) { const t = setTimeout(() => { setError(''); setSuccess(''); }, 3000); return () => clearTimeout(t); } }, [error, success]);
-
-    const fetchBanners = async () => {
+    const fetchBanners = useCallback(async () => {
         try {
             const token = localStorage.getItem('authToken');
             const res = await fetch(`${API_URL}/banners`, { headers: { Authorization: `Bearer ${token}` } });
@@ -44,7 +41,9 @@ export default function AdminBanners() {
             if (data.success) setBanners(data.data);
         } catch (err) { setError('Failed to fetch banners'); }
         finally { setLoading(false); }
-    };
+    }, [API_URL]);
+
+    useEffect(() => { fetchBanners(); }, [fetchBanners]);
 
     const getStatusInfo = (banner) => {
         if (!banner.isActive) return { label: 'Inactive', classes: 'bg-charcoal-100 text-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-400' };

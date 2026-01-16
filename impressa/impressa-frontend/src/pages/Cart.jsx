@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { formatRwf } from "../utils/currency";
-import { FaShoppingCart, FaTrashAlt, FaArrowRight, FaHeart, FaSearch, FaTimes } from "react-icons/fa";
+import { FaShoppingCart, FaTrashAlt, FaArrowRight, FaTimes } from "react-icons/fa";
 import LandingFooter from "../components/LandingFooter";
 import Header from "../components/Header";
 import * as api from "../services/api";

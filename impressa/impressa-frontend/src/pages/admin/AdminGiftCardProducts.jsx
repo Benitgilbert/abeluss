@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
     FaGift, FaPlus, FaEdit, FaTrash, FaSave, FaTimes,
     FaEye, FaEyeSlash, FaPalette, FaTag, FaCalendarAlt
 } from "react-icons/fa";
 import Sidebar from "../../components/Sidebar";
 import Topbar from "../../components/Topbar";
-import { getAdminGiftCardProducts, createGiftCardProduct, updateGiftCardProduct, deleteGiftCardProduct, formatCurrency } from "../../services/api";
+import { getAdminGiftCardProducts, createGiftCardProduct, updateGiftCardProduct, deleteGiftCardProduct } from "../../services/api";
 import { useToast } from "../../context/ToastContext";
 
 // Gradient presets for easy selection
@@ -42,11 +42,7 @@ const AdminGiftCardProducts = () => {
         expiryDays: 365,
     });
 
-    useEffect(() => {
-        fetchProducts();
-    }, []);
-
-    const fetchProducts = async () => {
+    const fetchProducts = useCallback(async () => {
         setLoading(true);
         try {
             const response = await getAdminGiftCardProducts();
@@ -57,7 +53,11 @@ const AdminGiftCardProducts = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [showError]);
+
+    useEffect(() => {
+        fetchProducts();
+    }, [fetchProducts]);
 
     // OPEN CREATE MODAL
     const openCreateModal = () => {

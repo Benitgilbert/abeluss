@@ -1,5 +1,3 @@
-import api from "./axiosInstance";
-
 // Build absolute URL for server-hosted assets like /uploads/... 
 // - If input is absolute (http/https), return as-is
 // - If input starts with /uploads/, prefix backend origin (strip trailing /api from baseURL)

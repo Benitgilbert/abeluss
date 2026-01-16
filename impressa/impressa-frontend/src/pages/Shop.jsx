@@ -81,7 +81,7 @@ export default function Shop() {
     if (sort !== sortBy) setSortBy(sort);
     if (min !== minPrice) setMinPrice(min);
     if (max !== maxPrice) setMaxPrice(max);
-  }, [searchParams]);
+  }, [searchParams, q, selectedCategory, sortBy, minPrice, maxPrice]);
 
   const { addItem } = useCart();
   const { showError } = useToast();
@@ -116,7 +116,7 @@ export default function Shop() {
     if (newParams.get("q") !== searchParams.get("q") || (searchParams.has("search") && !debouncedQ)) {
       setSearchParams(newParams, { replace: true });
     }
-  }, [debouncedQ]);
+  }, [debouncedQ, searchParams, setSearchParams]);
 
   useEffect(() => {
     (async () => {
@@ -195,7 +195,7 @@ export default function Shop() {
         setLoading(false);
       }
     })();
-  }, [debouncedQ, selectedCategory, minPrice, maxPrice, sortBy, categories]);
+  }, [debouncedQ, selectedCategory, minPrice, maxPrice, sortBy, categories, showError]);
 
   const handleSortChange = (e) => {
     const newSort = e.target.value;

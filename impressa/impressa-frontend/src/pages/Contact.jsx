@@ -2,11 +2,8 @@ import { useState, useEffect } from "react";
 import Header from "../components/Header";
 import LandingFooter from "../components/LandingFooter";
 import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt } from "react-icons/fa";
-import { Link } from "react-router-dom";
-import { useCart } from "../context/CartContext";
 
 export default function Contact() {
-  const { items = [] } = useCart();
   const [settings, setSettings] = useState(null);
 
   useEffect(() => {

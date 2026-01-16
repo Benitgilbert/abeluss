@@ -51,11 +51,18 @@ export default function SellerDashboard() {
     const [revenueData, setRevenueData] = useState({ labels: [], datasets: [] });
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchDashboardData();
-        const interval = setInterval(() => fetchDashboardData(true), 15000); // 15s polling
-        return () => clearInterval(interval);
-    }, [fetchDashboardData]);
+    const formatCurrency = (amount) => `RWF ${(amount || 0).toLocaleString()}`;
+    const getStatusBadge = (status) => {
+        const badges = {
+            pending: { class: 'bg-yellow-100 text-yellow-800', text: 'Pending' },
+            processing: { class: 'bg-blue-100 text-blue-800', text: 'Processing' },
+            shipped: { class: 'bg-indigo-100 text-indigo-800', text: 'Shipped' },
+            delivered: { class: 'bg-green-100 text-green-800', text: 'Delivered' },
+            cancelled: { class: 'bg-red-100 text-red-800', text: 'Cancelled' }
+        };
+        const badge = badges[status?.toLowerCase()] || badges.pending;
+        return <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${badge.class}`}>{badge.text}</span>;
+    };
 
     const fetchDashboardData = useCallback(async (isPolling = false) => {
         try {
@@ -139,18 +146,13 @@ export default function SellerDashboard() {
         }
     }, [user]);
 
-    const formatCurrency = (amount) => `RWF ${(amount || 0).toLocaleString()}`;
-    const getStatusBadge = (status) => {
-        const badges = {
-            pending: { class: 'bg-yellow-100 text-yellow-800', text: 'Pending' },
-            processing: { class: 'bg-blue-100 text-blue-800', text: 'Processing' },
-            shipped: { class: 'bg-indigo-100 text-indigo-800', text: 'Shipped' },
-            delivered: { class: 'bg-green-100 text-green-800', text: 'Delivered' },
-            cancelled: { class: 'bg-red-100 text-red-800', text: 'Cancelled' }
-        };
-        const badge = badges[status?.toLowerCase()] || badges.pending;
-        return <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${badge.class}`}>{badge.text}</span>;
-    };
+    useEffect(() => {
+        fetchDashboardData();
+        const interval = setInterval(() => fetchDashboardData(true), 15000); // 15s polling
+        return () => clearInterval(interval);
+    }, [fetchDashboardData]);
+
+
 
     const chartOptions = {
         responsive: true,

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { FaEdit, FaTrash, FaPlus, FaSearch, FaFolder, FaImage, FaTimes } from "react-icons/fa";
+import { useState, useEffect, useCallback } from 'react';
+import { FaEdit, FaTrash, FaPlus, FaFolder, FaImage, FaTimes } from "react-icons/fa";
 import api from '../utils/axiosInstance';
 import Sidebar from '../components/Sidebar';
 import Topbar from '../components/Topbar';
@@ -35,11 +35,7 @@ export default function AdminCategories() {
         isActive: true,
     });
 
-    useEffect(() => {
-        fetchCategories();
-    }, []);
-
-    const fetchCategories = async () => {
+    const fetchCategories = useCallback(async () => {
         try {
             const res = await api.get('/categories');
             if (res.data.success) {
@@ -51,7 +47,11 @@ export default function AdminCategories() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        fetchCategories();
+    }, [fetchCategories]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();

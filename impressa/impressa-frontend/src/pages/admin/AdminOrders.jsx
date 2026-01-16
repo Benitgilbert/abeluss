@@ -26,12 +26,6 @@ const AdminOrders = () => {
         return () => clearTimeout(timer);
     }, [search]);
 
-    useEffect(() => {
-        fetchOrders();
-        const interval = setInterval(() => fetchOrders(true), 10000); // 10s polling
-        return () => clearInterval(interval);
-    }, [fetchOrders]);
-
     const fetchOrders = useCallback(async (isPolling = false) => {
         if (!isPolling) setLoading(true);
         try {
@@ -50,6 +44,12 @@ const AdminOrders = () => {
             setLoading(false);
         }
     }, [page, statusFilter, debouncedSearch]);
+
+    useEffect(() => {
+        fetchOrders();
+        const interval = setInterval(() => fetchOrders(true), 10000); // 10s polling
+        return () => clearInterval(interval);
+    }, [fetchOrders]);
 
     const getStatusBadge = (status) => {
         const baseClasses = "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold capitalize";

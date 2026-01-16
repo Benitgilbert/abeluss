@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     FaCheck, FaTimes, FaEye,
     FaClock, FaSpinner, FaCheckCircle, FaTimesCircle,
@@ -23,10 +23,7 @@ export default function AdminPayouts() {
 
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
-    useEffect(() => { fetchPayouts(); }, [currentPage, statusFilter]);
-    useEffect(() => { if (error || success) { const t = setTimeout(() => { setError(''); setSuccess(''); }, 3000); return () => clearTimeout(t); } }, [error, success]);
-
-    const fetchPayouts = async () => {
+    const fetchPayouts = useCallback(async () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('authToken');
@@ -36,7 +33,9 @@ export default function AdminPayouts() {
             if (data.success) { setPayouts(data.data); setStats(data.stats); setTotalPages(data.pagination.pages); }
         } catch (err) { setError('Failed to fetch payouts'); }
         finally { setLoading(false); }
-    };
+    }, [currentPage, statusFilter, API_URL]);
+
+    useEffect(() => { fetchPayouts(); }, [fetchPayouts]);
 
     const handleProcess = async (action, transactionId = '', rejectionReason = '') => {
         setProcessing(true);

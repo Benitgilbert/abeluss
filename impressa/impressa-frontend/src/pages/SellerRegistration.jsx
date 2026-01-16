@@ -39,20 +39,19 @@ export default function SellerRegistration() {
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
     useEffect(() => {
-        fetchTerms();
-    }, []);
-
-    const fetchTerms = async () => {
-        try {
-            const res = await fetch(`${API_URL}/seller-verification/terms`);
-            const data = await res.json();
-            if (data.success) {
-                setTermsContent(data.data.content);
+        const fetchTerms = async () => {
+            try {
+                const res = await fetch(`${API_URL}/seller-verification/terms`);
+                const data = await res.json();
+                if (data.success) {
+                    setTermsContent(data.data.content);
+                }
+            } catch (err) {
+                console.error('Failed to fetch terms');
             }
-        } catch (err) {
-            console.error('Failed to fetch terms');
-        }
-    };
+        };
+        fetchTerms();
+    }, [API_URL]);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import api from "../../utils/axiosInstance";
-import { FaArrowLeft, FaBox, FaTruck, FaMapMarkerAlt, FaUser, FaCreditCard } from "react-icons/fa";
+import { FaArrowLeft, FaBox, FaMapMarkerAlt, FaUser, FaCreditCard } from "react-icons/fa";
 
 const AdminOrderDetails = () => {
     const { id } = useParams();

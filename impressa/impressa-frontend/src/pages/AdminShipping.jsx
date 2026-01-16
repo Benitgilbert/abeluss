@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import api from "../utils/axiosInstance";
@@ -18,12 +18,7 @@ function AdminShipping() {
     const [editId, setEditId] = useState(null);
     const [availableProvinces, setAvailableProvinces] = useState([]);
 
-    useEffect(() => {
-        fetchZones();
-        setAvailableProvinces(getProvinces());
-    }, []);
-
-    const fetchZones = async () => {
+    const fetchZones = useCallback(async () => {
         try {
             const { data } = await api.get("/shipping"); // Path is /shipping but displayed as Delivery
             setZones(data.data);
@@ -33,7 +28,12 @@ function AdminShipping() {
             showError("Failed to load delivery zones");
             setLoading(false);
         }
-    };
+    }, [showError]);
+
+    useEffect(() => {
+        fetchZones();
+        setAvailableProvinces(getProvinces());
+    }, [fetchZones]);
 
     const handleDelete = async (id) => {
         if (window.confirm("Are you sure you want to delete this zone?")) {

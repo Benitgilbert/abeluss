@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     FaPlus, FaEdit, FaTrash, FaCalendarAlt, FaClock, FaBox,
     FaSave, FaTimes, FaFire
@@ -43,14 +43,11 @@ export default function AdminFlashSales() {
     });
 
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-    const BASE_URL = API_URL.replace(/\/api$/, '');
 
-    useEffect(() => {
-        fetchFlashSales();
-        fetchProducts();
-    }, []);
 
-    const fetchFlashSales = async () => {
+
+
+    const fetchFlashSales = useCallback(async () => {
         try {
             const token = localStorage.getItem('authToken');
             const res = await fetch(`${API_URL}/flash-sales`, {
@@ -65,9 +62,9 @@ export default function AdminFlashSales() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [API_URL]);
 
-    const fetchProducts = async () => {
+    const fetchProducts = useCallback(async () => {
         try {
             const res = await fetch(`${API_URL}/products`);
             const data = await res.json();
@@ -76,7 +73,12 @@ export default function AdminFlashSales() {
         } catch (err) {
             console.error('Failed to fetch products');
         }
-    };
+    }, [API_URL]);
+
+    useEffect(() => {
+        fetchFlashSales();
+        fetchProducts();
+    }, [fetchFlashSales, fetchProducts]);
 
     const getSaleStatus = (sale) => {
         const now = new Date();

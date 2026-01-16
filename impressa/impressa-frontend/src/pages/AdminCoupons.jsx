@@ -4,6 +4,14 @@ import Topbar from "../components/Topbar";
 import api from "../utils/axiosInstance";
 import { FaTrash, FaEdit, FaPlus, FaTag, FaTimes, FaPercent, FaTruck } from "react-icons/fa";
 
+const getTypeIcon = (type) => {
+    if (type === 'percentage') return <FaPercent className="text-purple-500" />;
+    if (type === 'free_shipping') return <FaTruck className="text-blue-500" />;
+    return <FaTag className="text-terracotta-500" />;
+};
+
+const isExpired = (date) => new Date(date) < new Date();
+
 function AdminCoupons() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [coupons, setCoupons] = useState([]);
@@ -12,8 +20,6 @@ function AdminCoupons() {
     const [formData, setFormData] = useState({ code: "", type: "fixed", value: "", minSpend: "", usageLimit: "", expiresAt: "", isActive: true });
     const [isEdit, setIsEdit] = useState(false);
     const [editId, setEditId] = useState(null);
-
-    useEffect(() => { fetchCoupons(); }, [fetchCoupons]);
 
     const fetchCoupons = useCallback(async () => {
         try {
@@ -25,6 +31,8 @@ function AdminCoupons() {
             setLoading(false);
         }
     }, []);
+
+    useEffect(() => { fetchCoupons(); }, [fetchCoupons]);
 
     const handleDelete = async (id) => {
         if (window.confirm("Are you sure you want to delete this coupon?")) {
@@ -69,13 +77,7 @@ function AdminCoupons() {
         }
     };
 
-    const getTypeIcon = (type) => {
-        if (type === 'percentage') return <FaPercent className="text-purple-500" />;
-        if (type === 'free_shipping') return <FaTruck className="text-blue-500" />;
-        return <FaTag className="text-terracotta-500" />;
-    };
 
-    const isExpired = (date) => new Date(date) < new Date();
 
     return (
         <div className="min-h-screen bg-cream-100 dark:bg-charcoal-900 transition-colors duration-300">

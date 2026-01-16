@@ -46,10 +46,6 @@ const AdminGiftCards = () => {
         return () => clearTimeout(timer);
     }, [search]);
 
-    useEffect(() => {
-        fetchGiftCards();
-    }, [fetchGiftCards]);
-
     const fetchGiftCards = useCallback(async () => {
         setLoading(true);
         try {
@@ -69,6 +65,10 @@ const AdminGiftCards = () => {
             setLoading(false);
         }
     }, [page, statusFilter, debouncedSearch, showError]);
+
+    useEffect(() => {
+        fetchGiftCards();
+    }, [fetchGiftCards]);
 
     const handleStatusUpdate = async (id, newStatus) => {
         try {

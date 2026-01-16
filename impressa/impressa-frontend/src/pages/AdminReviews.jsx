@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     FaStar, FaCheck, FaTimes, FaEye, FaReply, FaTrash,
     FaClock, FaCheckCircle, FaTimesCircle, FaFlag,
@@ -23,11 +23,9 @@ export default function AdminReviews() {
     const [processing, setProcessing] = useState(false);
 
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-    const BASE_URL = API_URL.replace(/\/api$/, '');
 
-    useEffect(() => { fetchReviews(); }, [currentPage, statusFilter, ratingFilter]);
 
-    const fetchReviews = async () => {
+    const fetchReviews = useCallback(async () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('authToken');
@@ -37,7 +35,9 @@ export default function AdminReviews() {
             if (data.success) { setReviews(data.data); setStats(data.stats); setTotalPages(data.pagination.pages); }
         } catch (err) { setError('Failed to fetch reviews'); }
         finally { setLoading(false); }
-    };
+    }, [currentPage, statusFilter, ratingFilter, API_URL]);
+
+    useEffect(() => { fetchReviews(); }, [fetchReviews]);
 
     const viewReviewDetails = async (id) => {
         try {

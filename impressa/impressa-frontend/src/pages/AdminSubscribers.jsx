@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     FaEnvelope, FaSearch, FaTrash, FaDownload, FaUsers,
     FaUserCheck, FaUserTimes, FaChevronLeft, FaChevronRight,
@@ -35,7 +35,7 @@ export default function AdminSubscribers() {
 
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
-    useEffect(() => { fetchSubscribers(); }, [currentPage, statusFilter]);
+
     useEffect(() => { if (error || success) { const t = setTimeout(() => { setError(''); setSuccess(''); }, 3000); return () => clearTimeout(t); } }, [error, success]);
     useEffect(() => {
         if (activeTemplateKey && NEWSLETTER_TEMPLATES[activeTemplateKey]) {
@@ -44,7 +44,7 @@ export default function AdminSubscribers() {
         }
     }, [activeTemplateKey, templateValues]);
 
-    const fetchSubscribers = async () => {
+    const fetchSubscribers = useCallback(async () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('authToken');
@@ -55,7 +55,9 @@ export default function AdminSubscribers() {
             else setError(data.message || 'Failed to fetch subscribers');
         } catch (err) { setError('Failed to fetch subscribers'); }
         finally { setLoading(false); }
-    };
+    }, [currentPage, statusFilter, API_URL]);
+
+    useEffect(() => { fetchSubscribers(); }, [fetchSubscribers]);
 
     const handleDelete = async (id) => {
         if (!window.confirm('Remove this subscriber permanently?')) return;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     FaExclamationTriangle, FaEye, FaTimes, FaCheck,
     FaClock, FaUserSlash, FaBan, FaChartLine,
@@ -15,7 +15,7 @@ export default function AdminViolations() {
     const [statusFilter, setStatusFilter] = useState('all');
     const [typeFilter, setTypeFilter] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
+
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [selectedViolation, setSelectedViolation] = useState(null);
@@ -23,11 +23,7 @@ export default function AdminViolations() {
 
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
-    useEffect(() => {
-        fetchViolations();
-    }, [currentPage, statusFilter, typeFilter]);
-
-    const fetchViolations = async () => {
+    const fetchViolations = useCallback(async () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('authToken');
@@ -38,14 +34,18 @@ export default function AdminViolations() {
 
             setViolations(data.violations || []);
             setStats(data.stats || { total: 0, active: 0, warning: 0, review: 0, suspension: 0 });
-            setTotalPages(data.totalPages || 1);
+            // setTotalPages(data.totalPages || 1); // Unused
         } catch (err) {
             console.error(err);
             setError('Failed to fetch violations');
         } finally {
             setLoading(false);
         }
-    };
+    }, [statusFilter, typeFilter, currentPage, API_URL]);
+
+    useEffect(() => {
+        fetchViolations();
+    }, [fetchViolations]);
 
     const handleDismiss = async (id) => {
         if (!window.confirm('Dismiss this violation? This will remove penalty points from the seller.')) return;

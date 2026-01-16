@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     FaFileAlt, FaCheck, FaTimes, FaEye,
     FaClock, FaCheckCircle, FaTimesCircle, FaBuilding,
@@ -25,10 +25,7 @@ export default function AdminSellerVerification() {
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
     const BASE_URL = API_URL.replace(/\/api$/, '');
 
-    useEffect(() => { fetchSellers(); }, [currentPage, statusFilter]);
-    useEffect(() => { if (error || success) { const t = setTimeout(() => { setError(''); setSuccess(''); }, 3000); return () => clearTimeout(t); } }, [error, success]);
-
-    const fetchSellers = async () => {
+    const fetchSellers = useCallback(async () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('authToken');
@@ -38,7 +35,9 @@ export default function AdminSellerVerification() {
             if (data.success) { setSellers(data.data); setStats(data.stats); setTotalPages(data.pagination.pages); }
         } catch (err) { setError('Failed to fetch sellers'); }
         finally { setLoading(false); }
-    };
+    }, [currentPage, statusFilter, API_URL]);
+
+    useEffect(() => { fetchSellers(); }, [fetchSellers]);
 
     const viewSellerDetails = async (id) => {
         try {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     FaPlus, FaEdit, FaTrash, FaStar, FaTimes,
     FaQuoteLeft, FaToggleOn, FaToggleOff, FaUser
@@ -18,12 +18,12 @@ export default function AdminTestimonials() {
     const [form, setForm] = useState({ name: '', role: 'Customer', content: '', avatar: '', rating: 5, isActive: true, featured: false });
 
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-    const BASE_URL = API_URL.replace(/\/api$/, '');
 
-    useEffect(() => { fetchTestimonials(); }, []);
+
+
     useEffect(() => { if (error || success) { const t = setTimeout(() => { setError(''); setSuccess(''); }, 3000); return () => clearTimeout(t); } }, [error, success]);
 
-    const fetchTestimonials = async () => {
+    const fetchTestimonials = useCallback(async () => {
         try {
             const token = localStorage.getItem('authToken');
             const res = await fetch(`${API_URL}/testimonials`, { headers: { Authorization: `Bearer ${token}` } });
@@ -31,7 +31,9 @@ export default function AdminTestimonials() {
             if (data.success) setTestimonials(data.data);
         } catch (err) { setError('Failed to fetch testimonials'); }
         finally { setLoading(false); }
-    };
+    }, [API_URL]);
+
+    useEffect(() => { fetchTestimonials(); }, [fetchTestimonials]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();

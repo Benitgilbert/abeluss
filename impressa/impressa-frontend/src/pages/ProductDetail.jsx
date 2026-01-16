@@ -93,7 +93,7 @@ export default function ProductDetail() {
         setLoading(false);
       }
     })();
-  }, [id]);
+  }, [id, showError]);
 
   const handleSubmitReview = async () => {
     try {

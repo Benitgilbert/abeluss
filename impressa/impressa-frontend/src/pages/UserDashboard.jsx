@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../utils/axiosInstance";
 import Header from "../components/Header";
@@ -32,11 +32,7 @@ function UserDashboard() {
 
   const provinces = getProvinces(); // Static list
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const [profileRes, ordersRes] = await Promise.all([
         api.get("/auth/me"),
@@ -52,8 +48,8 @@ function UserDashboard() {
       const billing = profileRes.data.billingAddress || {};
       const shipping = profileRes.data.shippingAddress || {};
 
-      setBillingAddress({ ...billingAddress, ...billing });
-      setShippingAddress({ ...shippingAddress, ...shipping });
+      setBillingAddress(prev => ({ ...prev, ...billing }));
+      setShippingAddress(prev => ({ ...prev, ...shipping }));
 
       // Pre-load options if data exists
       setLocationOptions({
@@ -76,7 +72,11 @@ function UserDashboard() {
       if (error.response?.status === 401) navigate("/login");
       setLoading(false);
     }
-  };
+  }, [navigate]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");

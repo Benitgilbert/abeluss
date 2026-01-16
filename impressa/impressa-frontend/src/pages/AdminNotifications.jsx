@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import api from "../utils/axiosInstance";
@@ -10,20 +10,20 @@ const AdminNotifications = () => {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState("all");
 
-    useEffect(() => {
-        fetchNotifications();
-        const interval = setInterval(() => fetchNotifications(true), 5000);
-        return () => clearInterval(interval);
-    }, [filter]);
-
-    const fetchNotifications = async (isPolling = false) => {
+    const fetchNotifications = useCallback(async (isPolling = false) => {
         try {
             if (!isPolling) setLoading(true);
             const res = await api.get(`/notifications?unreadOnly=${filter === 'unread'}`);
             if (res.data.success) { setNotifications(res.data.data); }
         } catch (error) { console.error("Failed to fetch notifications:", error); }
         finally { if (!isPolling) setLoading(false); }
-    };
+    }, [filter]);
+
+    useEffect(() => {
+        fetchNotifications();
+        const interval = setInterval(() => fetchNotifications(true), 5000);
+        return () => clearInterval(interval);
+    }, [fetchNotifications]);
 
     const handleMarkAsRead = async (id) => {
         try {

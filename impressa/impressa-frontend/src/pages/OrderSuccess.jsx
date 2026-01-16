@@ -1,19 +1,9 @@
-import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { LuCircleCheck, LuTruck, LuShoppingBag } from "react-icons/lu";
-import api from "../utils/axiosInstance";
 import Header from "../components/Header";
 import LandingFooter from "../components/LandingFooter";
-
 export default function OrderSuccess() {
     const { id } = useParams();
-    const [order, setOrder] = useState(null);
-    const [loading, setLoading] = useState(true);
-
-    // Intentionally skipped complex fetching for now to ensure stability
-    useEffect(() => {
-        setLoading(false);
-    }, []);
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-slate-950">

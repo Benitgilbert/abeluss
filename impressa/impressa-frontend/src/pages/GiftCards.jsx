@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Header from "../components/Header";
 import LandingFooter from "../components/LandingFooter";
 import { FaGift, FaSearch, FaCheckCircle, FaChevronRight, FaShoppingCart, FaTimes, FaEnvelope, FaCoins } from "react-icons/fa";
-import { checkGiftCardBalance, addToCart, getGiftCardProducts } from "../services/api";
+import { checkGiftCardBalance, getGiftCardProducts } from "../services/api";
 import { useToast } from "../context/ToastContext";
 import { useCart } from "../context/CartContext";
 import { Link } from "react-router-dom";
@@ -21,8 +21,6 @@ const GiftCards = () => {
 
     // Dynamic gift card products from API
     const [giftCardOptions, setGiftCardOptions] = useState([]);
-    const [loadingProducts, setLoadingProducts] = useState(true);
-
     // Fetch gift card products on mount
     useEffect(() => {
         const fetchProducts = async () => {
@@ -38,8 +36,6 @@ const GiftCards = () => {
                     { _id: "gc100", amount: 100000, label: "Luxury", color: "from-charcoal-700 to-charcoal-900" },
                     { _id: "gc_custom", amount: 0, label: "Custom", color: "from-emerald-500 to-teal-600", isCustom: true },
                 ]);
-            } finally {
-                setLoadingProducts(false);
             }
         };
         fetchProducts();

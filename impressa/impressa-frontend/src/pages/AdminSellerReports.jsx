@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     FaFileAlt, FaDownload, FaStore, FaCalendarAlt,
     FaArrowUp, FaArrowDown, FaShoppingCart, FaStar, FaDollarSign
@@ -18,11 +18,7 @@ export default function AdminSellerReports() {
 
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
-    useEffect(() => {
-        fetchReports();
-    }, [selectedMonth]);
-
-    const fetchReports = async () => {
+    const fetchReports = useCallback(async () => {
         setLoading(true);
         setError('');
         try {
@@ -44,7 +40,11 @@ export default function AdminSellerReports() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [selectedMonth, API_URL]);
+
+    useEffect(() => {
+        fetchReports();
+    }, [fetchReports]);
 
     const getScoreBadge = (score) => {
         let colorClasses = 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400 border-red-200 dark:border-red-800';

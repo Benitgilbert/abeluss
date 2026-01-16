@@ -9,7 +9,6 @@ const SellerProfile = () => {
     const { addToast } = useToast();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [user, setUser] = useState(null);
     const [formData, setFormData] = useState({
         name: "",
         email: "",
@@ -25,33 +24,32 @@ const SellerProfile = () => {
     });
 
     useEffect(() => {
-        fetchProfile();
-    }, []);
+        const fetchProfile = async () => {
+            try {
+                const res = await api.get("/auth/me");
+                setFormData({
+                    name: res.data.name || "",
+                    email: res.data.email || "",
+                    storeName: res.data.storeName || "",
+                    storeDescription: res.data.storeDescription || "",
+                    storePhone: res.data.storePhone || "",
+                    profileImage: null,
+                    storeLogo: null
+                });
+                setPreviews({
+                    profileImage: res.data.profileImage,
+                    storeLogo: res.data.storeLogo
+                });
+            } catch (err) {
+                console.error("Failed to load profile", err);
+                addToast("Failed to load profile data", "error");
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    const fetchProfile = async () => {
-        try {
-            const res = await api.get("/auth/me");
-            setUser(res.data);
-            setFormData({
-                name: res.data.name || "",
-                email: res.data.email || "",
-                storeName: res.data.storeName || "",
-                storeDescription: res.data.storeDescription || "",
-                storePhone: res.data.storePhone || "",
-                profileImage: null,
-                storeLogo: null
-            });
-            setPreviews({
-                profileImage: res.data.profileImage,
-                storeLogo: res.data.storeLogo
-            });
-        } catch (err) {
-            console.error("Failed to load profile", err);
-            addToast("Failed to load profile data", "error");
-        } finally {
-            setLoading(false);
-        }
-    };
+        fetchProfile();
+    }, [addToast]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -81,11 +79,10 @@ const SellerProfile = () => {
             if (formData.profileImage) data.append("profileImage", formData.profileImage);
             if (formData.storeLogo) data.append("storeLogo", formData.storeLogo);
 
-            const res = await api.put("/auth/profile", data, {
+            await api.put("/auth/profile", data, {
                 headers: { "Content-Type": "multipart/form-data" }
             });
 
-            setUser(res.data);
             addToast("Profile updated successfully!", "success");
         } catch (err) {
             console.error("Failed to update profile", err);

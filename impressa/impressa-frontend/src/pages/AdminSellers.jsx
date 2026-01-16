@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
-    FaStore, FaSearch, FaCheck, FaTimes, FaEye, FaTrash,
-    FaUsers, FaUserCheck, FaClock, FaUserTimes,
-    FaChevronLeft, FaChevronRight, FaBox, FaChartLine,
-    FaEdit, FaExclamationTriangle, FaFilter, FaDownload, FaBan, FaCheckDouble, FaEnvelope,
-    FaUser, FaFileAlt, FaIdCard, FaBuilding, FaExclamationCircle
+    FaSearch, FaEye, FaTrash, FaUserCheck, FaClock, FaUserTimes,
+    FaStore, FaUsers, FaChevronLeft, FaChevronRight, FaTimes, FaUser,
+    FaFileAlt, FaChartLine, FaBox, FaIdCard, FaBuilding, FaDownload,
+    FaExclamationCircle, FaCheck, FaEnvelope
 } from 'react-icons/fa';
 import Sidebar from '../components/Sidebar';
 import Topbar from '../components/Topbar';
@@ -28,11 +27,7 @@ export default function AdminSellers() {
     const [rejectionReason, setRejectionReason] = useState('');
     const [processing, setProcessing] = useState(false);
 
-    useEffect(() => {
-        fetchSellers();
-    }, [currentPage, statusFilter]);
-
-    const fetchSellers = async () => {
+    const fetchSellers = useCallback(async () => {
         setLoading(true);
         try {
             const params = new URLSearchParams({
@@ -58,7 +53,11 @@ export default function AdminSellers() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentPage, statusFilter, searchTerm]);
+
+    useEffect(() => {
+        fetchSellers();
+    }, [fetchSellers]);
 
     const handleSearch = (e) => {
         e.preventDefault();

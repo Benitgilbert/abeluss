@@ -25,8 +25,6 @@ const FinanceDashboard = () => {
     const [summary, setSummary] = useState(null);
     const [activeTab, setActiveTab] = useState("overview");
 
-    useEffect(() => { fetchSummary(); }, [fetchSummary]);
-
     const fetchSummary = useCallback(async () => {
         try {
             const res = await axios.get("/finance/summary");
@@ -35,6 +33,8 @@ const FinanceDashboard = () => {
             console.error("Failed to fetch financial summary");
         }
     }, []);
+
+    useEffect(() => { fetchSummary(); }, [fetchSummary]);
 
     if (!summary) {
         return (

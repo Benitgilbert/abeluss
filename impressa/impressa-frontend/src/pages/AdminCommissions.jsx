@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     FaPercent, FaSave, FaDollarSign, FaCalendarAlt,
     FaUsers, FaMoneyBillWave, FaCog, FaChartLine
@@ -17,10 +17,7 @@ export default function AdminCommissions() {
 
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
-    useEffect(() => { fetchData(); }, []);
-    useEffect(() => { if (error || success) { const t = setTimeout(() => { setError(''); setSuccess(''); }, 3000); return () => clearTimeout(t); } }, [error, success]);
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             const token = localStorage.getItem('authToken');
             const [settingsRes, dashRes] = await Promise.all([
@@ -33,7 +30,10 @@ export default function AdminCommissions() {
             if (dashData.success) setDashboard(dashData.data);
         } catch (err) { setError('Failed to load commission data'); }
         finally { setLoading(false); }
-    };
+    }, [API_URL]);
+
+    useEffect(() => { fetchData(); }, [fetchData]);
+    useEffect(() => { if (error || success) { const t = setTimeout(() => { setError(''); setSuccess(''); }, 3000); return () => clearTimeout(t); } }, [error, success]);
 
     const handleSaveSettings = async (e) => {
         e.preventDefault();

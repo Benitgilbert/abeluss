@@ -10,12 +10,6 @@ const SellerOrders = () => {
     const [loading, setLoading] = useState(true);
     const [filterStatus, setFilterStatus] = useState("all");
 
-    useEffect(() => {
-        fetchOrders();
-        const interval = setInterval(() => fetchOrders(true), 10000); // 10s polling
-        return () => clearInterval(interval);
-    }, [fetchOrders]);
-
     const fetchOrders = useCallback(async (isPolling = false) => {
         try {
             if (!isPolling) setLoading(true);
@@ -29,6 +23,12 @@ const SellerOrders = () => {
             if (!isPolling) setLoading(false);
         }
     }, []);
+
+    useEffect(() => {
+        fetchOrders();
+        const interval = setInterval(() => fetchOrders(true), 10000); // 10s polling
+        return () => clearInterval(interval);
+    }, [fetchOrders]);
 
     const getStatusBadge = (status) => {
         const badges = {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import api from "../utils/axiosInstance";
 import assetUrl from "../utils/assetUrl";
 import { FaSearch, FaShoppingCart, FaTrash, FaPlus, FaMinus, FaMoneyBillWave, FaMobileAlt, FaBoxOpen, FaStore, FaBarcode, FaTimes } from "react-icons/fa";
@@ -53,42 +53,22 @@ export default function SellerPOS() {
     const [completedOrder, setCompletedOrder] = useState(null);
     const [scanError, setScanError] = useState("");
 
-    useEffect(() => {
-        fetchProducts();
-        fetchSellerInfo();
+    const addToCart = useCallback((product) => {
+        if (product.stock <= 0) return;
+        setCart(prevCart => {
+            const existing = prevCart.find((item) => item._id === product._id);
+            if (existing) {
+                if (existing.quantity >= product.stock) return prevCart;
+                return prevCart.map((item) =>
+                    item._id === product._id ? { ...item, quantity: item.quantity + 1 } : item
+                );
+            } else {
+                return [...prevCart, { ...product, quantity: 1 }];
+            }
+        });
     }, []);
 
-    // Barcode scanner detection - rapid keypresses
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            const now = Date.now();
-
-            // If Enter is pressed, check if we have a barcode
-            if (e.key === 'Enter' && scanBuffer.length >= 4) {
-                e.preventDefault();
-                handleBarcodeScan(scanBuffer);
-                setScanBuffer("");
-                return;
-            }
-
-            // If keystroke is fast (< 50ms) and alphanumeric, it's likely a scanner
-            if (now - lastKeyTime < 50) {
-                if (/^[a-zA-Z0-9\-]$/.test(e.key)) {
-                    setScanBuffer(prev => prev + e.key);
-                }
-            } else {
-                // Too slow, reset buffer
-                setScanBuffer(e.key);
-            }
-
-            setLastKeyTime(now);
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [scanBuffer, lastKeyTime, products]);
-
-    const handleBarcodeScan = async (barcode) => {
+    const handleBarcodeScan = useCallback(async (barcode) => {
         setScanError("");
 
         // First check if product is in local list
@@ -114,17 +94,9 @@ export default function SellerPOS() {
             setScanError(`Product not found: ${barcode}`);
             setTimeout(() => setScanError(""), 3000);
         }
-    };
+    }, [products, addToCart]);
 
-    // Manual barcode entry via search
-    const handleSearchKeyDown = (e) => {
-        if (e.key === 'Enter' && searchTerm.length >= 4) {
-            handleBarcodeScan(searchTerm);
-            setSearchTerm("");
-        }
-    };
-
-    const fetchProducts = async () => {
+    const fetchProducts = useCallback(async () => {
         setLoading(true);
         try {
             const res = await api.get("/orders/seller/pos-products");
@@ -136,31 +108,65 @@ export default function SellerPOS() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
-    const fetchSellerInfo = async () => {
+    const fetchSellerInfo = useCallback(async () => {
         try {
             const res = await api.get("/auth/me");
             setSeller(res.data);
         } catch (err) {
             console.error("Failed to fetch seller info");
         }
-    };
+    }, []);
 
-    const addToCart = (product) => {
-        if (product.stock <= 0) return;
-        const existing = cart.find((item) => item._id === product._id);
-        if (existing) {
-            if (existing.quantity >= product.stock) return;
-            setCart(
-                cart.map((item) =>
-                    item._id === product._id ? { ...item, quantity: item.quantity + 1 } : item
-                )
-            );
-        } else {
-            setCart([...cart, { ...product, quantity: 1 }]);
+    useEffect(() => {
+        fetchProducts();
+        fetchSellerInfo();
+    }, [fetchProducts, fetchSellerInfo]);
+
+    // Barcode scanner detection - rapid keypresses
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            const now = Date.now();
+
+            // If Enter is pressed, check if we have a barcode
+            if (e.key === 'Enter' && scanBuffer.length >= 4) {
+                e.preventDefault();
+                handleBarcodeScan(scanBuffer);
+                setScanBuffer("");
+                return;
+            }
+
+            // If keystroke is fast (< 50ms) and alphanumeric, it's likely a scanner
+            if (now - lastKeyTime < 50) {
+                if (/^[a-zA-Z0-9-]$/.test(e.key)) {
+                    setScanBuffer(prev => prev + e.key);
+                }
+            } else {
+                // Too slow, reset buffer
+                setScanBuffer(e.key);
+            }
+
+            setLastKeyTime(now);
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [scanBuffer, lastKeyTime, handleBarcodeScan]);
+
+
+
+    // Manual barcode entry via search
+    const handleSearchKeyDown = (e) => {
+        if (e.key === 'Enter' && searchTerm.length >= 4) {
+            handleBarcodeScan(searchTerm);
+            setSearchTerm("");
         }
     };
+
+
+
+
 
     const removeFromCart = (productId) => {
         setCart(cart.filter((item) => item._id !== productId));
@@ -283,7 +289,7 @@ export default function SellerPOS() {
             }, 3000);
         }
         return () => clearInterval(interval);
-    }, [pendingOrder]);
+    }, [pendingOrder, cart, seller, fetchProducts]);
 
     const handleReceiptClose = () => {
         setShowReceipt(false);

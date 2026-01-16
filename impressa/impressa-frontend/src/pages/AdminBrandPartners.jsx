@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     FaPlus, FaEdit, FaTrash, FaTimes,
     FaHandshake, FaLink, FaToggleOn, FaToggleOff,
@@ -19,12 +19,8 @@ export default function AdminBrandPartners() {
     const [logoFile, setLogoFile] = useState(null);
 
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-    const BASE_URL = API_URL.replace(/\/api$/, '');
 
-    useEffect(() => { fetchPartners(); }, []);
-    useEffect(() => { if (error || success) { const t = setTimeout(() => { setError(''); setSuccess(''); }, 3000); return () => clearTimeout(t); } }, [error, success]);
-
-    const fetchPartners = async () => {
+    const fetchPartners = useCallback(async () => {
         try {
             const token = localStorage.getItem('authToken');
             const res = await fetch(`${API_URL}/brand-partners`, { headers: { Authorization: `Bearer ${token}` } });
@@ -32,7 +28,10 @@ export default function AdminBrandPartners() {
             if (data.success) setPartners(data.data);
         } catch (err) { setError('Failed to fetch brand partners'); }
         finally { setLoading(false); }
-    };
+    }, [API_URL]);
+
+    useEffect(() => { fetchPartners(); }, [fetchPartners]);
+    useEffect(() => { if (error || success) { const t = setTimeout(() => { setError(''); setSuccess(''); }, 3000); return () => clearTimeout(t); } }, [error, success]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();

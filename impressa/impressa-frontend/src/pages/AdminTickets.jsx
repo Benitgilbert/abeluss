@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     FaTicketAlt, FaEye, FaReply, FaTrash,
     FaClock, FaCheckCircle, FaSpinner, FaExclamationTriangle,
@@ -24,9 +24,7 @@ export default function AdminTickets() {
 
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
-    useEffect(() => { fetchTickets(); }, [currentPage, statusFilter]);
-
-    const fetchTickets = async () => {
+    const fetchTickets = useCallback(async () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('authToken');
@@ -36,7 +34,9 @@ export default function AdminTickets() {
             if (data.success) { setTickets(data.data); setStats(data.stats); setTotalPages(data.pagination.pages); }
         } catch (err) { setError('Failed to fetch tickets'); }
         finally { setLoading(false); }
-    };
+    }, [currentPage, statusFilter, API_URL]);
+
+    useEffect(() => { fetchTickets(); }, [fetchTickets]);
 
     const viewTicketDetails = async (id) => {
         try {

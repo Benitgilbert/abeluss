@@ -6,7 +6,7 @@ import { formatRwf } from "../utils/currency";
 import api from "../utils/axiosInstance";
 import { getProvinces, getDistricts, getSectors, getCells } from "../utils/locationHelpers";
 import { useToast } from "../context/ToastContext";
-import { FaShoppingCart, FaCreditCard, FaMoneyBillWave, FaLock, FaHeart, FaSearch, FaTruck, FaMobileAlt, FaGift } from "react-icons/fa";
+import { FaShoppingCart, FaCreditCard, FaMoneyBillWave, FaLock, FaTruck, FaMobileAlt, FaGift } from "react-icons/fa";
 import LandingFooter from "../components/LandingFooter";
 import Header from "../components/Header";
 
@@ -108,7 +108,7 @@ export default function CheckoutPage() {
     if (formData.district) {
       fetchShipping();
     }
-  }, [formData.district, formData.province, totals.subtotal, items]);
+  }, [formData.district, formData.province, formData.sector, formData.cell, totals.subtotal, items]);
 
   // Fetch tax calculation when shipping/subtotal changes
   useEffect(() => {
@@ -129,7 +129,7 @@ export default function CheckoutPage() {
     };
 
     fetchTax();
-  }, [formData.district, formData.province, totals.subtotal, totals.discount, shippingCost]);
+  }, [formData.district, formData.province, formData.sector, formData.cell, totals.subtotal, totals.discount, shippingCost]);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

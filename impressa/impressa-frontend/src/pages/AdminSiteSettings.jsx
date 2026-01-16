@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     FaSave, FaTimes, FaPlus, FaTrash, FaEdit, FaCog,
     FaTruck, FaShieldAlt, FaUndo, FaHeadset, FaStar, FaHeart, FaCheck, FaClock,
@@ -27,7 +27,8 @@ export default function AdminSiteSettings() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [showModal, setShowModal] = useState(false);
-    const [editingBadge, setEditingBadge] = useState(null);
+    // const [editingBadge, setEditingBadge] = useState(null); // Unused
+
     const [editingIndex, setEditingIndex] = useState(-1);
 
     const [badgeForm, setBadgeForm] = useState({ icon: 'truck', title: '', description: '', isActive: true });
@@ -38,9 +39,9 @@ export default function AdminSiteSettings() {
     });
 
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-    const BASE_URL = API_URL.replace(/\/api$/, '');
 
-    useEffect(() => { fetchSettings(); }, []);
+
+
     useEffect(() => {
         if (settings) {
             setFooterForm({
@@ -53,7 +54,7 @@ export default function AdminSiteSettings() {
     }, [settings]);
     useEffect(() => { if (error || success) { const t = setTimeout(() => { setError(''); setSuccess(''); }, 3000); return () => clearTimeout(t); } }, [error, success]);
 
-    const fetchSettings = async () => {
+    const fetchSettings = useCallback(async () => {
         try {
             const token = localStorage.getItem('authToken');
             const res = await fetch(`${API_URL}/site-settings`, { headers: { Authorization: `Bearer ${token}` } });
@@ -61,7 +62,9 @@ export default function AdminSiteSettings() {
             if (data.success) setSettings(data.data);
         } catch (err) { setError('Failed to fetch settings'); }
         finally { setLoading(false); }
-    };
+    }, [API_URL]);
+
+    useEffect(() => { fetchSettings(); }, [fetchSettings]);
 
     const saveTrustBadges = async (badges) => {
         setSaving(true); setError('');
@@ -94,8 +97,8 @@ export default function AdminSiteSettings() {
         finally { setSaving(false); }
     };
 
-    const handleAddBadge = () => { setEditingBadge(null); setEditingIndex(-1); setBadgeForm({ icon: 'truck', title: '', description: '', isActive: true }); setShowModal(true); };
-    const handleEditBadge = (badge, index) => { setEditingBadge(badge); setEditingIndex(index); setBadgeForm({ icon: badge.icon, title: badge.title, description: badge.description, isActive: badge.isActive }); setShowModal(true); };
+    const handleAddBadge = () => { setEditingIndex(-1); setBadgeForm({ icon: 'truck', title: '', description: '', isActive: true }); setShowModal(true); };
+    const handleEditBadge = (badge, index) => { setEditingIndex(index); setBadgeForm({ icon: badge.icon, title: badge.title, description: badge.description, isActive: badge.isActive }); setShowModal(true); };
     const handleSaveBadge = (e) => {
         e.preventDefault();
         const updatedBadges = [...(settings?.trustBadges || [])];

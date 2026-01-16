@@ -9,18 +9,13 @@ export function CartProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { showSuccess } = useToast();
-  // Local-only mapping of files per cart line item index
-  const [files, setFiles] = useState([]);
 
-  const syncFilesWithCart = useCallback((nextCart) => {
-    const length = nextCart?.items?.length || 0;
-    setFiles((prev) => prev.slice(0, length));
-  }, []);
+
+
 
   const setCartSafe = useCallback((nextCart) => {
     setCart(nextCart);
-    syncFilesWithCart(nextCart);
-  }, [syncFilesWithCart]);
+  }, []);
 
   const fetchCart = useCallback(async () => {
     try {
@@ -191,13 +186,7 @@ export function CartProvider({ children }) {
     return updateItem(productId, quantity);
   };
 
-  const setFile = (index, file) => {
-    setFiles((prev) => {
-      const next = [...prev];
-      next[index] = file || null;
-      return next;
-    });
-  };
+
 
   // const getFile = (index) => files[index] || null; // REMOVED unused
 
@@ -234,7 +223,6 @@ export function CartProvider({ children }) {
     applyCoupon,
     removeCoupon,
     updateQty,
-    setFile,
     removeMany,
     sessionToken: cart?.sessionToken || null,
     mergeCart: async () => {
