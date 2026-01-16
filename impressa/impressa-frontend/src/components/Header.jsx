@@ -14,7 +14,8 @@ import {
   LuUser,
   LuLogOut,
   LuMenu,
-  LuX
+  LuX,
+  LuGift
 } from "react-icons/lu";
 import RoleSwitcher from "./RoleSwitcher";
 import api from "../utils/axiosInstance";
@@ -167,6 +168,7 @@ export default function Header() {
 
             <Link to="/shop" className="px-3 py-2 text-sm font-medium text-cream-300 hover:text-white transition-colors">Shop</Link>
             <Link to="/daily-deals" className="px-3 py-2 text-sm font-medium text-sand-400 hover:text-sand-300 transition-colors">Deals</Link>
+            <Link to="/gift-cards" className="px-3 py-2 text-sm font-medium text-terracotta-400 hover:text-terracotta-300 transition-colors">Gift Cards</Link>
             <Link to="/track" className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-cream-300 hover:text-white transition-colors">
               <LuTruck className="w-4 h-4" /> Track
             </Link>
@@ -349,6 +351,13 @@ export default function Header() {
                   className="p-4 rounded-xl bg-charcoal-800 text-sand-400 font-medium hover:bg-charcoal-700"
                 >
                   Daily Deals
+                </Link>
+                <Link
+                  to="/gift-cards"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-4 rounded-xl bg-charcoal-800 text-terracotta-400 font-medium hover:bg-charcoal-700 flex items-center gap-2"
+                >
+                  <LuGift className="w-4 h-4" /> Gift Cards
                 </Link>
                 <Link
                   to="/track"

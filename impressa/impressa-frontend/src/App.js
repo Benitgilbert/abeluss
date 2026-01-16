@@ -59,6 +59,8 @@ import SellerProducts from "./pages/SellerProducts";
 // SellerAddProduct removed
 
 import AdminCustomerQueries from "./pages/AdminCustomerQueries";
+import AdminBlogs from "./pages/admin/AdminBlogs";
+import AdminBlogEditor from "./pages/admin/AdminBlogEditor";
 import SellerOrders from "./pages/SellerOrders";
 import SellerPayouts from "./pages/SellerPayouts";
 import SellerProfile from "./pages/SellerProfile";
@@ -299,6 +301,21 @@ function App() {
                   <Route path="/admin/seller-verification" element={
                     <ProtectedRoute allowedRoles={['admin']}>
                       <AdminSellerVerification />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/blogs" element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                      <AdminBlogs />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/blogs/new" element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                      <AdminBlogEditor />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/blogs/edit/:id" element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                      <AdminBlogEditor />
                     </ProtectedRoute>
                   } />
                   <Route path="/admin/violations" element={
