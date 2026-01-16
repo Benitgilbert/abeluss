@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "../../utils/axiosInstance";
 import { FaSearch, FaShoppingCart, FaTrash, FaPlus, FaMinus, FaMoneyBillWave, FaMobileAlt, FaBoxOpen, FaSpinner } from "react-icons/fa";
 import Sidebar from "../../components/Sidebar";
@@ -18,7 +18,7 @@ const POS = () => {
 
     useEffect(() => {
         fetchProducts();
-    }, []);
+    }, [fetchProducts]);
 
     // Polling for Payment Status
     useEffect(() => {
@@ -50,7 +50,7 @@ const POS = () => {
             }, 3000); // Poll every 3 seconds
         }
         return () => clearInterval(interval);
-    }, [pendingOrder]);
+    }, [pendingOrder, fetchProducts]);
 
     const showSuccessNotification = (message) => {
         const successMsg = document.createElement("div");
@@ -60,7 +60,7 @@ const POS = () => {
         setTimeout(() => successMsg.remove(), 3000);
     };
 
-    const fetchProducts = async () => {
+    const fetchProducts = useCallback(async () => {
         setLoading(true);
         try {
             // Fetch only Impressa's own products (admin-owned)
@@ -76,7 +76,7 @@ const POS = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     const addToCart = (product) => {
         if (product.stock <= 0) return;

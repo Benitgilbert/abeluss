@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-    FaFileAlt, FaSearch, FaCheck, FaTimes, FaEye,
+    FaFileAlt, FaCheck, FaTimes, FaEye,
     FaClock, FaCheckCircle, FaTimesCircle, FaBuilding,
     FaIdCard, FaPhone, FaEnvelope, FaDownload, FaUser
 } from 'react-icons/fa';
@@ -13,7 +13,6 @@ export default function AdminSellerVerification() {
     const [stats, setStats] = useState({ pending: 0, approved: 0, rejected: 0 });
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState('pending_review');
-    const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [error, setError] = useState('');

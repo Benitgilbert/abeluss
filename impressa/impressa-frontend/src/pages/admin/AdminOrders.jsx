@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import api from "../../utils/axiosInstance";
 import {
@@ -30,9 +30,9 @@ const AdminOrders = () => {
         fetchOrders();
         const interval = setInterval(() => fetchOrders(true), 10000); // 10s polling
         return () => clearInterval(interval);
-    }, [page, statusFilter, debouncedSearch]);
+    }, [fetchOrders]);
 
-    const fetchOrders = async (isPolling = false) => {
+    const fetchOrders = useCallback(async (isPolling = false) => {
         if (!isPolling) setLoading(true);
         try {
             const params = {
@@ -49,7 +49,7 @@ const AdminOrders = () => {
             console.error("Failed to fetch orders:", error);
             setLoading(false);
         }
-    };
+    }, [page, statusFilter, debouncedSearch]);
 
     const getStatusBadge = (status) => {
         const baseClasses = "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold capitalize";

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-    FaChartLine, FaFileAlt, FaDownload, FaStore, FaCalendarAlt,
+    FaFileAlt, FaDownload, FaStore, FaCalendarAlt,
     FaArrowUp, FaArrowDown, FaShoppingCart, FaStar, FaDollarSign
 } from 'react-icons/fa';
 import Sidebar from '../components/Sidebar';

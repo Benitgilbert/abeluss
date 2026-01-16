@@ -392,7 +392,7 @@ export const formatCurrency = (amount) => {
   return `${n.toLocaleString()} RWF`;
 };
 
-export default {
+const apiService = {
   // Cart
   getCart,
   addToCart,
@@ -444,3 +444,5 @@ export default {
   validatePhoneNumber,
   formatCurrency,
 };
+
+export default apiService;

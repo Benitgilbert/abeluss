@@ -8,14 +8,14 @@ export function CartProvider({ children }) {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { showSuccess, showError } = useToast();
+  const { showSuccess } = useToast();
   // Local-only mapping of files per cart line item index
   const [files, setFiles] = useState([]);
 
   // Fetch cart on mount
   useEffect(() => {
     fetchCart();
-  }, []);
+  }, [fetchCart]);
 
   const syncFilesWithCart = (nextCart) => {
     const length = nextCart?.items?.length || 0;
@@ -27,7 +27,7 @@ export function CartProvider({ children }) {
     syncFilesWithCart(nextCart);
   };
 
-  const fetchCart = async () => {
+  const fetchCart = useCallback(async () => {
     try {
       setLoading(true);
       const payload = await api.getCart(); // { success, data: cartDoc, sessionToken }
@@ -39,7 +39,7 @@ export function CartProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   /**
    * Add item to cart.
@@ -199,7 +199,7 @@ export function CartProvider({ children }) {
     });
   };
 
-  const getFile = (index) => files[index] || null;
+  // const getFile = (index) => files[index] || null; // REMOVED unused
 
   const removeMany = async (indices) => {
     const uniqueIndices = Array.from(new Set(indices)).sort((a, b) => a - b);

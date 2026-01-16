@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import api from "../utils/axiosInstance";
-import { FaArrowLeft, FaBox, FaTruck, FaMapMarkerAlt, FaUser, FaCreditCard } from "react-icons/fa";
+import { FaArrowLeft, FaBox, FaMapMarkerAlt, FaUser, FaCreditCard } from "react-icons/fa";
 import SellerSidebar from "../components/SellerSidebar";
 import Header from "../components/Header";
 
@@ -14,19 +14,19 @@ const SellerOrderDetails = () => {
     const [addingNote, setAddingNote] = useState(false);
 
     useEffect(() => {
+        const fetchOrderDetails = async () => {
+            try {
+                const { data } = await api.get(`/orders/${id}`);
+                setOrder(data);
+                setLoading(false);
+            } catch (error) {
+                console.error("Failed to fetch order details:", error);
+                setLoading(false);
+            }
+        };
+
         fetchOrderDetails();
     }, [id]);
-
-    const fetchOrderDetails = async () => {
-        try {
-            const { data } = await api.get(`/orders/${id}`);
-            setOrder(data);
-            setLoading(false);
-        } catch (error) {
-            console.error("Failed to fetch order details:", error);
-            setLoading(false);
-        }
-    };
 
     const handleStatusUpdate = async (newStatus) => {
         // Removed window.confirm to fix popup issue

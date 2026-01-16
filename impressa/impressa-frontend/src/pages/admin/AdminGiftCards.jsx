@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
     FaSearch, FaFilter, FaGift, FaChevronLeft, FaChevronRight,
     FaCalendarAlt, FaEnvelope, FaBan, FaCheckCircle,
@@ -48,9 +48,9 @@ const AdminGiftCards = () => {
 
     useEffect(() => {
         fetchGiftCards();
-    }, [page, statusFilter, debouncedSearch]);
+    }, [fetchGiftCards]);
 
-    const fetchGiftCards = async () => {
+    const fetchGiftCards = useCallback(async () => {
         setLoading(true);
         try {
             const params = {
@@ -68,7 +68,7 @@ const AdminGiftCards = () => {
             showError("Failed to load gift cards");
             setLoading(false);
         }
-    };
+    }, [page, statusFilter, debouncedSearch, showError]);
 
     const handleStatusUpdate = async (id, newStatus) => {
         try {

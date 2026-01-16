@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FaPlus, FaEdit, FaTrash, FaImage, FaTimes, FaFolder, FaCheck } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaSearch, FaFolder, FaImage, FaTimes } from "react-icons/fa";
 import api from '../utils/axiosInstance';
 import Sidebar from '../components/Sidebar';
 import Topbar from '../components/Topbar';

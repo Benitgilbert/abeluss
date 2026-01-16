@@ -1,8 +1,9 @@
+
 import { useState, useEffect } from "react";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import api from "../utils/axiosInstance";
-import { FaTrash, FaEdit, FaPlus, FaCloudDownloadAlt, FaGlobeAfrica, FaPercentage, FaCheck, FaTimes, FaMapMarkerAlt, FaShippingFast } from "react-icons/fa";
+import { FaTrash, FaEdit, FaPlus, FaCloudDownloadAlt, FaGlobeAfrica, FaPercentage, FaCheck, FaTimes, FaShippingFast } from "react-icons/fa";
 
 function AdminTax() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -33,7 +34,7 @@ function AdminTax() {
 
     const handleDelete = async (id) => {
         if (window.confirm("Are you sure you want to delete this tax rate?")) {
-            try { await api.delete(`/taxes/${id}`); setSuccess("Tax rate deleted"); fetchRates(); } catch (error) { console.error("Error deleting rate:", error); setError("Failed to delete rate"); }
+            try { await api.delete(`/ taxes / ${id} `); setSuccess("Tax rate deleted"); fetchRates(); } catch (error) { console.error("Error deleting rate:", error); setError("Failed to delete rate"); }
         }
     };
 
@@ -57,7 +58,7 @@ function AdminTax() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            if (isEdit) await api.put(`/taxes/${editId}`, formData);
+            if (isEdit) await api.put(`/ taxes / ${editId} `, formData);
             else await api.post("/taxes", formData);
             setShowModal(false); resetForm(); fetchRates(); setSuccess(isEdit ? "Tax rate updated" : "Tax rate added");
         } catch (error) { console.error("Error saving rate:", error); setError("Failed to save tax rate"); }

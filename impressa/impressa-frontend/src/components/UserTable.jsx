@@ -11,7 +11,7 @@ function UserTable({ onCreate }) {
   const [sortKey, setSortKey] = useState("name");
   const [sortDir, setSortDir] = useState("asc");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize] = useState(10);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [editingUser, setEditingUser] = useState(null);
@@ -177,8 +177,8 @@ function UserTable({ onCreate }) {
       {/* Message */}
       {message && (
         <div className={`mb-4 p-4 rounded-xl text-sm ${message.startsWith("success")
-            ? "bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 text-sage-700 dark:text-sage-400"
-            : "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400"
+          ? "bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 text-sage-700 dark:text-sage-400"
+          : "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400"
           }`}>
           {message.split(":")[1]}
         </div>
@@ -319,8 +319,8 @@ function UserTable({ onCreate }) {
             disabled={page === 1}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${page === 1
-                ? "bg-cream-100 dark:bg-charcoal-700 text-charcoal-400 cursor-not-allowed"
-                : "bg-white dark:bg-charcoal-700 border border-cream-200 dark:border-charcoal-600 text-charcoal-700 dark:text-white hover:border-terracotta-500"
+              ? "bg-cream-100 dark:bg-charcoal-700 text-charcoal-400 cursor-not-allowed"
+              : "bg-white dark:bg-charcoal-700 border border-cream-200 dark:border-charcoal-600 text-charcoal-700 dark:text-white hover:border-terracotta-500"
               }`}
           >
             Previous
@@ -329,8 +329,8 @@ function UserTable({ onCreate }) {
             disabled={page === totalPages}
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${page === totalPages
-                ? "bg-cream-100 dark:bg-charcoal-700 text-charcoal-400 cursor-not-allowed"
-                : "bg-terracotta-500 hover:bg-terracotta-600 text-white"
+              ? "bg-cream-100 dark:bg-charcoal-700 text-charcoal-400 cursor-not-allowed"
+              : "bg-terracotta-500 hover:bg-terracotta-600 text-white"
               }`}
           >
             Next

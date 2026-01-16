@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-    FaMoneyBillWave, FaSearch, FaCheck, FaTimes, FaEye,
+    FaCheck, FaTimes, FaEye,
     FaClock, FaSpinner, FaCheckCircle, FaTimesCircle,
     FaChevronLeft, FaChevronRight, FaStore, FaHandHoldingUsd, FaReceipt
 } from 'react-icons/fa';

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaArrowLeft, FaSave, FaImage, FaUpload } from "react-icons/fa";
+import { FaArrowLeft, FaSave, FaImage } from "react-icons/fa";
 import api from "../utils/axiosInstance";
 import SellerSidebar from "../components/SellerSidebar";
 import Header from "../components/Header";

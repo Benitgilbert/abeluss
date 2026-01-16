@@ -21,13 +21,14 @@ export default function LandingFooter() {
         const res = await api.get('/site-settings/public');
         const data = res.data; // Axios puts the response body in .data
         if (data.success && data.data) {
-          setFooterData({
-            footerTagline: data.data.footerTagline || footerData.footerTagline,
-            contactEmail: data.data.contactEmail || footerData.contactEmail,
-            contactPhone: data.data.contactPhone || footerData.contactPhone,
-            contactAddress: data.data.contactAddress || footerData.contactAddress,
-            socialLinks: data.data.socialLinks || footerData.socialLinks
-          });
+          setFooterData(prev => ({
+            ...prev,
+            footerTagline: data.data.footerTagline || prev.footerTagline,
+            contactEmail: data.data.contactEmail || prev.contactEmail,
+            contactPhone: data.data.contactPhone || prev.contactPhone,
+            contactAddress: data.data.contactAddress || prev.contactAddress,
+            socialLinks: data.data.socialLinks || prev.socialLinks
+          }));
         }
       } catch (error) {
         console.error('Error fetching footer settings:', error);

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import api from "../utils/axiosInstance";
@@ -13,9 +13,9 @@ function AdminCoupons() {
     const [isEdit, setIsEdit] = useState(false);
     const [editId, setEditId] = useState(null);
 
-    useEffect(() => { fetchCoupons(); }, []);
+    useEffect(() => { fetchCoupons(); }, [fetchCoupons]);
 
-    const fetchCoupons = async () => {
+    const fetchCoupons = useCallback(async () => {
         try {
             const { data } = await api.get("/coupons");
             setCoupons(data.data);
@@ -24,7 +24,7 @@ function AdminCoupons() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     const handleDelete = async (id) => {
         if (window.confirm("Are you sure you want to delete this coupon?")) {

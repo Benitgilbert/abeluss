@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import api from "../utils/axiosInstance";
-import { FaFilePdf, FaFileCsv, FaCalendarAlt, FaDownload, FaHistory, FaSearch, FaFileAlt } from "react-icons/fa";
+import { FaDownload, FaFileAlt, FaFilePdf, FaFileCsv, FaHistory, FaSearch } from "react-icons/fa";
 
 function AdminReports() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -60,7 +60,7 @@ function AdminReports() {
           if (contentType && contentType.includes('application/json')) {
             const errorData = await res.json();
             throw new Error(errorData.message || "Failed to generate PDF");
-          } else throw new Error(`Failed to generate PDF (Status: ${res.status})`);
+          } else throw new Error(`Failed to generate PDF(Status: ${res.status})`);
         }
 
         const blob = await res.blob();

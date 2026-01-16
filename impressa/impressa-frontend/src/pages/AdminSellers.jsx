@@ -3,9 +3,8 @@ import {
     FaStore, FaSearch, FaCheck, FaTimes, FaEye, FaTrash,
     FaUsers, FaUserCheck, FaClock, FaUserTimes,
     FaChevronLeft, FaChevronRight, FaBox, FaChartLine,
-    FaIdCard, FaBuilding, FaFileAlt, FaDownload, FaPhone,
-    FaEnvelope, FaUser, FaCheckCircle, FaExclamationCircle,
-    FaCalendarAlt
+    FaEdit, FaExclamationTriangle, FaFilter, FaDownload, FaBan, FaCheckDouble, FaEnvelope,
+    FaUser, FaFileAlt, FaIdCard, FaBuilding, FaExclamationCircle
 } from 'react-icons/fa';
 import Sidebar from '../components/Sidebar';
 import Topbar from '../components/Topbar';

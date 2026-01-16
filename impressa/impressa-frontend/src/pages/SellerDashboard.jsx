@@ -1,9 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
-    FaChartLine, FaDollarSign, FaBox, FaShoppingCart, FaStar,
-    FaExclamationTriangle, FaClock, FaCheckCircle, FaArrowUp,
-    FaArrowDown, FaEye, FaMoneyBillWave
+    FaChartLine, FaDollarSign, FaBox, FaShoppingCart, FaMoneyBillWave
 } from 'react-icons/fa';
 import api from '../utils/axiosInstance';
 import Topbar from '../components/Topbar';
@@ -57,9 +55,9 @@ export default function SellerDashboard() {
         fetchDashboardData();
         const interval = setInterval(() => fetchDashboardData(true), 15000); // 15s polling
         return () => clearInterval(interval);
-    }, []);
+    }, [fetchDashboardData]);
 
-    const fetchDashboardData = async (isPolling = false) => {
+    const fetchDashboardData = useCallback(async (isPolling = false) => {
         try {
             if (!isPolling) setLoading(true);
 
@@ -139,7 +137,7 @@ export default function SellerDashboard() {
         } finally {
             if (!isPolling) setLoading(false);
         }
-    };
+    }, [user]);
 
     const formatCurrency = (amount) => `RWF ${(amount || 0).toLocaleString()}`;
     const getStatusBadge = (status) => {

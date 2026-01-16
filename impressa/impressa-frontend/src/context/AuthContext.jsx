@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import api from '../utils/axiosInstance';
 
 const AuthContext = createContext();
@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [loading, setLoading] = useState(true);
 
-    const checkAuth = async () => {
+    const checkAuth = useCallback(async () => {
         const token = localStorage.getItem('authToken');
         if (token) {
             try {
@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
             setIsAuthenticated(false);
         }
         setLoading(false);
-    };
+    }, []);
 
     useEffect(() => {
         checkAuth();

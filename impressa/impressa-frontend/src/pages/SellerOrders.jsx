@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { FaEye, FaSearch, FaFilter, FaBox } from "react-icons/fa";
+import { FaEye, FaFilter, FaBox } from "react-icons/fa";
 import api from "../utils/axiosInstance";
 import SellerSidebar from "../components/SellerSidebar";
 import Header from "../components/Header";
@@ -14,9 +14,9 @@ const SellerOrders = () => {
         fetchOrders();
         const interval = setInterval(() => fetchOrders(true), 10000); // 10s polling
         return () => clearInterval(interval);
-    }, []);
+    }, [fetchOrders]);
 
-    const fetchOrders = async (isPolling = false) => {
+    const fetchOrders = useCallback(async (isPolling = false) => {
         try {
             if (!isPolling) setLoading(true);
             const res = await api.get("/orders/seller/my-orders");
@@ -28,7 +28,7 @@ const SellerOrders = () => {
         } finally {
             if (!isPolling) setLoading(false);
         }
-    };
+    }, []);
 
     const getStatusBadge = (status) => {
         const badges = {

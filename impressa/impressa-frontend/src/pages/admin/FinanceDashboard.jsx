@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "../../utils/axiosInstance";
 import { Line, Doughnut } from "react-chartjs-2";
 import {
@@ -25,16 +25,16 @@ const FinanceDashboard = () => {
     const [summary, setSummary] = useState(null);
     const [activeTab, setActiveTab] = useState("overview");
 
-    useEffect(() => { fetchSummary(); }, []);
+    useEffect(() => { fetchSummary(); }, [fetchSummary]);
 
-    const fetchSummary = async () => {
+    const fetchSummary = useCallback(async () => {
         try {
             const res = await axios.get("/finance/summary");
             setSummary(res.data);
         } catch (err) {
             console.error("Failed to fetch financial summary");
         }
-    };
+    }, []);
 
     if (!summary) {
         return (

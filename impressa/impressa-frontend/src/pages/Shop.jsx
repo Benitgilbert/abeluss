@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
-  FaSearch, FaHeart, FaShoppingCart, FaStar, FaStarHalfAlt, FaTshirt, FaRegHeart, FaFilter, FaTimes
+  FaSearch, FaHeart, FaShoppingCart, FaStar, FaTshirt, FaRegHeart, FaFilter, FaTimes
 } from "react-icons/fa";
 import { LuSlidersHorizontal, LuSparkles, LuTrendingUp, LuPackage } from "react-icons/lu";
 
@@ -84,7 +84,7 @@ export default function Shop() {
   }, [searchParams]);
 
   const { addItem } = useCart();
-  const { showError, showSuccess } = useToast();
+  const { showError } = useToast();
   const [categories, setCategories] = useState([]);
   const [debouncedQ, setDebouncedQ] = useState(q);
 

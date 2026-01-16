@@ -5,7 +5,7 @@ import api from "../utils/axiosInstance";
 function ProductCreateEditModal({ product, onClose, onSaved }) {
   const isEdit = !!product;
   const [activeTab, setActiveTab] = useState("general");
-  const [globalAttributes, setGlobalAttributes] = useState([]);
+  // const [globalAttributes, setGlobalAttributes] = useState([]); // REMOVED unused
   const [allProducts, setAllProducts] = useState([]);
   const [shippingClasses, setShippingClasses] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -32,23 +32,16 @@ function ProductCreateEditModal({ product, onClose, onSaved }) {
     variations: product?.variations || [],
   });
 
-  const [variationImages, setVariationImages] = useState({});
+  // const [variationImages, setVariationImages] = useState({}); // REMOVED unused
 
   useEffect(() => {
-    fetchGlobalAttributes();
+    // fetchGlobalAttributes(); // REMOVED unused
     fetchAllProducts();
     fetchShippingClasses();
     fetchCategories();
   }, []);
 
-  const fetchGlobalAttributes = async () => {
-    try {
-      const res = await api.get("/attributes");
-      setGlobalAttributes(res.data.data || res.data);
-    } catch (err) {
-      console.error("Failed to fetch attributes:", err);
-    }
-  };
+  // Removed unused fetchGlobalAttributes
 
   const fetchAllProducts = async () => {
     try {

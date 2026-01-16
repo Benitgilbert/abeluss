@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../utils/axiosInstance";
-import { FaUserPlus, FaCheck, FaTimes, FaEye } from "react-icons/fa";
+import { FaUserPlus, FaCheck, FaEye } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
 function PendingApprovalsWidget() {

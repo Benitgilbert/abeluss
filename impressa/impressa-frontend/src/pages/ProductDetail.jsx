@@ -10,8 +10,8 @@ import LandingFooter from "../components/LandingFooter";
 import Header from "../components/Header";
 import Breadcrumbs from "../components/Breadcrumbs";
 import {
-  FaSearch, FaHeart, FaShoppingCart, FaStar, FaStarHalfAlt,
-  FaTshirt, FaChevronLeft, FaPlus, FaMinus
+  FaHeart, FaShoppingCart, FaStar,
+  FaTshirt, FaPlus, FaMinus
 } from "react-icons/fa";
 
 export default function ProductDetail() {
@@ -165,7 +165,8 @@ export default function ProductDetail() {
 
   // Determine display price and stock
   const displayPrice = currentVariation ? currentVariation.price : product?.price;
-  const displayStock = currentVariation ? currentVariation.stock : product?.stock;
+  const displayPrice = currentVariation ? currentVariation.price : product?.price;
+  // const displayStock = currentVariation ? currentVariation.stock : product?.stock; // REMOVED unused
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-300">

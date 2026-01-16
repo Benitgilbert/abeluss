@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     FaStore, FaIdCard, FaBuilding, FaFileUpload, FaPhone,
-    FaUser, FaCheckCircle, FaArrowLeft, FaArrowRight,
+    FaCheckCircle, FaArrowLeft, FaArrowRight,
     FaFileAlt, FaSignature, FaSpinner, FaExclamationTriangle
 } from 'react-icons/fa';
 import Header from '../components/Header';

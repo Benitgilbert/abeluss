@@ -27,19 +27,19 @@ const AdminOrderDetails = () => {
     }, [order]);
 
     useEffect(() => {
+        const fetchOrderDetails = async () => {
+            try {
+                const { data } = await api.get(`/orders/${id}`);
+                setOrder(data);
+                setLoading(false);
+            } catch (error) {
+                console.error("Failed to fetch order details:", error);
+                setLoading(false);
+            }
+        };
+
         fetchOrderDetails();
     }, [id]);
-
-    const fetchOrderDetails = async () => {
-        try {
-            const { data } = await api.get(`/orders/${id}`);
-            setOrder(data);
-            setLoading(false);
-        } catch (error) {
-            console.error("Failed to fetch order details:", error);
-            setLoading(false);
-        }
-    };
 
     const handleStatusUpdate = async (newStatus) => {
         if (!window.confirm(`Are you sure you want to change status to "${newStatus}"?`)) return;
