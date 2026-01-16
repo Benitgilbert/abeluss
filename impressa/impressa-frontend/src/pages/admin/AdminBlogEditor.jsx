@@ -76,7 +76,7 @@ export default function AdminBlogEditor() {
 
             if (imageFile) {
                 const uploadData = new FormData();
-                uploadData.append("file", imageFile); // Changed 'image' to 'file' to match typical backend
+                uploadData.append("image", imageFile);
                 const uploadRes = await api.post("/upload", uploadData, {
                     headers: { "Content-Type": "multipart/form-data" }
                 });
