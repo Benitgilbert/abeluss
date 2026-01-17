@@ -478,7 +478,10 @@ export default function AdminSellers() {
                                                 <h5 className="text-sm font-bold text-charcoal-700 dark:text-charcoal-300 mb-3">Uploaded Documents</h5>
                                                 <div className="grid grid-cols-2 gap-3">
                                                     {selectedSeller.rdbVerification?.rdbCertificate ? (
-                                                        <a href={`${BASE_URL}${selectedSeller.rdbVerification.rdbCertificate}`} target="_blank" rel="noopener noreferrer"
+                                                        <a href={selectedSeller.rdbVerification.rdbCertificate.startsWith('http')
+                                                            ? selectedSeller.rdbVerification.rdbCertificate
+                                                            : `${BASE_URL}${selectedSeller.rdbVerification.rdbCertificate.startsWith('/') ? '' : '/'}${selectedSeller.rdbVerification.rdbCertificate}`}
+                                                            target="_blank" rel="noopener noreferrer"
                                                             className="flex items-center gap-3 p-3 bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 rounded-xl hover:bg-sage-100 transition-colors">
                                                             <FaFileAlt className="text-sage-500" />
                                                             <span className="flex-1 text-sm font-medium text-charcoal-700 dark:text-charcoal-300">RDB Certificate</span>
@@ -491,7 +494,10 @@ export default function AdminSellers() {
                                                         </div>
                                                     )}
                                                     {selectedSeller.rdbVerification?.nationalId ? (
-                                                        <a href={`${BASE_URL}${selectedSeller.rdbVerification.nationalId}`} target="_blank" rel="noopener noreferrer"
+                                                        <a href={selectedSeller.rdbVerification.nationalId.startsWith('http')
+                                                            ? selectedSeller.rdbVerification.nationalId
+                                                            : `${BASE_URL}${selectedSeller.rdbVerification.nationalId.startsWith('/') ? '' : '/'}${selectedSeller.rdbVerification.nationalId}`}
+                                                            target="_blank" rel="noopener noreferrer"
                                                             className="flex items-center gap-3 p-3 bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 rounded-xl hover:bg-sage-100 transition-colors">
                                                             <FaIdCard className="text-sage-500" />
                                                             <span className="flex-1 text-sm font-medium text-charcoal-700 dark:text-charcoal-300">National ID</span>
