@@ -27,10 +27,8 @@ const playBeep = () => {
     }
 };
 
-// Notification helper
-const showSuccessNotification = (msg) => {
-    alert(msg);
-};
+
+
 
 
 
