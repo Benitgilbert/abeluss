@@ -71,7 +71,8 @@ const SellerNotifications = () => {
     return (
         <div className="min-h-screen bg-cream-100 dark:bg-charcoal-900 transition-colors duration-300">
             <SellerSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-            <div className="lg:ml-64 min-h-screen flex flex-col transition-all duration-300">
+            <div className="flex-1 min-h-screen flex flex-col transition-all duration-300">
+
                 <Topbar onMenuClick={() => setSidebarOpen(true)} title="Notifications" />
                 <main className="flex-1 p-4 lg:p-6 max-w-[1200px] w-full mx-auto">
                     {/* Header with Filters & Actions */}
