@@ -26,59 +26,10 @@ const POS = () => {
 
     const [shiftReport, setShiftReport] = useState(null);
 
-    const [clientType, setClientType] = useState("normal"); // "normal" or "abonne"
-    const [abonnes, setAbonnes] = useState([]);
-    const [selectedAbonne, setSelectedAbonne] = useState(null);
-    const [showAbonneSelectModal, setShowAbonneSelectModal] = useState(false);
-    const [showAbonneSplitModal, setShowAbonneSplitModal] = useState(false);
-    const [abonneUpfrontCash, setAbonneUpfrontCash] = useState("");
 
-    const fetchAbonnes = async () => {
-        try {
-            const res = await axios.get("/abonnes");
-            if (res.data.success) {
-                setAbonnes(res.data.data);
-            }
-        } catch (err) {
-            console.error("Failed to fetch abonnes");
-        }
-    };
 
-    useEffect(() => {
-        fetchAbonnes();
-    }, []);
 
-    const handleAbonneCheckout = async () => {
-        if (!selectedAbonne) return alert("Select an Abonné first");
-        if (cart.length === 0) return;
-        
-        setProcessing(true);
-        try {
-            const res = await axios.post("/orders/pos", {
-                items: cart.map((item) => ({
-                    product: item._id,
-                    quantity: item.quantity,
-                })),
-                paymentMethod: "client_abonne",
-                abonneId: selectedAbonne._id,
-                upfrontCashPaid: Number(abonneUpfrontCash) || 0
-            });
 
-            showSuccessNotification("Abonné Sale Recorded!");
-            setShowAbonneSplitModal(false);
-            setAbonneUpfrontCash("");
-            setCart([]);
-            fetchProducts();
-            
-            // Optionally clear selected abonne to force re-selection for next order
-            // setSelectedAbonne(null);
-            // setClientType("normal");
-        } catch (err) {
-            alert(err.response?.data?.message || "Failed to process sale");
-        } finally {
-            setProcessing(false);
-        }
-    };
 
 
     const fetchActiveShift = useCallback(async () => {
