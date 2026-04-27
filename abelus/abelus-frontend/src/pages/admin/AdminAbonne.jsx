@@ -127,9 +127,10 @@ const AdminAbonne = () => {
                                                 {client.phone || client.email || "N/A"}
                                             </td>
                                             <td className="p-4">
-                                                <span className={\`font-black \${client.totalDebt > 0 ? 'text-red-500' : 'text-green-500'}\`}>
-                                                    {client.totalDebt.toLocaleString()}
-                                                </span>
+                                                <span className={`font-black ${client.totalDebt > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                                                     {client.totalDebt.toLocaleString()}
+                                                 </span>
+
                                             </td>
                                             <td className="p-4 text-right flex justify-end gap-3">
                                                 <button
@@ -261,7 +262,7 @@ const AdminAbonne = () => {
 
                         <div className="overflow-y-auto flex-1 bg-white" id="fiche-print-area">
                             <style>
-                                {\`
+                                {`
                                 @media print {
                                     @page { margin: 20px; }
                                     body { font-family: sans-serif; background: white; color: black; }
@@ -270,7 +271,7 @@ const AdminAbonne = () => {
                                     .print-header { margin-bottom: 30px; }
                                     .no-print { display: none; }
                                 }
-                                \`}
+                                `}
                             </style>
                             <div className="p-8">
                                 <div className="print-header flex justify-between items-end mb-8 border-b-2 border-black pb-4">
