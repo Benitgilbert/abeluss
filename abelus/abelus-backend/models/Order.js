@@ -114,7 +114,7 @@ const orderSchema = new mongoose.Schema(
     payment: {
       method: {
         type: String,
-        enum: ["cash", "stripe", "paypal", "mtn_momo", "airtel_money", "pending"],
+        enum: ["cash", "stripe", "paypal", "mtn_momo", "airtel_money", "client_abonne", "pending"],
         default: "pending",
       },
       status: {

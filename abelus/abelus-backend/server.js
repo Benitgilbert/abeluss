@@ -159,6 +159,10 @@ const startServer = async () => {
     app.use("/api/site-settings", siteSettingsRoutes);
     app.use("/api/newsletter", newsletterRoutes);
     app.use("/api/gift-cards", giftCardRoutes);
+    const shiftRoutes = (await import("./routes/shiftRoutes.js")).default;
+    app.use("/api/shifts", shiftRoutes);
+    const abonneRoutes = (await import("./routes/abonneRoutes.js")).default;
+    app.use("/api/abonnes", abonneRoutes);
     const giftCardProductRoutes = (await import("./routes/giftCardProductRoutes.js")).default;
     app.use("/api/gift-card-products", giftCardProductRoutes);
     const sellerRoutes = (await import("./routes/sellerRoutes.js")).default;

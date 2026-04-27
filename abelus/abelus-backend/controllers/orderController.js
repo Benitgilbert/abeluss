@@ -9,6 +9,9 @@ import { recordTransaction } from "./financeController.js";
 import Account from "../models/Account.js";
 import CommissionSettings from "../models/CommissionSettings.js";
 import SellerEarning from "../models/SellerEarning.js";
+import Shift from "../models/Shift.js";
+import ClientAbonne from "../models/ClientAbonne.js";
+import AbonneTransaction from "../models/AbonneTransaction.js";
 
 import { buildReportData } from "../services/reportBuilders.js";
 import { createabelusPDF } from "../utils/pdfLayout.js";
@@ -724,7 +727,7 @@ export const addOrderNote = async (req, res) => {
 // 🏪 Create POS Order (Physical Sale) - Admin or Seller
 export const createPOSOrder = async (req, res) => {
   try {
-    const { items, paymentMethod, storeLocation } = req.body;
+    const { items, paymentMethod, storeLocation, abonneId, upfrontCashPaid } = req.body;
     const userRole = req.user.role;
     const userId = req.user.id;
 
@@ -848,6 +851,25 @@ export const createPOSOrder = async (req, res) => {
 
     order.publicId = generatePublicId();
     await order.save();
+
+    // UPDATE ACTIVE SHIFT
+    try {
+      const activeShift = await Shift.findOne({ user: userId, status: "open" });
+      if (activeShift) {
+        activeShift.orders.push(order._id);
+        if (paymentMethod === "mtn_momo") {
+          activeShift.totalMomoSales += subtotal;
+        } else if (paymentMethod === "cash" || !paymentMethod) {
+          activeShift.totalCashSales += subtotal;
+          activeShift.expectedEndingDrawerAmount += subtotal;
+        } else {
+          activeShift.totalOtherSales += subtotal;
+        }
+        await activeShift.save();
+      }
+    } catch (shiftErr) {
+      console.error("Failed to update active shift:", shiftErr);
+    }
 
     // 3. Record Financial Transaction
     try {

@@ -45,6 +45,126 @@ export default function SellerPOS() {
     const [showMomoModal, setShowMomoModal] = useState(false);
     const [phoneNumber, setPhoneNumber] = useState("");
     const [pendingOrder, setPendingOrder] = useState(null);
+
+    const [activeShift, setActiveShift] = useState(null);
+    const [showStartShiftModal, setShowStartShiftModal] = useState(false);
+    const [startingAmount, setStartingAmount] = useState("");
+    
+    const [showCloseShiftModal, setShowCloseShiftModal] = useState(false);
+    const [actualAmount, setActualAmount] = useState("");
+    const [shiftNotes, setShiftNotes] = useState("");
+
+    const [shiftReport, setShiftReport] = useState(null);
+
+    const [clientType, setClientType] = useState("normal"); // "normal" or "abonne"
+    const [abonnes, setAbonnes] = useState([]);
+    const [selectedAbonne, setSelectedAbonne] = useState(null);
+    const [showAbonneSelectModal, setShowAbonneSelectModal] = useState(false);
+    const [showAbonneSplitModal, setShowAbonneSplitModal] = useState(false);
+    const [abonneUpfrontCash, setAbonneUpfrontCash] = useState("");
+
+    const fetchAbonnes = async () => {
+        try {
+            const res = await axios.get("/abonnes");
+            if (res.data.success) {
+                setAbonnes(res.data.data);
+            }
+        } catch (err) {
+            console.error("Failed to fetch abonnes");
+        }
+    };
+
+    useEffect(() => {
+        fetchAbonnes();
+    }, []);
+
+    const handleAbonneCheckout = async () => {
+        if (!selectedAbonne) return alert("Select an Abonné first");
+        if (cart.length === 0) return;
+        
+        setProcessing(true);
+        try {
+            const res = await axios.post("/orders/pos", {
+                items: cart.map((item) => ({
+                    product: item._id,
+                    quantity: item.quantity,
+                })),
+                paymentMethod: "client_abonne",
+                abonneId: selectedAbonne._id,
+                upfrontCashPaid: Number(abonneUpfrontCash) || 0
+            });
+
+            showSuccessNotification("Abonné Sale Recorded!");
+            setShowAbonneSplitModal(false);
+            setAbonneUpfrontCash("");
+            setCart([]);
+            fetchProducts();
+            
+            // Optionally clear selected abonne to force re-selection for next order
+            // setSelectedAbonne(null);
+            // setClientType("normal");
+        } catch (err) {
+            alert(err.response?.data?.message || "Failed to process sale");
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+
+    const fetchActiveShift = useCallback(async () => {
+        try {
+            const res = await axios.get("/shifts/current");
+            if (res.data.success && res.data.data) {
+                setActiveShift(res.data.data);
+                setShowStartShiftModal(false);
+            } else {
+                setActiveShift(null);
+                setShowStartShiftModal(true);
+            }
+        } catch (err) {
+            console.error("Failed to fetch shift", err);
+            setShowStartShiftModal(true);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchActiveShift();
+    }, [fetchActiveShift]);
+
+    const handleStartShift = async () => {
+        if (!startingAmount) return alert("Enter starting amount");
+        try {
+            const res = await axios.post("/shifts/start", { startingDrawerAmount: Number(startingAmount) });
+            if (res.data.success) {
+                setActiveShift(res.data.data);
+                setShowStartShiftModal(false);
+            }
+        } catch (err) {
+            alert(err.response?.data?.message || "Failed to start shift");
+        }
+    };
+
+    const handleCloseShift = async () => {
+        if (!actualAmount) return alert("Enter actual ending amount");
+        try {
+            const res = await axios.post("/shifts/close", { 
+                actualEndingDrawerAmount: Number(actualAmount),
+                notes: shiftNotes
+            });
+            if (res.data.success) {
+                setShowCloseShiftModal(false);
+                // Fetch report
+                const reportRes = await axios.get(`/shifts/${res.data.data._id}/report`);
+                if (reportRes.data.success) {
+                    setShiftReport(reportRes.data.data);
+                }
+                setActiveShift(null);
+            }
+        } catch (err) {
+            alert(err.response?.data?.message || "Failed to close shift");
+        }
+    };
+
     const [showCashConfirm, setShowCashConfirm] = useState(false);
     const [cashReceived, setCashReceived] = useState("");
 

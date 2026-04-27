@@ -16,6 +16,126 @@ const POS = () => {
     const [phoneNumber, setPhoneNumber] = useState("");
     const [pendingOrder, setPendingOrder] = useState(null);
 
+    const [activeShift, setActiveShift] = useState(null);
+    const [showStartShiftModal, setShowStartShiftModal] = useState(false);
+    const [startingAmount, setStartingAmount] = useState("");
+    
+    const [showCloseShiftModal, setShowCloseShiftModal] = useState(false);
+    const [actualAmount, setActualAmount] = useState("");
+    const [shiftNotes, setShiftNotes] = useState("");
+
+    const [shiftReport, setShiftReport] = useState(null);
+
+    const [clientType, setClientType] = useState("normal"); // "normal" or "abonne"
+    const [abonnes, setAbonnes] = useState([]);
+    const [selectedAbonne, setSelectedAbonne] = useState(null);
+    const [showAbonneSelectModal, setShowAbonneSelectModal] = useState(false);
+    const [showAbonneSplitModal, setShowAbonneSplitModal] = useState(false);
+    const [abonneUpfrontCash, setAbonneUpfrontCash] = useState("");
+
+    const fetchAbonnes = async () => {
+        try {
+            const res = await axios.get("/abonnes");
+            if (res.data.success) {
+                setAbonnes(res.data.data);
+            }
+        } catch (err) {
+            console.error("Failed to fetch abonnes");
+        }
+    };
+
+    useEffect(() => {
+        fetchAbonnes();
+    }, []);
+
+    const handleAbonneCheckout = async () => {
+        if (!selectedAbonne) return alert("Select an Abonné first");
+        if (cart.length === 0) return;
+        
+        setProcessing(true);
+        try {
+            const res = await axios.post("/orders/pos", {
+                items: cart.map((item) => ({
+                    product: item._id,
+                    quantity: item.quantity,
+                })),
+                paymentMethod: "client_abonne",
+                abonneId: selectedAbonne._id,
+                upfrontCashPaid: Number(abonneUpfrontCash) || 0
+            });
+
+            showSuccessNotification("Abonné Sale Recorded!");
+            setShowAbonneSplitModal(false);
+            setAbonneUpfrontCash("");
+            setCart([]);
+            fetchProducts();
+            
+            // Optionally clear selected abonne to force re-selection for next order
+            // setSelectedAbonne(null);
+            // setClientType("normal");
+        } catch (err) {
+            alert(err.response?.data?.message || "Failed to process sale");
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+
+    const fetchActiveShift = useCallback(async () => {
+        try {
+            const res = await axios.get("/shifts/current");
+            if (res.data.success && res.data.data) {
+                setActiveShift(res.data.data);
+                setShowStartShiftModal(false);
+            } else {
+                setActiveShift(null);
+                setShowStartShiftModal(true);
+            }
+        } catch (err) {
+            console.error("Failed to fetch shift", err);
+            setShowStartShiftModal(true);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchActiveShift();
+    }, [fetchActiveShift]);
+
+    const handleStartShift = async () => {
+        if (!startingAmount) return alert("Enter starting amount");
+        try {
+            const res = await axios.post("/shifts/start", { startingDrawerAmount: Number(startingAmount) });
+            if (res.data.success) {
+                setActiveShift(res.data.data);
+                setShowStartShiftModal(false);
+            }
+        } catch (err) {
+            alert(err.response?.data?.message || "Failed to start shift");
+        }
+    };
+
+    const handleCloseShift = async () => {
+        if (!actualAmount) return alert("Enter actual ending amount");
+        try {
+            const res = await axios.post("/shifts/close", { 
+                actualEndingDrawerAmount: Number(actualAmount),
+                notes: shiftNotes
+            });
+            if (res.data.success) {
+                setShowCloseShiftModal(false);
+                // Fetch report
+                const reportRes = await axios.get(`/shifts/${res.data.data._id}/report`);
+                if (reportRes.data.success) {
+                    setShiftReport(reportRes.data.data);
+                }
+                setActiveShift(null);
+            }
+        } catch (err) {
+            alert(err.response?.data?.message || "Failed to close shift");
+        }
+    };
+
+
     const fetchProducts = useCallback(async () => {
         setLoading(true);
         try {
@@ -166,6 +286,120 @@ const POS = () => {
 
     return (
         <div className="flex h-screen bg-cream-50 dark:bg-charcoal-900 overflow-hidden font-sans">
+
+            {/* Shift Modals */}
+            {showStartShiftModal && (
+                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-charcoal-800 rounded-2xl shadow-2xl w-full max-w-md p-8 text-center">
+                        <h2 className="text-2xl font-black mb-2 text-charcoal-900 dark:text-white">Start New Shift</h2>
+                        <p className="text-gray-500 dark:text-gray-400 mb-6">Please enter the starting cash amount in your drawer.</p>
+                        <input
+                            type="number"
+                            placeholder="Starting Amount (RWF)"
+                            className="w-full px-4 py-3 bg-gray-50 dark:bg-charcoal-700 border border-gray-200 dark:border-charcoal-600 rounded-xl mb-4 text-center font-bold text-xl outline-none focus:border-terracotta-500"
+                            value={startingAmount}
+                            onChange={(e) => setStartingAmount(e.target.value)}
+                        />
+                        <button
+                            onClick={handleStartShift}
+                            className="w-full py-3 bg-terracotta-500 hover:bg-terracotta-600 text-white rounded-xl font-bold transition-all"
+                        >
+                            Open Shift
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {showCloseShiftModal && (
+                <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-charcoal-800 rounded-2xl shadow-2xl w-full max-w-md p-8">
+                        <h2 className="text-2xl font-black mb-4 text-charcoal-900 dark:text-white text-center">Close Shift</h2>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Actual Cash in Drawer</label>
+                                <input
+                                    type="number"
+                                    className="w-full px-4 py-3 bg-gray-50 dark:bg-charcoal-700 border border-gray-200 dark:border-charcoal-600 rounded-xl outline-none focus:border-terracotta-500"
+                                    value={actualAmount}
+                                    onChange={(e) => setActualAmount(e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Notes (Optional)</label>
+                                <textarea
+                                    className="w-full px-4 py-3 bg-gray-50 dark:bg-charcoal-700 border border-gray-200 dark:border-charcoal-600 rounded-xl outline-none focus:border-terracotta-500"
+                                    value={shiftNotes}
+                                    onChange={(e) => setShiftNotes(e.target.value)}
+                                    rows="2"
+                                />
+                            </div>
+                            <div className="flex gap-3 mt-6">
+                                <button
+                                    onClick={() => setShowCloseShiftModal(false)}
+                                    className="flex-1 py-3 bg-gray-200 dark:bg-charcoal-700 text-charcoal-800 dark:text-white rounded-xl font-bold hover:bg-gray-300 transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleCloseShift}
+                                    className="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition-all"
+                                >
+                                    End Shift
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {shiftReport && (
+                <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-charcoal-800 rounded-2xl shadow-2xl w-full max-w-lg p-8">
+                        <div className="text-center mb-6">
+                            <h2 className="text-2xl font-black text-charcoal-900 dark:text-white">Shift Report</h2>
+                            <p className="text-gray-500 text-sm">{new Date(shiftReport.startTime).toLocaleString()} - {new Date(shiftReport.endTime).toLocaleString()}</p>
+                        </div>
+                        <div className="space-y-3 text-charcoal-800 dark:text-gray-200">
+                            <div className="flex justify-between border-b border-gray-100 dark:border-charcoal-700 pb-2">
+                                <span>Starting Drawer</span>
+                                <span className="font-bold">RWF {shiftReport.startingDrawerAmount.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between border-b border-gray-100 dark:border-charcoal-700 pb-2">
+                                <span>Cash Sales</span>
+                                <span className="font-bold text-green-500">+ RWF {shiftReport.totalCashSales.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between border-b border-gray-100 dark:border-charcoal-700 pb-2">
+                                <span>MoMo Sales</span>
+                                <span className="font-bold text-yellow-500">+ RWF {shiftReport.totalMomoSales.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between border-b border-gray-100 dark:border-charcoal-700 pb-2 bg-gray-50 dark:bg-charcoal-700/50 p-2 rounded">
+                                <span className="font-bold">Expected Drawer</span>
+                                <span className="font-black">RWF {shiftReport.expectedEndingDrawerAmount.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between border-b border-gray-100 dark:border-charcoal-700 pb-2 p-2">
+                                <span>Actual Counted</span>
+                                <span className="font-bold">RWF {shiftReport.actualEndingDrawerAmount.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between p-2">
+                                <span>Discrepancy</span>
+                                <span className={`font-black ${shiftReport.actualEndingDrawerAmount - shiftReport.expectedEndingDrawerAmount < 0 ? 'text-red-500' : 'text-green-500'}`}>
+                                    RWF {(shiftReport.actualEndingDrawerAmount - shiftReport.expectedEndingDrawerAmount).toLocaleString()}
+                                </span>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => {
+                                setShiftReport(null);
+                                setShowStartShiftModal(true);
+                            }}
+                            className="w-full mt-6 py-3 bg-terracotta-500 hover:bg-terracotta-600 text-white rounded-xl font-bold transition-all"
+                        >
+                            Close & Start New Shift
+                        </button>
+                    </div>
+                </div>
+            )}
+    
             {/* MoMo Modal */}
             {showMomoModal && (
                 <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -338,9 +572,21 @@ const POS = () => {
                                     <FaShoppingCart className="text-terracotta-500" />
                                     Current Sale
                                 </h2>
-                                <span className="px-2.5 py-1 bg-terracotta-100 dark:bg-terracotta-900/30 text-terracotta-600 dark:text-terracotta-400 text-xs font-bold rounded-full">
-                                    {cart.length} Items
-                                </span>
+                                
+                                <div className="flex items-center gap-4">
+                                    {activeShift && (
+                                        <button 
+                                            onClick={() => setShowCloseShiftModal(true)}
+                                            className="px-3 py-1.5 text-xs font-bold bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+                                        >
+                                            Close Shift
+                                        </button>
+                                    )}
+                                    <span className="px-2.5 py-1 bg-terracotta-100 dark:bg-terracotta-900/30 text-terracotta-600 dark:text-terracotta-400 text-xs font-bold rounded-full">
+                                        {cart.length} Items
+                                    </span>
+                                </div>
+    
                             </div>
                             <p className="text-xs font-mono text-gray-400 uppercase tracking-widest">Order #{Math.floor(Math.random() * 10000)}</p>
                         </div>
