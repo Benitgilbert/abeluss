@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "../../utils/axiosInstance";
-import { FaUserPlus, FaFileInvoiceDollar, FaCheck, FaTimes, FaMoneyBillWave, FaPrint } from "react-icons/fa";
+import { FaUserPlus, FaFileInvoiceDollar, FaTimes, FaMoneyBillWave, FaPrint } from "react-icons/fa";
+
 import Sidebar from "../../components/Sidebar";
 import Topbar from "../../components/Topbar";
 
