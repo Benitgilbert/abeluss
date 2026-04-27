@@ -1,4 +1,4 @@
-# IMPRESSA - Multi-Vendor E-Commerce Platform
+# ABELUS - Multi-Vendor E-Commerce Platform
 
 A full-stack MERN (MongoDB, Express, React, Node.js) multi-vendor e-commerce application. This platform connects customers, sellers, and administrators in a seamless shopping environment with advanced features like order tracking, reports, and payments.
 
@@ -46,16 +46,16 @@ A full-stack MERN (MongoDB, Express, React, Node.js) multi-vendor e-commerce app
 
 1.  **Clone the Repository**
     ```bash
-    git clone https://github.com/Benitgilbert/impressa.git
-    cd impressa
+    git clone https://github.com/Benitgilbert/abelus.git
+    cd abelus
     ```
 
 2.  **Backend Setup**
     ```bash
-    cd impressa-backend
+    cd abelus-backend
     npm install
     ```
-    *Create a `.env` file in `impressa-backend/` with:*
+    *Create a `.env` file in `abelus-backend/` with:*
     ```env
     PORT=5000
     MONGO_URI=your_mongodb_uri
@@ -69,10 +69,10 @@ A full-stack MERN (MongoDB, Express, React, Node.js) multi-vendor e-commerce app
 
 3.  **Frontend Setup**
     ```bash
-    cd ../impressa-frontend
+    cd ../abelus-frontend
     npm install
     ```
-    *Create a `.env` file in `impressa-frontend/` (optional for defaults):*
+    *Create a `.env` file in `abelus-frontend/` (optional for defaults):*
     ```env
     REACT_APP_API_URL=http://localhost:5000/api
     ```
@@ -81,21 +81,21 @@ A full-stack MERN (MongoDB, Express, React, Node.js) multi-vendor e-commerce app
 
 **Start Backend:**
 ```bash
-cd impressa-backend
+cd abelus-backend
 npm run dev
 ```
 
 **Start Frontend:**
 ```bash
-cd impressa-frontend
+cd abelus-frontend
 npm start
 ```
 
 ## 📁 Project Structure
 
 ```
-impressa/
-├── impressa-backend/       # Express API
+abelus/
+├── abelus-backend/       # Express API
 │   ├── config/             # DB, Passport, Logger config
 │   ├── controllers/        # Route logic
 │   ├── models/             # Mongoose Schemas (User, Product, Order)
@@ -103,7 +103,7 @@ impressa/
 │   ├── middleware/         # Auth, Validation, Uploads
 │   └── server.js           # Entry point
 │
-└── impressa-frontend/      # React App
+└── abelus-frontend/      # React App
     ├── src/
     │   ├── components/     # Reusable UI components
     │   ├── context/        # Global State (Cart, Toast, Wishlist)
@@ -130,4 +130,4 @@ The backend exposes RESTful APIs at `/api`. Key endpoints include:
 5.  Open a Pull Request.
 
 ## 📄 License
-Proprietary to Impressa Custom Solutions. All rights reserved.
+Proprietary to Abelus Custom Solutions. All rights reserved.

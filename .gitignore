@@ -1,4 +1,4 @@
-# Root ignores for impressa monorepo
+# Root ignores for abelus monorepo
 
 # Node modules and caches
 **/node_modules/
@@ -11,8 +11,8 @@
 # Build outputs
 **/dist/
 **/build/
-impressa-frontend/.next/
-impressa-frontend/out/
+abelus-frontend/.next/
+abelus-frontend/out/
 
 # Env and secrets
 **/.env

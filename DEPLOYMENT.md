@@ -1,4 +1,4 @@
-# Deployment Guide for Impressa E-Commerce
+# Deployment Guide for Abelus E-Commerce
 
 ## 🎯 Quick Deployment Guide
 
@@ -27,7 +27,7 @@ Your `.gitignore` is already configured to exclude:
 ### 1.2 Create Environment Templates
 Create `env.example` files to help with deployment:
 
-**Backend** (`impressa-backend/env.example`):
+**Backend** (`abelus-backend/env.example`):
 ```bash
 MONGODB_URI=your_mongodb_atlas_connection_string
 JWT_SECRET=your_secret_key
@@ -43,7 +43,7 @@ FRONTEND_URL=https://your-app.vercel.app
 
 ```bash
 # Navigate to project root
-cd d:/Benit/FYP/impressa
+cd d:/Benit/FYP/abelus
 
 # Check what will be committed
 git status
@@ -77,8 +77,8 @@ git push -u origin main
 2. Click **"New +"** → **"Web Service"**
 3. Connect your GitHub repository
 4. Configure:
-   - **Name**: `impressa-backend`
-   - **Root Directory**: `impressa/impressa-backend`
+   - **Name**: `abelus-backend`
+   - **Root Directory**: `abelus/abelus-backend`
    - **Environment**: `Node`
    - **Build Command**: `npm install`
    - **Start Command**: `npm start`
@@ -98,7 +98,7 @@ PORT = 5000
 ### 3.3 Deploy
 Click **"Create Web Service"** - deployment will start automatically!
 
-**Important**: Copy your backend URL (e.g., `https://impressa-backend.onrender.com`)
+**Important**: Copy your backend URL (e.g., `https://abelus-backend.onrender.com`)
 
 ---
 
@@ -119,19 +119,19 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 3. Select your GitHub repository
 4. Configure:
    - **Framework Preset**: `Create React App`
-   - **Root Directory**: `impressa/impressa-frontend`
+   - **Root Directory**: `abelus/abelus-frontend`
    - **Build Command**: `npm run build`
    - **Output Directory**: `build`
 
 ### 4.3 Add Environment Variable
 ```
-REACT_APP_API_URL = https://impressa-backend.onrender.com
+REACT_APP_API_URL = https://abelus-backend.onrender.com
 ```
 
 ### 4.4 Deploy
 Click **"Deploy"** - done in ~2 minutes!
 
-Your app will be live at: `https://impressa-<random>.vercel.app`
+Your app will be live at: `https://abelus-<random>.vercel.app`
 
 ---
 
@@ -169,7 +169,7 @@ Render free tier sleeps after 15 minutes of inactivity.
 **Solution**: Use [cron-job.org](https://cron-job.org) (free):
 1. Create account
 2. Add new cron job
-3. URL: `https://impressa-backend.onrender.com/health` (create this endpoint)
+3. URL: `https://abelus-backend.onrender.com/health` (create this endpoint)
 4. Interval: Every 10 minutes
 
 **Add Health Endpoint** (backend):
