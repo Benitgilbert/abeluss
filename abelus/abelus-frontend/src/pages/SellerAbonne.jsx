@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import axios from "../../utils/axiosInstance";
+import axios from "../utils/axiosInstance";
 import { FaUserPlus, FaFileInvoiceDollar, FaCheck, FaTimes, FaMoneyBillWave, FaPrint } from "react-icons/fa";
-import SellerSidebar from "../../components/SellerSidebar";
-import Topbar from "../../components/Topbar";
+import SellerSidebar from "../components/SellerSidebar";
+import Topbar from "../components/Topbar";
+
 
 const SellerAbonne = () => {
     const [clients, setClients] = useState([]);
