@@ -1,4 +1,4 @@
-import { FaChartBar, FaBox, FaSignOutAlt, FaStore, FaList, FaShoppingCart, FaPlus, FaMoneyBillWave, FaTimes } from "react-icons/fa";
+import { FaChartBar, FaBox, FaSignOutAlt, FaStore, FaList, FaShoppingCart, FaPlus, FaMoneyBillWave, FaTimes, FaUserFriends } from "react-icons/fa";
 import { Link, useLocation } from "react-router-dom";
 
 function SellerSidebar({ isOpen, onClose }) {

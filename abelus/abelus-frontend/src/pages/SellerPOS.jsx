@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import api from "../utils/axiosInstance";
+import axios from "../utils/axiosInstance";
 import assetUrl from "../utils/assetUrl";
 import { FaSearch, FaShoppingCart, FaTrash, FaPlus, FaMinus, FaMoneyBillWave, FaMobileAlt, FaBoxOpen, FaStore, FaBarcode, FaTimes } from "react-icons/fa";
 import Header from "../components/Header";
@@ -209,7 +209,7 @@ export default function SellerPOS() {
 
         // Fallback to API lookup
         try {
-            const res = await api.get(`/orders/pos/lookup?barcode=${barcode}`);
+            const res = await axios.get(`/orders/pos/lookup?barcode=${barcode}`);
             if (res.data.success && res.data.product) {
                 playBeep();
                 addToCart(res.data.product);
@@ -223,7 +223,7 @@ export default function SellerPOS() {
     const fetchProducts = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await api.get("/orders/seller/pos-products");
+            const res = await axios.get("/orders/seller/pos-products");
             if (res.data.success) {
                 setProducts(res.data.data);
             }
@@ -236,7 +236,7 @@ export default function SellerPOS() {
 
     const fetchSellerInfo = useCallback(async () => {
         try {
-            const res = await api.get("/auth/me");
+            const res = await axios.get("/auth/me");
             setSeller(res.data);
         } catch (err) {
             console.error("Failed to fetch seller info");
@@ -369,11 +369,16 @@ export default function SellerPOS() {
         handleCheckout("mtn_momo", phoneNumber);
     };
 
+    const showSuccessNotification = (msg) => {
+        // Simple alert as fallback for missing toast system in this file
+        alert(msg);
+    };
+
     const handleCheckout = async (method, phone = null, receivedAmount = null) => {
         if (cart.length === 0) return;
         setProcessing(true);
         try {
-            const res = await api.post("/orders/seller/pos", {
+            const res = await axios.post("/orders/seller/pos", {
                 items: cart.map((item) => ({
                     product: item._id,
                     quantity: item.quantity,
@@ -417,7 +422,7 @@ export default function SellerPOS() {
         if (pendingOrder) {
             interval = setInterval(async () => {
                 try {
-                    const res = await api.get(`/payments/status/${pendingOrder}`);
+                    const res = await axios.get(`/payments/status/${pendingOrder}`);
                     if (res.data.status === "completed" || res.data.status === "delivered") {
                         clearInterval(interval);
                         setPendingOrder(null);
