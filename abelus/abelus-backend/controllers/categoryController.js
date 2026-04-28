@@ -117,8 +117,23 @@ export const getCategoryByIdOrSlug = async (req, res, next) => {
  */
 export const createCategory = async (req, res, next) => {
   try {
+    const { name, slug, parentId, parent, ...rest } = req.body;
+
+    // Generate slug from name if not provided
+    const categorySlug = slug || name.toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)+/g, '');
+
+    // Map parent to parentId if needed
+    const finalParentId = parentId || parent || null;
+
     const category = await prisma.category.create({
-      data: req.body
+      data: {
+        ...rest,
+        name,
+        slug: categorySlug,
+        parentId: finalParentId
+      }
     });
 
     res.status(201).json({
@@ -127,6 +142,11 @@ export const createCategory = async (req, res, next) => {
       data: category,
     });
   } catch (error) {
+    if (error.code === 'P2002') {
+      const err = new Error("Category with this slug already exists");
+      err.statusCode = 400;
+      return next(err);
+    }
     next(error);
   }
 };
@@ -137,10 +157,16 @@ export const createCategory = async (req, res, next) => {
 export const updateCategory = async (req, res, next) => {
   try {
     const { id } = req.params;
+    const { _id, id: _, parent, parentId, createdAt, updatedAt, ...updateData } = req.body;
+
+    // If parent/parentId is provided, ensure it's mapped correctly
+    if (parent !== undefined || parentId !== undefined) {
+      updateData.parentId = parentId || parent || null;
+    }
 
     const category = await prisma.category.update({
       where: { id },
-      data: req.body
+      data: updateData
     });
 
     res.json({
@@ -152,6 +178,11 @@ export const updateCategory = async (req, res, next) => {
     if (error.code === 'P2025') {
       const err = new Error("Category not found");
       err.statusCode = 404;
+      return next(err);
+    }
+    if (error.code === 'P2002') {
+      const err = new Error("Category with this slug already exists");
+      err.statusCode = 400;
       return next(err);
     }
     next(error);

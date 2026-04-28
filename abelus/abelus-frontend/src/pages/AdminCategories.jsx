@@ -60,13 +60,13 @@ export default function AdminCategories() {
 
         try {
             const url = editingCategory
-                ? `/categories/${editingCategory._id}`
+                ? `/categories/${editingCategory.id}`
                 : `/categories`;
 
             const res = await api({
                 method: editingCategory ? 'put' : 'post',
                 url: url,
-                data: { ...form, parent: form.parent || null }
+                data: { ...form, parentId: form.parent || null }
             });
 
             if (res.data.success) {
@@ -105,7 +105,7 @@ export default function AdminCategories() {
             setForm({
                 name: category.name || '',
                 description: category.description || '',
-                parent: category.parent?._id || category.parent || '',
+                parent: category.parentId || category.parent?.id || '',
                 image: category.image || '',
                 color: category.color || 'from-terracotta-500 to-sand-400',
                 isActive: category.isActive !== false,
@@ -201,7 +201,7 @@ export default function AdminCategories() {
                                             </tr>
                                         ) : (
                                             categories.map((cat) => (
-                                                <tr key={cat._id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
+                                                <tr key={cat.id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
                                                     <td className="px-6 py-4">
                                                         {cat.image ? (
                                                             <img src={cat.image} alt={cat.name} className="w-12 h-12 rounded-xl object-cover" />
@@ -243,7 +243,7 @@ export default function AdminCategories() {
                                                                 <FaEdit />
                                                             </button>
                                                             <button
-                                                                onClick={() => handleDelete(cat._id)}
+                                                                onClick={() => handleDelete(cat.id)}
                                                                 className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                                                                 title="Delete"
                                                             >
@@ -267,7 +267,7 @@ export default function AdminCategories() {
                                     </div>
                                 ) : (
                                     categories.map((cat) => (
-                                        <div key={cat._id} className="p-4 hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
+                                        <div key={cat.id} className="p-4 hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
                                             <div className="flex items-start gap-3">
                                                 {cat.image ? (
                                                     <img src={cat.image} alt={cat.name} className="w-12 h-12 rounded-xl object-cover" />
@@ -297,7 +297,7 @@ export default function AdminCategories() {
                                                     <FaEdit />
                                                 </button>
                                                 <button
-                                                    onClick={() => handleDelete(cat._id)}
+                                                    onClick={() => handleDelete(cat.id)}
                                                     className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
                                                 >
                                                     <FaTrash />
@@ -358,9 +358,9 @@ export default function AdminCategories() {
                                             >
                                                 <option value="">None (Top Level)</option>
                                                 {categories
-                                                    .filter(c => c._id !== editingCategory?._id)
+                                                    .filter(c => c.id !== editingCategory?.id)
                                                     .map(c => (
-                                                        <option key={c._id} value={c._id}>{c.name}</option>
+                                                        <option key={c.id} value={c.id}>{c.name}</option>
                                                     ))
                                                 }
                                             </select>
