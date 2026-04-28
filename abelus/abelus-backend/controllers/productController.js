@@ -166,7 +166,6 @@ export const createProduct = async (req, res) => {
     delete body.variations;
     delete body.crossSells;
     delete body.upSells;
-    delete body.attributes;
 
     if (typeof body.customizable === "string") body.customizable = body.customizable === "true";
     if (typeof body.featured === "string") body.featured = body.featured === "true";
@@ -489,7 +488,6 @@ export const updateProduct = async (req, res) => {
     delete body.variations;
     delete body.crossSells;
     delete body.upSells;
-    delete body.attributes;
 
     if (typeof body.customizable === "string") body.customizable = body.customizable === "true";
     if (typeof body.featured === "string") body.featured = body.featured === "true";
