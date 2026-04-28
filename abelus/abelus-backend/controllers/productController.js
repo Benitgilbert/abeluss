@@ -181,13 +181,30 @@ export const createProduct = async (req, res) => {
 
     // Connect categories if provided
     let categoryConnect = undefined;
-    if (body.categories) {
-      const catArray = typeof body.categories === 'string' ? JSON.parse(body.categories) : body.categories;
-      if (Array.isArray(catArray)) {
-        categoryConnect = { connect: catArray.map(id => ({ id })) };
+    const rawCategories = body.categories || body.category;
+
+    if (rawCategories) {
+      let catArray = [];
+      try {
+        catArray = typeof rawCategories === 'string' && rawCategories.startsWith('[') 
+          ? JSON.parse(rawCategories) 
+          : [rawCategories];
+      } catch (e) {
+        catArray = [rawCategories];
       }
-      delete body.categories;
+
+      if (Array.isArray(catArray) && catArray.length > 0) {
+        categoryConnect = {
+          connect: catArray.map(item => {
+            // Check if item is a UUID (common ID format)
+            const isId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item);
+            return isId ? { id: item } : { slug: item.toLowerCase().replace(/[^a-z0-9]+/g, '-') };
+          })
+        };
+      }
     }
+    delete body.categories;
+    delete body.category;
 
     // Ensure slug is unique or fallback
     if (!body.slug) {
@@ -464,13 +481,29 @@ export const updateProduct = async (req, res) => {
     }
 
     let categoryConnect = undefined;
-    if (body.categories) {
-      const catArray = typeof body.categories === 'string' ? JSON.parse(body.categories) : body.categories;
-      if (Array.isArray(catArray)) {
-        categoryConnect = { set: catArray.map(id => ({ id })) };
+    const rawCategories = body.categories || body.category;
+
+    if (rawCategories) {
+      let catArray = [];
+      try {
+        catArray = typeof rawCategories === 'string' && rawCategories.startsWith('[') 
+          ? JSON.parse(rawCategories) 
+          : [rawCategories];
+      } catch (e) {
+        catArray = [rawCategories];
       }
-      delete body.categories;
+
+      if (Array.isArray(catArray) && catArray.length > 0) {
+        categoryConnect = {
+          set: catArray.map(item => {
+            const isId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item);
+            return isId ? { id: item } : { slug: item.toLowerCase().replace(/[^a-z0-9]+/g, '-') };
+          })
+        };
+      }
     }
+    delete body.categories;
+    delete body.category;
 
     const product = await prisma.product.update({
       where: { id: req.params.id },
