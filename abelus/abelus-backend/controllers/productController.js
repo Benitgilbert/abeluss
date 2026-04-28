@@ -196,13 +196,35 @@ export const createProduct = async (req, res) => {
       }
 
       if (Array.isArray(catArray) && catArray.length > 0) {
-        categoryConnect = {
-          connect: catArray.map(item => {
-            // Check if item is a UUID (common ID format)
-            const isId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item);
-            return isId ? { id: item } : { slug: item.toLowerCase().replace(/[^a-z0-9]+/g, '-') };
-          })
-        };
+        const resolvedCategories = [];
+        for (const item of catArray) {
+          if (!item) continue;
+          
+          const isId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item);
+          if (isId) {
+            resolvedCategories.push({ id: item });
+            continue;
+          }
+
+          const slug = item.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+          const found = await prisma.category.findFirst({
+            where: {
+              OR: [
+                { slug: slug },
+                { name: { equals: item, mode: 'insensitive' } },
+                { slug: { equals: item, mode: 'insensitive' } }
+              ]
+            }
+          });
+
+          if (found) {
+            resolvedCategories.push({ id: found.id });
+          }
+        }
+
+        if (resolvedCategories.length > 0) {
+          categoryConnect = { connect: resolvedCategories };
+        }
       }
     }
     delete body.categories;
@@ -517,12 +539,39 @@ export const updateProduct = async (req, res) => {
       }
 
       if (Array.isArray(catArray) && catArray.length > 0) {
-        categoryConnect = {
-          set: catArray.map(item => {
-            const isId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item);
-            return isId ? { id: item } : { slug: item.toLowerCase().replace(/[^a-z0-9]+/g, '-') };
-          })
-        };
+        const resolvedCategories = [];
+        for (const item of catArray) {
+          if (!item) continue;
+          
+          // 1. Check if it's a UUID
+          const isId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item);
+          if (isId) {
+            resolvedCategories.push({ id: item });
+            continue;
+          }
+
+          // 2. Search for category by slug or name
+          const slug = item.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+          const found = await prisma.category.findFirst({
+            where: {
+              OR: [
+                { slug: slug },
+                { name: { equals: item, mode: 'insensitive' } },
+                { slug: { equals: item, mode: 'insensitive' } }
+              ]
+            }
+          });
+
+          if (found) {
+            resolvedCategories.push({ id: found.id });
+          } else {
+            console.warn(`Category not found: ${item}`);
+          }
+        }
+
+        if (resolvedCategories.length > 0) {
+          categoryConnect = { set: resolvedCategories };
+        }
       }
     }
     delete body.categories;
