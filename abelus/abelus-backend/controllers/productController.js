@@ -152,14 +152,17 @@ export const createProduct = async (req, res) => {
       body.visibility = 'public';
     }
 
-    ["customizationOptions", "tags"].forEach(field => {
+    // Parse arrays and objects from potential string inputs (multipart/form-data)
+    ["customizationOptions", "tags", "variations", "crossSells", "upSells", "attributes"].forEach(field => {
       if (typeof body[field] === "string") {
         try { body[field] = JSON.parse(body[field]); } catch { body[field] = []; }
       }
     });
 
-    // We skip variations, crossSells, upSells for simple create since they require nested connect/create logic in Prisma
-    // Will need dedicated endpoints or specific parsing to handle those cleanly.
+    const variations = body.variations || [];
+    const crossSells = body.crossSells || [];
+    const upSells = body.upSells || [];
+
     delete body.variations;
     delete body.crossSells;
     delete body.upSells;
@@ -215,7 +218,25 @@ export const createProduct = async (req, res) => {
       data: {
         ...body,
         sellerId,
-        ...(categoryConnect && { categories: categoryConnect })
+        ...(categoryConnect && { categories: categoryConnect }),
+        ...(variations.length > 0 && {
+          variations: {
+            create: variations.map(v => ({
+              sku: v.sku || `sku-${Date.now()}-${Math.random()}`,
+              price: Number(v.price) || 0,
+              stock: Number(v.stock) || 0,
+              image: v.image || null,
+              attributes: v.attributes || {},
+              isActive: v.isActive !== false
+            }))
+          }
+        }),
+        ...(crossSells.length > 0 && {
+          crossSells: { connect: crossSells.map(id => ({ id })) }
+        }),
+        ...(upSells.length > 0 && {
+          upSells: { connect: upSells.map(id => ({ id })) }
+        })
       }
     });
 
@@ -455,11 +476,15 @@ export const updateProduct = async (req, res) => {
 
     const body = { ...req.body };
 
-    ["customizationOptions", "tags"].forEach(field => {
+    ["customizationOptions", "tags", "variations", "crossSells", "upSells", "attributes"].forEach(field => {
       if (typeof body[field] === "string") {
         try { body[field] = JSON.parse(body[field]); } catch { body[field] = []; }
       }
     });
+
+    const variations = body.variations || [];
+    const crossSells = body.crossSells || [];
+    const upSells = body.upSells || [];
 
     delete body.variations;
     delete body.crossSells;
@@ -509,7 +534,24 @@ export const updateProduct = async (req, res) => {
       where: { id: req.params.id },
       data: {
         ...body,
-        ...(categoryConnect && { categories: categoryConnect })
+        ...(categoryConnect && { categories: categoryConnect }),
+        variations: {
+          deleteMany: {}, // Simplest way to sync variations is to recreate them
+          create: variations.map(v => ({
+            sku: v.sku || `sku-${Date.now()}-${Math.random()}`,
+            price: Number(v.price) || 0,
+            stock: Number(v.stock) || 0,
+            image: v.image || null,
+            attributes: v.attributes || {},
+            isActive: v.isActive !== false
+          }))
+        },
+        crossSells: {
+          set: crossSells.map(id => ({ id }))
+        },
+        upSells: {
+          set: upSells.map(id => ({ id }))
+        }
       }
     });
 

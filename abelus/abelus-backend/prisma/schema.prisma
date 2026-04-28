@@ -180,6 +180,11 @@ model Product {
   cartItems         CartItem[]
   flashSaleProducts FlashSaleProduct[]
 
+  crossSells        Product[]          @relation("ProductCrossSells")
+  crossSellOf       Product[]          @relation("ProductCrossSells")
+  upSells           Product[]          @relation("ProductUpSells")
+  upSellOf          Product[]          @relation("ProductUpSells")
+
 
   createdAt         DateTime           @default(now())
 
