@@ -37,6 +37,10 @@ export default function AdminSiteSettings() {
         googleMapsQuery: '',
         socialLinks: { facebook: '', twitter: '', instagram: '', linkedin: '' }
     });
+    const [generalForm, setGeneralForm] = useState({
+        siteName: '', tagline: '', logo: null
+    });
+    const [logoPreview, setLogoPreview] = useState(null);
 
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
@@ -50,6 +54,12 @@ export default function AdminSiteSettings() {
                 googleMapsQuery: settings.googleMapsQuery || '',
                 socialLinks: settings.socialLinks || { facebook: '', twitter: '', instagram: '', linkedin: '' }
             });
+            setGeneralForm({
+                siteName: settings.siteName || '',
+                tagline: settings.tagline || '',
+                logo: null
+            });
+            setLogoPreview(settings.logo);
         }
     }, [settings]);
     useEffect(() => { if (error || success) { const t = setTimeout(() => { setError(''); setSuccess(''); }, 3000); return () => clearTimeout(t); } }, [error, success]);
@@ -95,6 +105,37 @@ export default function AdminSiteSettings() {
             else setError(data.message || 'Failed to save footer settings');
         } catch (err) { setError('Failed to save footer settings'); }
         finally { setSaving(false); }
+    };
+
+    const saveGeneralSettings = async (e) => {
+        e.preventDefault();
+        setSaving(true); setError('');
+        try {
+            const token = localStorage.getItem('authToken');
+            const formData = new FormData();
+            formData.append('siteName', generalForm.siteName);
+            formData.append('tagline', generalForm.tagline);
+            if (generalForm.logo) {
+                formData.append('logo', generalForm.logo);
+            }
+
+            const res = await fetch(`${API_URL}/site-settings/general`, {
+                method: 'PUT',
+                headers: { Authorization: `Bearer ${token}` },
+                body: formData
+            });
+            const data = await res.json();
+            if (data.success) {
+                setSuccess('General settings saved!');
+                fetchSettings();
+            } else {
+                setError(data.message || 'Failed to save general settings');
+            }
+        } catch (err) {
+            setError('Failed to save general settings');
+        } finally {
+            setSaving(false);
+        }
     };
 
     const handleAddBadge = () => { setEditingIndex(-1); setBadgeForm({ icon: 'truck', title: '', description: '', isActive: true }); setShowModal(true); };
@@ -150,7 +191,70 @@ export default function AdminSiteSettings() {
                     {success && <div className="mb-4 p-4 bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 text-sage-700 dark:text-sage-400 rounded-xl text-sm">{success}</div>}
 
                     <div className="space-y-6">
+                        {/* General Settings Section */}
+
+                        <div className="bg-white dark:bg-charcoal-800 rounded-2xl shadow-sm border border-cream-200 dark:border-charcoal-700 overflow-hidden">
+                            <div className="p-6 border-b border-cream-100 dark:border-charcoal-700">
+                                <h3 className="text-lg font-bold text-charcoal-800 dark:text-white flex items-center gap-2"><FaCog className="text-terracotta-500" /> General Settings</h3>
+                                <p className="text-sm text-charcoal-500 dark:text-charcoal-400">Configure site name and branding</p>
+                            </div>
+
+                            <form onSubmit={saveGeneralSettings} className="p-6 space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="space-y-6">
+                                        <div className="form-group">
+                                            <label className="block text-sm font-medium text-charcoal-700 dark:text-charcoal-300 mb-2">Site Name</label>
+                                            <input type="text" value={generalForm.siteName} onChange={(e) => setGeneralForm({ ...generalForm, siteName: e.target.value })} placeholder="Abelus"
+                                                className="w-full px-4 py-2.5 bg-cream-50 dark:bg-charcoal-700 border border-cream-200 dark:border-charcoal-600 rounded-xl text-charcoal-800 dark:text-white outline-none focus:border-terracotta-500" />
+                                        </div>
+                                        <div className="form-group">
+                                            <label className="block text-sm font-medium text-charcoal-700 dark:text-charcoal-300 mb-2">Site Tagline</label>
+                                            <input type="text" value={generalForm.tagline} onChange={(e) => setGeneralForm({ ...generalForm, tagline: e.target.value })} placeholder="Your Marketplace"
+                                                className="w-full px-4 py-2.5 bg-cream-50 dark:bg-charcoal-700 border border-cream-200 dark:border-charcoal-600 rounded-xl text-charcoal-800 dark:text-white outline-none focus:border-terracotta-500" />
+                                        </div>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label className="block text-sm font-medium text-charcoal-700 dark:text-charcoal-300 mb-4">Site Logo</label>
+                                        <div className="flex flex-col items-center gap-4 p-6 border-2 border-dashed border-cream-200 dark:border-charcoal-700 rounded-2xl">
+                                            {logoPreview ? (
+                                                <div className="relative group">
+                                                    <img src={logoPreview} alt="Logo Preview" className="h-20 w-auto object-contain bg-white rounded-lg p-2 shadow-sm" />
+                                                    <button type="button" onClick={() => { setGeneralForm({ ...generalForm, logo: null }); setLogoPreview(null); }}
+                                                        className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <FaTimes size={10} />
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center justify-center h-20 w-20 bg-cream-50 dark:bg-charcoal-700 rounded-xl text-charcoal-300">
+                                                    <span className="text-3xl font-bold">A</span>
+                                                </div>
+                                            )}
+                                            <input type="file" id="logo-upload" className="hidden" accept="image/*" onChange={(e) => {
+                                                const file = e.target.files[0];
+                                                if (file) {
+                                                    setGeneralForm({ ...generalForm, logo: file });
+                                                    setLogoPreview(URL.createObjectURL(file));
+                                                }
+                                            }} />
+                                            <label htmlFor="logo-upload" className="px-4 py-2 text-sm font-bold text-terracotta-500 hover:bg-terracotta-50 dark:hover:bg-terracotta-900/20 border border-terracotta-500 rounded-xl cursor-pointer transition-all">
+                                                Change Logo
+                                            </label>
+                                            <p className="text-[10px] text-charcoal-400">Recommended: Transparent PNG, max 2MB</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="pt-4 border-t border-cream-100 dark:border-charcoal-700 flex justify-end">
+                                    <button type="submit" disabled={saving} className="flex items-center gap-2 px-6 py-3 bg-terracotta-500 hover:bg-terracotta-600 disabled:opacity-70 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform active:scale-[0.98] transition-all">
+                                        <FaSave /> {saving ? 'Saving...' : 'Save General Settings'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
                         {/* Trust Badges Section */}
+
                         <div className="bg-white dark:bg-charcoal-800 rounded-2xl shadow-sm border border-cream-200 dark:border-charcoal-700 overflow-hidden">
                             <div className="p-6 border-b border-cream-100 dark:border-charcoal-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                 <div>

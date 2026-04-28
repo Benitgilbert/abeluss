@@ -12,6 +12,8 @@ export default function LandingFooter() {
     contactEmail: 'uwanyirigiraeleora@gmail.com',
     contactPhone: '+25078 881 9878',
     contactAddress: 'Building near Bank of Kigali Gicumbi Branch',
+    siteName: 'Abelus',
+    logo: null,
     socialLinks: { facebook: '', twitter: '', instagram: '', linkedin: '' }
   });
 
@@ -27,6 +29,8 @@ export default function LandingFooter() {
             contactEmail: data.data.contactEmail || prev.contactEmail,
             contactPhone: data.data.contactPhone || prev.contactPhone,
             contactAddress: data.data.contactAddress || prev.contactAddress,
+            siteName: data.data.siteName || prev.siteName,
+            logo: data.data.logo || prev.logo,
             socialLinks: data.data.socialLinks || prev.socialLinks
           }));
         }
@@ -53,11 +57,18 @@ export default function LandingFooter() {
           {/* Brand Column */}
           <div>
             <Link to="/" className="flex items-center gap-2 mb-6 no-underline">
-              <div className="w-10 h-10 bg-gradient-to-br from-terracotta-500 to-terracotta-600 rounded-xl flex items-center justify-center font-bold text-xl text-white shadow-lg">
-                I
-              </div>
-              <span className="text-2xl font-bold text-charcoal-800 dark:text-white tracking-tight">Abelus</span>
+              {footerData.logo ? (
+                <img src={footerData.logo} alt={footerData.siteName} className="h-10 w-auto object-contain" />
+              ) : (
+                <div className="w-10 h-10 bg-gradient-to-br from-terracotta-500 to-terracotta-600 rounded-xl flex items-center justify-center font-bold text-xl text-white shadow-lg ring-1 ring-white/10">
+                  {footerData.siteName ? footerData.siteName.charAt(0) : 'A'}
+                </div>
+              )}
+              <span className="text-2xl font-bold text-charcoal-800 dark:text-white tracking-tight">
+                {footerData.siteName || 'Abelus'}
+              </span>
             </Link>
+
             <p className="text-charcoal-500 dark:text-charcoal-400 mb-6 leading-relaxed">
               {footerData.footerTagline}
             </p>

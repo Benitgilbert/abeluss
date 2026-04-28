@@ -110,13 +110,20 @@ export const updateGeneralSettings = async (req, res, next) => {
         const { siteName, tagline, contactEmail, contactPhone } = req.body;
         const settings = await getSettingsHelper();
 
+        // Handle logo upload if present
+        let logo = undefined;
+        if (req.file) {
+            logo = req.file.path;
+        }
+
         const updated = await prisma.siteSettings.update({
             where: { id: settings.id },
             data: {
                 siteName: siteName !== undefined ? siteName : undefined,
                 tagline: tagline !== undefined ? tagline : undefined,
                 contactEmail: contactEmail !== undefined ? contactEmail : undefined,
-                contactPhone: contactPhone !== undefined ? contactPhone : undefined
+                contactPhone: contactPhone !== undefined ? contactPhone : undefined,
+                logo: logo
             }
         });
 
@@ -129,6 +136,7 @@ export const updateGeneralSettings = async (req, res, next) => {
         next(error);
     }
 };
+
 
 /**
  * ⚙️ Update footer settings

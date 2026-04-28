@@ -35,6 +35,11 @@ export default function Header() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [siteSettings, setSiteSettings] = useState({
+    siteName: 'Abelus',
+    logo: null
+  });
+
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -59,8 +64,22 @@ export default function Header() {
         console.error('Error fetching categories:', error);
       }
     };
+
+    const fetchSettings = async () => {
+      try {
+        const res = await api.get('/site-settings/public');
+        if (res.data.success) {
+          setSiteSettings(res.data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching site settings:', error);
+      }
+    };
+
     fetchCategories();
+    fetchSettings();
   }, []);
+
 
   useEffect(() => {
     const fetchSuggestions = async () => {
@@ -119,11 +138,20 @@ export default function Header() {
 
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3 shrink-0">
-          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-terracotta-500 to-terracotta-600 shadow-lg shadow-terracotta-500/20">
-            <span className="text-xl font-bold text-white">I</span>
-          </div>
-          <span className="text-xl font-bold tracking-tight text-white hidden sm:block">Abelus</span>
+          {siteSettings.logo ? (
+            <img src={siteSettings.logo} alt={siteSettings.siteName} className="h-10 w-auto object-contain" />
+          ) : (
+            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-terracotta-500 to-terracotta-600 shadow-lg shadow-terracotta-500/20 ring-1 ring-white/20">
+              <span className="text-xl font-bold text-white tracking-tighter">
+                {siteSettings.siteName ? siteSettings.siteName.charAt(0) : 'A'}
+              </span>
+            </div>
+          )}
+          <span className="text-xl font-bold tracking-tight text-white hidden sm:block">
+            {siteSettings.siteName || 'Abelus'}
+          </span>
         </Link>
+
 
         {/* Navigation - DESKTOP ONLY */}
         {!isSellerOrAdminView && (
