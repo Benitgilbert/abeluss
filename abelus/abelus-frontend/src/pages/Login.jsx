@@ -32,7 +32,7 @@ function Login() {
     setError("");
     setLoading(true);
     try {
-      const { user } = await login(form.email, form.password);
+      await login(form.email, form.password);
       
       // Cart merging
       try { await mergeCart(); } catch (e) { console.error("Cart merge failed", e); }

@@ -1,16 +1,15 @@
 import { useState } from "react";
 import { supabase } from "../utils/supabaseClient";
-import { Link, useNavigate } from "react-router-dom";
-import { FaEnvelope, FaLock, FaKey, FaArrowRight, FaArrowLeft, FaSpinner } from "react-icons/fa";
+import { Link } from "react-router-dom";
+import { FaEnvelope, FaKey, FaArrowRight, FaArrowLeft, FaSpinner } from "react-icons/fa";
 import TrendingProductsSidebar from "../components/TrendingProductsSidebar";
 
 function ForgotPassword() {
-  const [step, setStep] = useState("request");
+  const step = "request";
   const [form, setForm] = useState({ email: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
