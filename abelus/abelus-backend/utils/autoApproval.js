@@ -40,9 +40,8 @@ export const calculateSellerScore = (user, criteria) => {
  */
 export const checkAutoApproval = async (user) => {
     try {
-        const settingsRecord = await prisma.siteSettings.findUnique({ where: { key: 'general' } });
-        const settings = settingsRecord?.value || {};
-        const autoApproval = settings.sellerAutoApproval || {};
+        const settings = await prisma.siteSettings.findFirst();
+        const autoApproval = settings?.sellerAutoApproval || {};
 
         if (!autoApproval.enabled) {
             return { shouldApprove: false, reason: 'Auto-approval disabled' };

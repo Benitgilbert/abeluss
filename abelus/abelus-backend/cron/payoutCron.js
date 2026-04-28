@@ -8,10 +8,12 @@ export const processAutomatedPayouts = async () => {
     console.log("[Payout Cron] Starting automated payout processing...");
 
     try {
-        const settingsRecord = await prisma.siteSettings.findUnique({ where: { key: 'general' } });
-        const settings = settingsRecord?.value || {};
-        const { autoPayoutEnabled, minimumAmount, maxAutoPayoutAmount } = settings.payoutSettings || {};
-        const commissionRate = settings.commissionRate || 10;
+        const settings = await prisma.siteSettings.findFirst();
+        if (!settings) {
+            console.log("[Payout Cron] No site settings found. Using defaults.");
+        }
+        const { autoPayoutEnabled, minimumAmount, maxAutoPayoutAmount } = settings?.payoutSettings || {};
+        const commissionRate = settings?.commissionRate || 10;
 
         if (!autoPayoutEnabled) {
             console.log("[Payout Cron] Auto payouts disabled. Skipping.");
@@ -112,9 +114,8 @@ const getCronSchedule = (frequency) => {
 
 export const initPayoutCron = async () => {
     try {
-        const settingsRecord = await prisma.siteSettings.findUnique({ where: { key: 'general' } });
-        const settings = settingsRecord?.value || {};
-        const frequency = settings.payoutSettings?.frequency || "weekly";
+        const settings = await prisma.siteSettings.findFirst();
+        const frequency = settings?.payoutSettings?.frequency || "weekly";
         const schedule = getCronSchedule(frequency);
 
         console.log(`[Payout Cron] Initializing with schedule: ${schedule} (${frequency})`);

@@ -569,10 +569,23 @@ model Subscriber {
 }
 
 model SiteSettings {
-  id              String   @id @default(uuid())
-  key             String   @unique
-  value           Json
+  id                String   @id @default(uuid())
+  siteName          String   @default("Abelus")
+  tagline           String?
+  footerTagline     String?
+  contactEmail      String?
+  contactPhone      String?
+  contactAddress    String?
+  googleMapsQuery   String?
+  socialLinks       Json?    // { facebook, twitter, instagram, linkedin }
+  trustBadges       Json?    // Array of { icon, title, description, isActive, order }
+  sellerAutoApproval Json?   // { enabled, minScore, criteria }
+  payoutSettings     Json?   // { autoPayoutEnabled, frequency, minimumAmount, payoutDay, maxAutoPayoutAmount }
+  commissionRate    Float    @default(10)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
+
 
 model Attribute {
   id              String           @id @default(uuid())
