@@ -199,21 +199,29 @@ export const createProduct = async (req, res) => {
         const resolvedCategories = [];
         for (let item of catArray) {
           if (!item) continue;
-          if (typeof item === 'string') item = item.trim();
           
-          const isId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item);
+          // Handle object input from frontend
+          let searchItem = item;
+          if (typeof item === 'object' && item !== null) {
+            searchItem = item.id || item._id || item.name || item.slug;
+          }
+          
+          if (!searchItem) continue;
+          if (typeof searchItem === 'string') searchItem = searchItem.trim();
+
+          const isId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(searchItem);
           if (isId) {
-            resolvedCategories.push({ id: item });
+            resolvedCategories.push({ id: searchItem });
             continue;
           }
 
-          const slug = item.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+          const slug = typeof searchItem === 'string' ? searchItem.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '';
           const found = await prisma.category.findFirst({
             where: {
               OR: [
                 { slug: slug },
-                { name: { equals: item, mode: 'insensitive' } },
-                { slug: { equals: item, mode: 'insensitive' } }
+                { name: { equals: searchItem, mode: 'insensitive' } },
+                { slug: { equals: searchItem, mode: 'insensitive' } }
               ]
             }
           });
@@ -543,23 +551,31 @@ export const updateProduct = async (req, res) => {
         const resolvedCategories = [];
         for (let item of catArray) {
           if (!item) continue;
-          if (typeof item === 'string') item = item.trim();
           
+          // Handle object input from frontend
+          let searchItem = item;
+          if (typeof item === 'object' && item !== null) {
+            searchItem = item.id || item._id || item.name || item.slug;
+          }
+
+          if (!searchItem) continue;
+          if (typeof searchItem === 'string') searchItem = searchItem.trim();
+
           // 1. Check if it's a UUID
-          const isId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item);
+          const isId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(searchItem);
           if (isId) {
-            resolvedCategories.push({ id: item });
+            resolvedCategories.push({ id: searchItem });
             continue;
           }
 
           // 2. Search for category by slug or name
-          const slug = item.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+          const slug = typeof searchItem === 'string' ? searchItem.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '';
           const found = await prisma.category.findFirst({
             where: {
               OR: [
                 { slug: slug },
-                { name: { equals: item, mode: 'insensitive' } },
-                { slug: { equals: item, mode: 'insensitive' } }
+                { name: { equals: searchItem, mode: 'insensitive' } },
+                { slug: { equals: searchItem, mode: 'insensitive' } }
               ]
             }
           });
@@ -567,7 +583,7 @@ export const updateProduct = async (req, res) => {
           if (found) {
             resolvedCategories.push({ id: found.id });
           } else {
-            console.warn(`Category not found: ${item}`);
+            console.warn(`Category not found: ${searchItem}`);
           }
         }
 
