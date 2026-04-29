@@ -197,8 +197,9 @@ export const createProduct = async (req, res) => {
 
       if (Array.isArray(catArray) && catArray.length > 0) {
         const resolvedCategories = [];
-        for (const item of catArray) {
+        for (let item of catArray) {
           if (!item) continue;
+          if (typeof item === 'string') item = item.trim();
           
           const isId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item);
           if (isId) {
@@ -540,8 +541,9 @@ export const updateProduct = async (req, res) => {
 
       if (Array.isArray(catArray) && catArray.length > 0) {
         const resolvedCategories = [];
-        for (const item of catArray) {
+        for (let item of catArray) {
           if (!item) continue;
+          if (typeof item === 'string') item = item.trim();
           
           // 1. Check if it's a UUID
           const isId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item);
