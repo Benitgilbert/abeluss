@@ -115,7 +115,7 @@ function App() {
                   <Route path="/faq" element={<FAQ />} />
                   <Route path="/print-portal" element={<PrintPortal />} />
                   <Route path="/orders" element={
-                    <ProtectedRoute allowedRoles={['customer']}>
+                    <ProtectedRoute allowedRoles={['customer', 'seller', 'admin', 'cashier']}>
                       <OrderHistory />
                     </ProtectedRoute>
                   } />
@@ -137,7 +137,7 @@ function App() {
                     </ProtectedRoute>
                   } />
                   <Route path="/dashboard" element={
-                    <ProtectedRoute allowedRoles={['customer']}>
+                    <ProtectedRoute allowedRoles={['customer', 'seller', 'admin', 'cashier']}>
                       <UserDashboard />
                     </ProtectedRoute>
                   } />
