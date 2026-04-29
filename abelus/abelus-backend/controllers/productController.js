@@ -153,9 +153,9 @@ export const createProduct = async (req, res) => {
     }
 
     // Parse arrays and objects from potential string inputs (multipart/form-data)
-    ["customizationOptions", "tags", "variations", "crossSells", "upSells", "attributes"].forEach(field => {
+    ["customizationOptions", "tags", "variations", "crossSells", "upSells", "attributes", "categories", "category"].forEach(field => {
       if (typeof body[field] === "string") {
-        try { body[field] = JSON.parse(body[field]); } catch { body[field] = []; }
+        try { body[field] = JSON.parse(body[field]); } catch { }
       }
     });
 
@@ -506,9 +506,9 @@ export const updateProduct = async (req, res) => {
 
     const body = { ...req.body };
 
-    ["customizationOptions", "tags", "variations", "crossSells", "upSells", "attributes"].forEach(field => {
+    ["customizationOptions", "tags", "variations", "crossSells", "upSells", "attributes", "categories", "category"].forEach(field => {
       if (typeof body[field] === "string") {
-        try { body[field] = JSON.parse(body[field]); } catch { body[field] = []; }
+        try { body[field] = JSON.parse(body[field]); } catch { }
       }
     });
 
