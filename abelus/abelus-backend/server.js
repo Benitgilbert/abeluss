@@ -6,12 +6,52 @@ import helmet from "helmet";
 import pinoHttp from "pino-http";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
-import prisma from "./prisma.js"; // Replace mongoose with prisma
-//import authRoutes from "./routes/authRoutes.js";
-import dashboardRoutes from "./routes/dashboardRoutes.js";
+import prisma from "./prisma.js";
 import { errorHandler, notFound } from "./middleware/errorHandler.js";
 import logger from "./config/logger.js";
 import { mongoCompat } from "./middleware/mongoCompat.js";
+
+// ✅ Import routes at top level for better Vercel performance
+import dashboardRoutes from "./routes/dashboardRoutes.js";
+import reportRoutes from "./routes/reportRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
+import productRoutes from "./routes/productRoutes.js";
+import categoryRoutes from "./routes/categoryRoutes.js";
+import customizationRoutes from "./routes/customizationRoutes.js";
+import orderRoutes from "./routes/orderRoutes.js";
+import analyticsRoutes from "./routes/analyticsRoutes.js";
+import healthRoutes from "./routes/healthRoutes.js";
+import cartRoutes from "./routes/cartRoutes.js";
+import couponRoutes from "./routes/couponRoutes.js";
+import checkoutRoutes from "./routes/checkoutRoutes.js";
+import paymentRoutes from "./routes/paymentRoutes.js";
+import attributeRoutes from "./routes/attributeRoutes.js";
+import deliveryRoutes from "./routes/deliveryRoutes.js";
+import deliveryClassRoutes from "./routes/deliveryClassRoutes.js";
+import taxRoutes from "./routes/taxRoutes.js";
+import blogRoutes from "./routes/blogRoutes.js";
+import financeRoutes from "./routes/financeRoutes.js";
+import reviewRoutes from "./routes/reviewRoutes.js";
+import flashSaleRoutes from "./routes/flashSaleRoutes.js";
+import bannerRoutes from "./routes/bannerRoutes.js";
+import testimonialRoutes from "./routes/testimonialRoutes.js";
+import brandPartnerRoutes from "./routes/brandPartnerRoutes.js";
+import siteSettingsRoutes from "./routes/siteSettingsRoutes.js";
+import newsletterRoutes from "./routes/newsletterRoutes.js";
+import giftCardRoutes from "./routes/giftCardRoutes.js";
+import shiftRoutes from "./routes/shiftRoutes.js";
+import abonneRoutes from "./routes/abonneRoutes.js";
+import giftCardProductRoutes from "./routes/giftCardProductRoutes.js";
+import sellerRoutes from "./routes/sellerRoutes.js";
+import commissionRoutes from "./routes/commissionRoutes.js";
+import productApprovalRoutes from "./routes/productApprovalRoutes.js";
+import reviewsAdminRoutes from "./routes/reviewsAdminRoutes.js";
+import ticketRoutes from "./routes/ticketRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
+import sellerVerificationRoutes from "./routes/sellerVerificationRoutes.js";
+import uploadRoutes from "./routes/uploadRoutes.js";
+import violationRoutes from "./routes/violationRoutes.js";
+import chatbotRoutes from "./routes/chatbotRoutes.js";
 
 dotenv.config();
 
@@ -20,7 +60,7 @@ const app = express();
 
 // ✅ Security Middleware
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" }, // Allow cross-origin resources
+  crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
 
 // ✅ CORS Configuration
@@ -32,19 +72,13 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-
-    // In development, allow localhost
     if (origin && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
       return callback(null, true);
     }
-
-    // Check if origin is in allowed list
     if (allowedOrigins.some(allowed => origin === allowed || origin.endsWith('.replit.dev') || origin.endsWith('.vercel.app'))) {
       return callback(null, true);
     }
-
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
@@ -55,8 +89,8 @@ app.use(cors({
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(passport.initialize());
-app.use(cookieParser()); // For cart session management
-app.use(mongoCompat); // Ensure frontend compatibility (id -> _id)
+app.use(cookieParser());
+app.use(mongoCompat);
 
 // ✅ Request Logging Middleware
 app.use(
@@ -67,13 +101,8 @@ app.use(
       if (res.statusCode >= 400) return "warn";
       return "info";
     },
-    customSuccessMessage: (req, res) => {
-      return `${req.method} ${req.url} ${res.statusCode} `;
-    },
-    customErrorMessage: (req, res, err) => {
-      return `${req.method} ${req.url} ${res.statusCode} - ${err.message} `;
-    },
-    // Skip logging for health checks
+    customSuccessMessage: (req, res) => `${req.method} ${req.url} ${res.statusCode}`,
+    customErrorMessage: (req, res, err) => `${req.method} ${req.url} ${res.statusCode} - ${err.message}`,
     autoLogging: {
       ignore: (req) => req.url === "/health" || req.url === "/live",
     },
@@ -83,175 +112,97 @@ app.use(
 // Static uploads for product images
 app.use("/uploads", express.static("uploads"));
 
-// ✅ Start server only after DB connects
-const startServer = async () => {
-  try {
-    // Connect to Prisma instead of Mongoose
-    await prisma.$connect();
-    logger.info("✅ Prisma connected to Supabase (PostgreSQL)");
+// ✅ Register health checks first
+app.use("/", healthRoutes);
+app.use("/api", healthRoutes);
 
-    // ✅ Import routes only after DB is ready
-    const reportRoutes = (await import("./routes/reportRoutes.js")).default;
-    const authRoutes = (await import("./routes/authRoutes.js")).default;
-    const productRoutes = (await import("./routes/productRoutes.js")).default;
-    const categoryRoutes = (await import("./routes/categoryRoutes.js")).default;
-    const customizationRoutes = (await import("./routes/customizationRoutes.js")).default;
-    const orderRoutes = (await import("./routes/orderRoutes.js")).default;
-    const analyticsRoutes = (await import("./routes/analyticsRoutes.js")).default;
-    const healthRoutes = (await import("./routes/healthRoutes.js")).default;
-    const cartRoutes = (await import("./routes/cartRoutes.js")).default;
-    const couponRoutes = (await import("./routes/couponRoutes.js")).default;
-    const checkoutRoutes = (await import("./routes/checkoutRoutes.js")).default;
-    const paymentRoutes = (await import("./routes/paymentRoutes.js")).default;
-    const attributeRoutes = (await import("./routes/attributeRoutes.js")).default;
-    const deliveryRoutes = (await import("./routes/deliveryRoutes.js")).default;
-    const deliveryClassRoutes = (await import("./routes/deliveryClassRoutes.js")).default;
-    const taxRoutes = (await import("./routes/taxRoutes.js")).default;
-    const blogRoutes = (await import("./routes/blogRoutes.js")).default;
-    const financeRoutes = (await import("./routes/financeRoutes.js")).default;
-    const reviewRoutes = (await import("./routes/reviewRoutes.js")).default;
-    const flashSaleRoutes = (await import("./routes/flashSaleRoutes.js")).default;
-    const bannerRoutes = (await import("./routes/bannerRoutes.js")).default;
-    const testimonialRoutes = (await import("./routes/testimonialRoutes.js")).default;
-    const brandPartnerRoutes = (await import("./routes/brandPartnerRoutes.js")).default;
-    const siteSettingsRoutes = (await import("./routes/siteSettingsRoutes.js")).default;
-    const newsletterRoutes = (await import("./routes/newsletterRoutes.js")).default;
-    const giftCardRoutes = (await import("./routes/giftCardRoutes.js")).default;
+// ✅ Register API routes
+app.use("/api/auth", authRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/cart", cartRoutes);
+app.use("/api/coupons", couponRoutes);
+app.use("/api/checkout", checkoutRoutes);
+app.use("/api/payments", paymentRoutes);
+app.use("/api/attributes", attributeRoutes);
+app.use("/api/shipping", deliveryRoutes);
+app.use("/api/delivery", deliveryRoutes);
+app.use("/api/shipping-classes", deliveryClassRoutes);
+app.use("/api/delivery-classes", deliveryClassRoutes);
+app.use("/api/taxes", taxRoutes);
+app.use("/api/customizations", customizationRoutes);
+app.use("/api/orders", orderRoutes);
+app.use("/api/reports", reportRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/analytics", analyticsRoutes);
+app.use("/api/blogs", blogRoutes);
+app.use("/api/finance", financeRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/flash-sales", flashSaleRoutes);
+app.use("/api/banners", bannerRoutes);
+app.use("/api/testimonials", testimonialRoutes);
+app.use("/api/brand-partners", brandPartnerRoutes);
+app.use("/api/site-settings", siteSettingsRoutes);
+app.use("/api/newsletter", newsletterRoutes);
+app.use("/api/gift-cards", giftCardRoutes);
+app.use("/api/shifts", shiftRoutes);
+app.use("/api/abonnes", abonneRoutes);
+app.use("/api/gift-card-products", giftCardProductRoutes);
+app.use("/api/sellers", sellerRoutes);
+app.use("/api/commissions", commissionRoutes);
+app.use("/api/product-approval", productApprovalRoutes);
+app.use("/api/reviews-admin", reviewsAdminRoutes);
+app.use("/api/tickets", ticketRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/seller-verification", sellerVerificationRoutes);
+app.use("/api/upload", uploadRoutes);
+app.use("/api/violations", violationRoutes);
+app.use("/api/chatbot", chatbotRoutes);
 
-    // ✅ Register health checks first (no auth required)
-    app.use("/", healthRoutes);
-    app.use("/api", healthRoutes);
+app.get("/api", (req, res) => {
+  res.json({
+    success: true,
+    message: "Abelus Backend API is running on Prisma!",
+    version: "1.0.0",
+    environment: process.env.NODE_ENV || "development"
+  });
+});
 
-    // ✅ Register API routes
-    app.use("/api/auth", authRoutes);
-    app.use("/api/products", productRoutes);
-    app.use("/api/categories", categoryRoutes);
-    app.use("/api/cart", cartRoutes);
-    app.use("/api/coupons", couponRoutes);
-    app.use("/api/checkout", checkoutRoutes);
-    app.use("/api/payments", paymentRoutes);
-    app.use("/api/attributes", attributeRoutes);
-    app.use("/api/shipping", deliveryRoutes);
-    app.use("/api/delivery", deliveryRoutes); // Alias
-    app.use("/api/shipping-classes", deliveryClassRoutes);
-    app.use("/api/delivery-classes", deliveryClassRoutes); // Alias
-    app.use("/api/taxes", taxRoutes);
-    app.use("/api/customizations", customizationRoutes);
-    app.use("/api/orders", orderRoutes);
-    app.use("/api/reports", reportRoutes);
-    app.use("/api", authRoutes);
-    app.use("/api/dashboard", dashboardRoutes);
-    app.use("/api/analytics", analyticsRoutes);
-    app.use("/api/blogs", blogRoutes);
-    app.use("/api/finance", financeRoutes);
-    app.use("/api/reviews", reviewRoutes);
-    app.use("/api/flash-sales", flashSaleRoutes);
-    app.use("/api/banners", bannerRoutes);
-    app.use("/api/testimonials", testimonialRoutes);
-    app.use("/api/brand-partners", brandPartnerRoutes);
-    app.use("/api/site-settings", siteSettingsRoutes);
-    app.use("/api/newsletter", newsletterRoutes);
-    app.use("/api/gift-cards", giftCardRoutes);
-    const shiftRoutes = (await import("./routes/shiftRoutes.js")).default;
-    app.use("/api/shifts", shiftRoutes);
-    const abonneRoutes = (await import("./routes/abonneRoutes.js")).default;
-    app.use("/api/abonnes", abonneRoutes);
-    const giftCardProductRoutes = (await import("./routes/giftCardProductRoutes.js")).default;
-    app.use("/api/gift-card-products", giftCardProductRoutes);
-    const sellerRoutes = (await import("./routes/sellerRoutes.js")).default;
-    app.use("/api/sellers", sellerRoutes);
-    const commissionRoutes = (await import("./routes/commissionRoutes.js")).default;
-    app.use("/api/commissions", commissionRoutes);
-    const productApprovalRoutes = (await import("./routes/productApprovalRoutes.js")).default;
-    app.use("/api/product-approval", productApprovalRoutes);
-    const reviewsAdminRoutes = (await import("./routes/reviewsAdminRoutes.js")).default;
-    app.use("/api/reviews-admin", reviewsAdminRoutes);
-    const ticketRoutes = (await import("./routes/ticketRoutes.js")).default;
-    app.use("/api/tickets", ticketRoutes);
-    const notificationRoutes = (await import("./routes/notificationRoutes.js")).default;
-    app.use("/api/notifications", notificationRoutes);
-    const sellerVerificationRoutes = (await import("./routes/sellerVerificationRoutes.js")).default;
-    app.use("/api/seller-verification", sellerVerificationRoutes);
-    const uploadRoutes = (await import("./routes/uploadRoutes.js")).default;
-    app.use("/api/upload", uploadRoutes);
-    const violationRoutes = (await import("./routes/violationRoutes.js")).default;
-    app.use("/api/violations", violationRoutes);
-    const chatbotRoutes = (await import("./routes/chatbotRoutes.js")).default;
-    app.use("/api/chatbot", chatbotRoutes);
+// ✅ 404 & Error Handlers
+app.use(notFound);
+app.use(errorHandler);
 
+// ✅ Database Connection & Server Start
+const isVercel = process.env.VERCEL === '1' || !!process.env.VERCEL;
 
-    app.get("/api", (req, res) => {
-      res.json({
-        success: true,
-        message: "Abelus Backend API is running on Prisma!",
-        version: "1.0.0",
-        environment: process.env.NODE_ENV || "development",
-        docs: "/api-docs (coming in Phase 4)"
+if (!isVercel) {
+  const startServer = async () => {
+    try {
+      await prisma.$connect();
+      logger.info("✅ Prisma connected to Supabase");
+
+      const PORT = process.env.PORT || 5000;
+      const server = app.listen(PORT, () => {
+        logger.info(`🚀 Server running on port ${PORT}`);
       });
-    });
 
-    // ✅ 404 Handler - Must be after all routes
-    app.use(notFound);
-
-    // ✅ Global Error Handler - Must be last
-    app.use(errorHandler);
-
-    // ✅ Start listening
-    const PORT = process.env.PORT || 5000;
-    const server = app.listen(PORT, () => {
-      logger.info(`🚀 Server running on port ${PORT} `);
-      logger.info(`📝 Environment: ${process.env.NODE_ENV || "development"} `);
-      logger.info(`🏥 Health check: http://localhost:${PORT}/health`);
-      logger.info(`📊 Readiness check: http://localhost:${PORT}/ready`);
-    });
-
-    // ✅ Graceful Shutdown
-    const gracefulShutdown = async (signal) => {
-      logger.info(`${signal} received, starting graceful shutdown...`);
-
-      // Stop accepting new connections
-      server.close(async () => {
-        logger.info("HTTP server closed");
-
-        try {
-          // Close Prisma connection
+      const gracefulShutdown = async (signal) => {
+        logger.info(`${signal} received, shutting down...`);
+        server.close(async () => {
           await prisma.$disconnect();
-          logger.info("Prisma connection closed");
-
-          logger.info("Graceful shutdown completed");
           process.exit(0);
-        } catch (error) {
-          logger.error({ err: error }, "Error during graceful shutdown");
-          process.exit(1);
-        }
-      });
+        });
+      };
 
-      // Force shutdown after 30 seconds
-      setTimeout(() => {
-        logger.error("Forced shutdown after timeout");
-        process.exit(1);
-      }, 30000);
-    };
+      process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+      process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+    } catch (err) {
+      logger.fatal({ err }, "❌ Failed to start server");
+      process.exit(1);
+    }
+  };
+  startServer();
+}
 
-    // Listen for termination signals
-    process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
-    process.on("SIGINT", () => gracefulShutdown("SIGINT"));
-
-    // Handle uncaught exceptions
-    process.on("uncaughtException", (error) => {
-      logger.fatal({ err: error }, "Uncaught Exception");
-      gracefulShutdown("UNCAUGHT_EXCEPTION");
-    });
-
-    // Handle unhandled promise rejections
-    process.on("unhandledRejection", (reason, promise) => {
-      logger.fatal({ reason, promise }, "Unhandled Promise Rejection");
-      gracefulShutdown("UNHANDLED_REJECTION");
-    });
-  } catch (err) {
-    logger.fatal({ err }, "❌ Failed to connect to Supabase via Prisma");
-    process.exit(1);
-  }
-};
-
-startServer();
+// ✅ Export app for Vercel
+export default app;

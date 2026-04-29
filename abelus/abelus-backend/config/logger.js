@@ -14,11 +14,14 @@ const isDevelopment = process.env.NODE_ENV !== "production";
  * - trace: 10
  */
 
+// Pretty print in development (but never on Vercel)
+const isVercel = process.env.VERCEL === "1" || !!process.env.VERCEL;
+
 const logger = pino({
   level: process.env.LOG_LEVEL || (isDevelopment ? "debug" : "info"),
   
-  // Pretty print in development
-  transport: isDevelopment
+  // Pretty print in development, but skip in production or on Vercel
+  transport: (isDevelopment && !isVercel)
     ? {
         target: "pino-pretty",
         options: {
