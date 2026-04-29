@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { FaCloudUploadAlt, FaPrint, FaFileAlt, FaCheckCircle, FaCalculator, FaInfoCircle } from "react-icons/fa";
 import api from "../utils/axiosInstance";
 import Header from "../components/Header";
-import Footer from "../components/Footer";
+import LandingFooter from "../components/LandingFooter";
 
 const PrintPortal = () => {
     const [services, setServices] = useState([]);
@@ -78,7 +78,7 @@ const PrintPortal = () => {
                         Return Home
                     </button>
                 </div>
-                <Footer />
+                <LandingFooter />
             </div>
         );
     }
@@ -243,7 +243,7 @@ const PrintPortal = () => {
                 </div>
             </main>
 
-            <Footer />
+            <LandingFooter />
         </div>
     );
 };
