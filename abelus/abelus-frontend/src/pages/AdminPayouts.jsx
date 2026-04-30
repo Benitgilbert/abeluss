@@ -6,6 +6,7 @@ import {
 } from 'react-icons/fa';
 import Sidebar from '../components/Sidebar';
 import Topbar from '../components/Topbar';
+import api from '../utils/axiosInstance';
 
 export default function AdminPayouts() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -21,35 +22,49 @@ export default function AdminPayouts() {
     const [showModal, setShowModal] = useState(false);
     const [processing, setProcessing] = useState(false);
 
-    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-
     const fetchPayouts = useCallback(async () => {
         setLoading(true);
         try {
-            const token = localStorage.getItem('authToken');
-            const params = new URLSearchParams({ page: currentPage, limit: 15, ...(statusFilter !== 'all' && { status: statusFilter }) });
-            const res = await fetch(`${API_URL}/commissions/payouts?${params}`, { headers: { Authorization: `Bearer ${token}` } });
-            const data = await res.json();
-            if (data.success) { setPayouts(data.data); setStats(data.stats); setTotalPages(data.pagination.pages); }
-        } catch (err) { setError('Failed to fetch payouts'); }
-        finally { setLoading(false); }
-    }, [currentPage, statusFilter, API_URL]);
+            const params = new URLSearchParams({ 
+                page: currentPage, 
+                limit: 15, 
+                ...(statusFilter !== 'all' && { status: statusFilter }) 
+            });
+            const res = await api.get(`/commissions/payouts?${params.toString()}`);
+            if (res.data.success) { 
+                setPayouts(res.data.data); 
+                setStats(res.data.stats || { pendingCount: 0, pendingAmount: 0 }); 
+                setTotalPages(res.data.pagination?.pages || 1); 
+            }
+        } catch (err) { 
+            console.error('Payout fetch error:', err);
+            setError('Failed to fetch payouts'); 
+        } finally { 
+            setLoading(false); 
+        }
+    }, [currentPage, statusFilter]);
 
     useEffect(() => { fetchPayouts(); }, [fetchPayouts]);
 
     const handleProcess = async (action, transactionId = '', rejectionReason = '') => {
         setProcessing(true);
         try {
-            const token = localStorage.getItem('authToken');
-            const res = await fetch(`${API_URL}/commissions/payouts/${selectedPayout._id}`, {
-                method: 'PUT', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action, transactionId, rejectionReason })
+            const res = await api.put(`/commissions/payouts/${selectedPayout.id || selectedPayout._id}`, {
+                action, transactionId, rejectionReason
             });
-            const data = await res.json();
-            if (data.success) { setSuccess(data.message); setShowModal(false); setSelectedPayout(null); fetchPayouts(); }
-            else setError(data.message || 'Failed to process payout');
-        } catch (err) { setError('Failed to process payout'); }
-        finally { setProcessing(false); }
+            if (res.data.success) { 
+                setSuccess(res.data.message); 
+                setShowModal(false); 
+                setSelectedPayout(null); 
+                fetchPayouts(); 
+            } else {
+                setError(res.data.message || 'Failed to process payout');
+            }
+        } catch (err) { 
+            setError('Failed to process payout'); 
+        } finally { 
+            setProcessing(false); 
+        }
     };
 
     const formatCurrency = (amount) => `RWF ${amount?.toLocaleString() || 0}`;

@@ -5,50 +5,72 @@ import {
 } from 'react-icons/fa';
 import Sidebar from '../components/Sidebar';
 import Topbar from '../components/Topbar';
+import api from '../utils/axiosInstance';
 
 export default function AdminCommissions() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [settings, setSettings] = useState({ defaultRate: 10, posRate: 5, minimumPayoutAmount: 10000, payoutSchedule: 'manual', payoutMethods: ['mobile_money', 'bank_transfer'] });
-    const [dashboard, setDashboard] = useState({ platformEarnings: 0, pendingPayouts: { amount: 0, count: 0 }, completedPayouts: { amount: 0, count: 0 }, activeSellers: 0 });
+    const [settings, setSettings] = useState({ 
+        defaultRate: 10, 
+        posRate: 5, 
+        minimumPayoutAmount: 10000, 
+        payoutSchedule: 'manual', 
+        payoutMethods: ['mobile_money', 'bank_transfer'] 
+    });
+    const [dashboard, setDashboard] = useState({ 
+        platformEarnings: 0, 
+        pendingPayouts: { amount: 0, count: 0 }, 
+        completedPayouts: { amount: 0, count: 0 }, 
+        activeSellers: 0 
+    });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
-    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-
     const fetchData = useCallback(async () => {
         try {
-            const token = localStorage.getItem('authToken');
+            setLoading(true);
             const [settingsRes, dashRes] = await Promise.all([
-                fetch(`${API_URL}/commissions/settings`, { headers: { Authorization: `Bearer ${token}` } }),
-                fetch(`${API_URL}/commissions/dashboard`, { headers: { Authorization: `Bearer ${token}` } })
+                api.get('/commissions/settings'),
+                api.get('/commissions/dashboard')
             ]);
-            const settingsData = await settingsRes.json();
-            const dashData = await dashRes.json();
-            if (settingsData.success) setSettings(settingsData.data);
-            if (dashData.success) setDashboard(dashData.data);
-        } catch (err) { setError('Failed to load commission data'); }
-        finally { setLoading(false); }
-    }, [API_URL]);
+            
+            if (settingsRes.data.success) {
+                setSettings({
+                    ...settingsRes.data.data,
+                    posRate: settingsRes.data.data.posRate ?? 5 // Fallback if missing
+                });
+            }
+            if (dashRes.data.success) setDashboard(dashRes.data.data);
+        } catch (err) { 
+            console.error('Commission load error:', err);
+            setError('Failed to load commission data. Please check your permissions.'); 
+        } finally { 
+            setLoading(false); 
+        }
+    }, []);
 
     useEffect(() => { fetchData(); }, [fetchData]);
-    useEffect(() => { if (error || success) { const t = setTimeout(() => { setError(''); setSuccess(''); }, 3000); return () => clearTimeout(t); } }, [error, success]);
+    
+    useEffect(() => { 
+        if (error || success) { 
+            const t = setTimeout(() => { setError(''); setSuccess(''); }, 3000); 
+            return () => clearTimeout(t); 
+        } 
+    }, [error, success]);
 
     const handleSaveSettings = async (e) => {
         e.preventDefault();
         setSaving(true);
         try {
-            const token = localStorage.getItem('authToken');
-            const res = await fetch(`${API_URL}/commissions/settings`, {
-                method: 'PUT', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify(settings)
-            });
-            const data = await res.json();
-            if (data.success) setSuccess('Settings saved successfully');
-            else setError(data.message || 'Failed to save');
-        } catch (err) { setError('Failed to save settings'); }
-        finally { setSaving(false); }
+            const res = await api.put('/commissions/settings', settings);
+            if (res.data.success) setSuccess('Settings saved successfully');
+            else setError(res.data.message || 'Failed to save');
+        } catch (err) { 
+            setError('Failed to save settings'); 
+        } finally { 
+            setSaving(false); 
+        }
     };
 
     const formatCurrency = (amount) => `RWF ${amount?.toLocaleString() || 0}`;
