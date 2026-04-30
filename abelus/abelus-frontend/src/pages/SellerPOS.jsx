@@ -68,6 +68,7 @@ export default function SellerPOS() {
     const [selectedClient, setSelectedClient] = useState(null);
     const [clientContractPrices, setClientContractPrices] = useState([]);
     const [clientSearchTerm, setClientSearchTerm] = useState("");
+    const [clientMode, setClientMode] = useState("guest"); // "guest" or "abonne"
 
     const fetchClients = useCallback(async () => {
         try {
@@ -891,14 +892,17 @@ export default function SellerPOS() {
                             <div className="space-y-3">
                                 <div className="flex gap-2 p-1 bg-gray-100 dark:bg-gray-900 rounded-xl">
                                     <button
-                                        onClick={() => setSelectedClient(null)}
-                                        className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${!selectedClient ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600' : 'text-gray-500'}`}
+                                        onClick={() => {
+                                            setClientMode("guest");
+                                            setSelectedClient(null);
+                                        }}
+                                        className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${clientMode === "guest" ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600' : 'text-gray-500'}`}
                                     >
                                         GUEST
                                     </button>
                                     <button
-                                        onClick={() => !selectedClient && setClientSearchTerm("")}
-                                        className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${selectedClient ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600' : 'text-gray-500'}`}
+                                        onClick={() => setClientMode("abonne")}
+                                        className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${clientMode === "abonne" ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600' : 'text-gray-500'}`}
                                     >
                                         ABONNÉ
                                     </button>
@@ -917,7 +921,7 @@ export default function SellerPOS() {
                                             <FaTrash size={12} />
                                         </button>
                                     </div>
-                                ) : (
+                                ) : clientMode === "abonne" ? (
                                     <div className="relative">
                                         <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
                                         <input
@@ -945,7 +949,7 @@ export default function SellerPOS() {
                                             </div>
                                         )}
                                     </div>
-                                )}
+                                ) : null}
                             </div>
                         </div>
 
