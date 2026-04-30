@@ -133,7 +133,7 @@ export default function About() {
                 </div>
               ) : teamMembers.length > 0 ? (
                 teamMembers.map((member) => (
-                  <div key={member._id || member.name} className="text-center group">
+                  <div key={member.id || member.name} className="text-center group">
                     <div className="relative mb-6 mx-auto w-48 h-48">
                       <div className="absolute inset-0 bg-violet-600 rounded-full scale-0 group-hover:scale-105 transition-transform duration-500 opacity-20"></div>
                       <img

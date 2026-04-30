@@ -56,7 +56,7 @@ function AdminShipping() {
             methods: zone.methods
         });
         setIsEdit(true);
-        setEditId(zone._id);
+        setEditId(zone.id);
         setShowModal(true);
     };
 
@@ -134,7 +134,7 @@ function AdminShipping() {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                             {zones.map((zone) => (
-                                <div key={zone._id} className="bg-white dark:bg-charcoal-800 rounded-2xl shadow-sm border border-cream-200 dark:border-charcoal-700 overflow-hidden flex flex-col group hover:shadow-lg transition-all duration-300">
+                                <div key={zone.id} className="bg-white dark:bg-charcoal-800 rounded-2xl shadow-sm border border-cream-200 dark:border-charcoal-700 overflow-hidden flex flex-col group hover:shadow-lg transition-all duration-300">
                                     <div className="p-6 pb-4 border-b border-cream-100 dark:border-charcoal-700 flex justify-between items-start">
                                         <div className="flex gap-4">
                                             <div className="w-12 h-12 rounded-xl bg-sage-100 dark:bg-sage-900/20 flex items-center justify-center text-sage-600 dark:text-sage-400 shrink-0">
@@ -150,7 +150,7 @@ function AdminShipping() {
                                         </div>
                                         <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button onClick={() => handleEdit(zone)} className="p-2 text-charcoal-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"><FaEdit /></button>
-                                            <button onClick={() => handleDelete(zone._id)} className="p-2 text-charcoal-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"><FaTrash /></button>
+                                            <button onClick={() => handleDelete(zone.id)} className="p-2 text-charcoal-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"><FaTrash /></button>
                                         </div>
                                     </div>
 

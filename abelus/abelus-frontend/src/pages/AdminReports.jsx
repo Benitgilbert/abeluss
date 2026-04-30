@@ -239,7 +239,7 @@ function AdminReports() {
                         </tr>
                       ) : (
                         logs.map((log) => (
-                          <tr key={log._id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors group">
+                          <tr key={log.id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors group">
                             <td className="px-6 py-4 text-sm text-charcoal-600 dark:text-charcoal-400 whitespace-nowrap">
                               {new Date(log.timestamp).toLocaleDateString()} <span className="text-xs opacity-70 ml-1">{new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                             </td>

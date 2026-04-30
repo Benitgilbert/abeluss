@@ -14,7 +14,7 @@ function EditUserModal({ user, onClose, onSave }) {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await axios.put(`/auth/users/${user._id}`, form);
+      const res = await axios.put(`/auth/users/${user.id}`, form);
       onSave(res.data);
       onClose();
     } catch (err) {

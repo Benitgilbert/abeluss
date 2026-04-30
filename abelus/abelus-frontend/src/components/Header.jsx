@@ -235,8 +235,8 @@ export default function Header() {
                       <div className="py-1">
                         {suggestions.map((item) => (
                           <div
-                            key={item._id}
-                            onClick={() => handleSuggestionClick(item._id)}
+                            key={item.id}
+                            onClick={() => handleSuggestionClick(item.id)}
                             className="flex items-center gap-3 px-4 py-2.5 hover:bg-charcoal-700 cursor-pointer transition-colors"
                           >
                             <img src={assetUrl(item.image)} alt={item.name} className="w-10 h-10 rounded-lg object-cover bg-charcoal-700" />

@@ -105,17 +105,19 @@ export const getTopProducts = async (req, res) => {
       take: 5
     });
 
-    const topProducts = await Promise.all(topProductsRaw.map(async (tp) => {
-      const product = await prisma.product.findUnique({ 
-          where: { id: tp.productId },
-          select: { name: true }
-      });
-      return {
-        _id: tp.productId,
-        productName: product?.name || "Unknown Product",
-        totalQuantity: tp._sum.quantity,
-        totalOrders: tp._count.productId
-      };
+    const productIds = topProductsRaw.map(tp => tp.productId);
+    const products = await prisma.product.findMany({
+      where: { id: { in: productIds } },
+      select: { id: true, name: true }
+    });
+    
+    const productMap = Object.fromEntries(products.map(p => [p.id, p]));
+
+    const topProducts = topProductsRaw.map((tp) => ({
+      id: tp.productId,
+      productName: productMap[tp.productId]?.name || "Unknown Product",
+      totalQuantity: tp._sum.quantity,
+      totalOrders: tp._count.productId
     }));
 
     res.json(topProducts);

@@ -1,5 +1,6 @@
 import express from "express";
 import * as checkoutController from "../controllers/checkoutController.js";
+import { checkoutLimiter } from "../middleware/rateLimiter.js";
 
 const router = express.Router();
 
@@ -14,7 +15,7 @@ const optionalAuth = (req, res, next) => {
 };
 
 // Checkout routes
-router.post("/order", optionalAuth, checkoutController.createOrderFromCart);
+router.post("/order", checkoutLimiter, optionalAuth, checkoutController.createOrderFromCart);
 router.post("/shipping/calculate", checkoutController.calculateShipping);
 router.post("/tax/calculate", checkoutController.calculateTax);
 

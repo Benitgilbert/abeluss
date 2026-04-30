@@ -103,7 +103,7 @@ const AdminGiftCardProducts = () => {
             };
 
             if (editingProduct) {
-                await updateGiftCardProduct(editingProduct._id, payload);
+                await updateGiftCardProduct(editingProduct.id, payload);
                 showSuccess("Gift card product updated!");
             } else {
                 await createGiftCardProduct(payload);
@@ -122,7 +122,7 @@ const AdminGiftCardProducts = () => {
     // TOGGLE ACTIVE STATUS
     const toggleActive = async (product) => {
         try {
-            await updateGiftCardProduct(product._id, { isActive: !product.isActive });
+            await updateGiftCardProduct(product.id, { isActive: !product.isActive });
             showSuccess(`Product ${product.isActive ? "hidden" : "shown"} `);
             fetchProducts();
         } catch (error) {
@@ -139,7 +139,7 @@ const AdminGiftCardProducts = () => {
     const handleDelete = async () => {
         setIsSubmitting(true);
         try {
-            await deleteGiftCardProduct(editingProduct._id);
+            await deleteGiftCardProduct(editingProduct.id);
             showSuccess("Gift card product deleted!");
             setShowDeleteModal(false);
             fetchProducts();
@@ -207,7 +207,7 @@ const AdminGiftCardProducts = () => {
                         ) : (
                             products.map((product) => (
                                 <div
-                                    key={product._id}
+                                    key={product.id}
                                     className={`relative bg-white dark:bg-charcoal-800 rounded-2xl p-1 shadow-sm border border-cream-200 dark:border-charcoal-700 overflow-hidden transition-all ${!product.isActive && "opacity-60"}`}
                                 >
                                     {/* Status Badge */}

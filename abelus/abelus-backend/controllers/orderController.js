@@ -2,7 +2,7 @@ import prisma from "../prisma.js";
 import crypto from "crypto";
 import logger from "../config/logger.js";
 import { recordTransaction } from "./financeController.js";
-import { sendOrderConfirmation, sendGiftCardEmail, sendStatusUpdate } from "../services/emailService.js";
+import { sendOrderConfirmation, sendGiftCardEmail, sendStatusUpdate } from "../utils/emailService.js";
 import { notifyAdminNewOrder, notifyOrderPlaced, notifyOrderStatus } from "./notificationController.js";
 
 // --- UTILITIES ---
@@ -83,7 +83,7 @@ export const placeOrder = async (req, res) => {
       }
     });
 
-    res.status(201).json({ _id: order.id, publicId: order.publicId });
+    res.status(201).json({ id: order.id, publicId: order.publicId });
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -120,7 +120,7 @@ export const placeOrderGuest = async (req, res) => {
       }
     });
 
-    res.status(201).json({ _id: order.id, publicId: order.publicId });
+    res.status(201).json({ id: order.id, publicId: order.publicId });
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -137,72 +137,76 @@ export const createOrder = async (req, res) => {
       return res.status(400).json({ message: "Order must contain items" });
     }
 
-    const orderItemsData = [];
-    
-    for (const item of items) {
-      const product = await prisma.product.findUnique({
-        where: { id: item.product.id || item.product },
-        include: { variations: true }
-      });
-      
-      if (!product) throw new Error(`Product not found: ${item.name}`);
+    // 🔒 Atomic transaction: stock validation + decrement + order creation
+    const order = await prisma.$transaction(async (tx) => {
+      const orderItemsData = [];
 
-      // Stock Deduction
-      if (item.variationId) {
-        const variation = product.variations.find(v => v.sku === item.variationId);
-        if (!variation) throw new Error(`Variation ${item.variationId} not found`);
-        if (variation.stock < item.quantity) throw new Error(`Insufficient stock for ${product.name} (Variation)`);
+      for (const item of items) {
+        const product = await tx.product.findUnique({
+          where: { id: item.product.id || item.product },
+          include: { variations: true }
+        });
 
-        await prisma.productVariation.update({
-          where: { id: variation.id },
-          data: { stock: { decrement: Number(item.quantity) } }
-        });
-        await prisma.product.update({
-          where: { id: product.id },
-          data: { stock: { decrement: Number(item.quantity) }, salesCount: { increment: Number(item.quantity) } }
-        });
-      } else {
-        if (product.stock < item.quantity) throw new Error(`Insufficient stock for ${product.name}`);
-        await prisma.product.update({
-          where: { id: product.id },
-          data: { stock: { decrement: Number(item.quantity) }, salesCount: { increment: Number(item.quantity) } }
+        if (!product) throw new Error(`Product not found: ${item.name}`);
+
+        // Stock Deduction (atomic — uses WHERE to prevent overselling)
+        if (item.variationId) {
+          const variation = product.variations.find(v => v.sku === item.variationId);
+          if (!variation) throw new Error(`Variation ${item.variationId} not found`);
+
+          const updatedVariation = await tx.productVariation.updateMany({
+            where: { id: variation.id, stock: { gte: Number(item.quantity) } },
+            data: { stock: { decrement: Number(item.quantity) } }
+          });
+          if (updatedVariation.count === 0) throw new Error(`Insufficient stock for ${product.name} (Variation)`);
+
+          await tx.product.update({
+            where: { id: product.id },
+            data: { stock: { decrement: Number(item.quantity) }, salesCount: { increment: Number(item.quantity) } }
+          });
+        } else {
+          const updated = await tx.product.updateMany({
+            where: { id: product.id, stock: { gte: Number(item.quantity) } },
+            data: { stock: { decrement: Number(item.quantity) }, salesCount: { increment: Number(item.quantity) } }
+          });
+          if (updated.count === 0) throw new Error(`Insufficient stock for ${product.name}`);
+        }
+
+        orderItemsData.push({
+          productId: product.id,
+          sellerId: product.sellerId,
+          productName: item.name || product.name,
+          quantity: Number(item.quantity),
+          price: Number(item.price || product.price || 0),
+          cost: Number(product.costPrice || 0),
+          subtotal: Number((item.price || product.price || 0) * item.quantity),
+          customizations: {
+            customText: item.customText,
+            cloudLink: item.cloudLink,
+            cloudPassword: item.cloudPassword
+          }
         });
       }
 
-      orderItemsData.push({
-        productId: product.id,
-        sellerId: product.sellerId,
-        productName: item.name || product.name,
-        quantity: Number(item.quantity),
-        price: Number(item.price || product.price || 0),
-        cost: Number(product.costPrice || 0),
-        subtotal: Number((item.price || product.price || 0) * item.quantity),
-        customizations: {
-          customText: item.customText,
-          cloudLink: item.cloudLink,
-          cloudPassword: item.cloudPassword
-        }
+      return tx.order.create({
+        data: {
+          publicId: generatePublicId(),
+          customerId: req.user?.id || null,
+          guestInfo: req.user ? null : req.body.guestInfo || {},
+          billingAddress,
+          shippingAddress,
+          subtotal: Number(totals.subtotal),
+          shippingCost: Number(shipping?.cost || 0),
+          tax: Number(tax?.totalTax || 0),
+          discount: Number(totals.discount || 0),
+          grandTotal: Number(totals.grandTotal),
+          items: {
+            create: orderItemsData
+          }
+        },
+        include: { items: true, customer: { select: { id: true, name: true, email: true } } }
       });
-    }
-
-    const order = await prisma.order.create({
-      data: {
-        publicId: generatePublicId(),
-        customerId: req.user?.id || null,
-        guestInfo: req.user ? null : req.body.guestInfo || {},
-        billingAddress,
-        shippingAddress,
-        subtotal: Number(totals.subtotal),
-        shippingCost: Number(shipping?.cost || 0),
-        tax: Number(tax?.totalTax || 0),
-        discount: Number(totals.discount || 0),
-        grandTotal: Number(totals.grandTotal),
-        items: {
-          create: orderItemsData
-        }
-      },
-      include: { items: true, customer: { select: { id: true, name: true, email: true } } }
-    });
+    }); // End $transaction
 
     // 📧 Confirmation Email
     try {
@@ -592,104 +596,111 @@ export const createPOSOrder = async (req, res) => {
       });
     }
 
-    let subtotal = 0;
-    const orderItemsData = [];
-    
-    for (const item of items) {
-      const product = await prisma.product.findUnique({
-        where: { id: item.product },
-        include: { variations: true }
-      });
-
-      if (!product) throw new Error(`Product not found`);
-      
-      // Ownership check
-      const effectiveSellerId = userRole === 'cashier' ? req.user.managedById : userId;
-      if (userRole === 'seller' && product.sellerId !== userId) {
-        throw new Error(`You can only sell your own products: ${product.name}`);
-      }
-      if (userRole === 'cashier' && product.sellerId !== effectiveSellerId) {
-        throw new Error(`Unauthorized: This product does not belong to your store.`);
-      }
-
-      // 💰 Price Logic
-      let price = item.price || product.price; // Allow price override from frontend (negotiated)
-      
-      // Apply Contract Price if available (and price wasn't manually overridden)
-      if (!item.price) {
-        const cp = contractPrices.find(p => p.productId === product.id);
-        if (cp) {
-          price = cp.price;
-        }
-      }
-
-      let productName = product.name;
-
-      if (item.variationId) {
-        const variation = product.variations.find(v => v.sku === item.variationId);
-        if (!variation) throw new Error(`Variation ${item.variationId} not found`);
-        
-        // Only check/decrement stock for physical products
-        if (product.type !== 'service') {
-          if (variation.stock < item.quantity) throw new Error(`Insufficient stock for ${product.name}`);
-          await prisma.productVariation.update({
-            where: { id: variation.id },
-            data: { stock: { decrement: Number(item.quantity) } }
-          });
-        }
-        
-        if (!item.price) price = variation.price;
-        const attrs = variation.attributes || {};
-        productName = `${product.name} - ${Object.values(attrs).join(" / ")}`;
-      } else {
-        if (product.type !== 'service' && product.stock < item.quantity) {
-          throw new Error(`Insufficient stock for ${product.name}`);
-        }
-      }
-
-      // Update product stock (if not service) and sales count
-      await prisma.product.update({
-        where: { id: product.id },
-        data: { 
-          ...(product.type !== 'service' && { stock: { decrement: Number(item.quantity) } }),
-          salesCount: { increment: Number(item.quantity) } 
-        }
-      });
-
-      const itemSubtotal = price * Number(item.quantity);
-      subtotal += itemSubtotal;
-      orderItemsData.push({
-        productId: product.id,
-        sellerId: product.sellerId,
-        productName,
-        quantity: Number(item.quantity),
-        price,
-        cost: Number(product.costPrice || 0),
-        subtotal: itemSubtotal
-      });
-    }
-
     const settings = await getCommissionSettings();
     const appliedRate = settings.posRate || settings.defaultRate || 10;
 
-    const order = await prisma.order.create({
-      data: {
-        publicId: generatePublicId(),
-        orderType: "pos",
-        channel: "store",
-        storeLocation: storeLocation || "",
-        processedById: userId,
-        subtotal,
-        grandTotal: subtotal,
-        paymentMethod: paymentMethod || "cash",
-        paymentStatus: "completed",
-        paidAt: new Date(),
-        status: "delivered",
-        items: {
-          create: orderItemsData
+    // 🔒 Atomic transaction: stock validation + decrement + order creation
+    const { order, orderItemsData, subtotal } = await prisma.$transaction(async (tx) => {
+      let txSubtotal = 0;
+      const txOrderItemsData = [];
+
+      for (const item of items) {
+        const product = await tx.product.findUnique({
+          where: { id: item.product },
+          include: { variations: true }
+        });
+
+        if (!product) throw new Error(`Product not found`);
+        
+        // Ownership check
+        const effectiveSellerId = userRole === 'cashier' ? req.user.managedById : userId;
+        if (userRole === 'seller' && product.sellerId !== userId) {
+          throw new Error(`You can only sell your own products: ${product.name}`);
         }
+        if (userRole === 'cashier' && product.sellerId !== effectiveSellerId) {
+          throw new Error(`Unauthorized: This product does not belong to your store.`);
+        }
+
+        // 💰 Price Logic
+        let price = item.price || product.price;
+        if (!item.price) {
+          const cp = contractPrices.find(p => p.productId === product.id);
+          if (cp) price = cp.price;
+        }
+
+        let productName = product.name;
+
+        if (item.variationId) {
+          const variation = product.variations.find(v => v.sku === item.variationId);
+          if (!variation) throw new Error(`Variation ${item.variationId} not found`);
+          
+          // Only check/decrement stock for physical products (atomic)
+          if (product.type !== 'service') {
+            const updatedVariation = await tx.productVariation.updateMany({
+              where: { id: variation.id, stock: { gte: Number(item.quantity) } },
+              data: { stock: { decrement: Number(item.quantity) } }
+            });
+            if (updatedVariation.count === 0) throw new Error(`Insufficient stock for ${product.name}`);
+          }
+          
+          if (!item.price) price = variation.price;
+          const attrs = variation.attributes || {};
+          productName = `${product.name} - ${Object.values(attrs).join(" / ")}`;
+        } else {
+          if (product.type !== 'service') {
+            const updated = await tx.product.updateMany({
+              where: { id: product.id, stock: { gte: Number(item.quantity) } },
+              data: { stock: { decrement: Number(item.quantity) }, salesCount: { increment: Number(item.quantity) } }
+            });
+            if (updated.count === 0) throw new Error(`Insufficient stock for ${product.name}`);
+          }
+        }
+
+        // Update product sales count (and stock for variations, since updateMany above only handles non-variation)
+        if (item.variationId || product.type === 'service') {
+          await tx.product.update({
+            where: { id: product.id },
+            data: {
+              ...(product.type !== 'service' && item.variationId && { stock: { decrement: Number(item.quantity) } }),
+              salesCount: { increment: Number(item.quantity) }
+            }
+          });
+        }
+
+        const itemSubtotal = price * Number(item.quantity);
+        txSubtotal += itemSubtotal;
+        txOrderItemsData.push({
+          productId: product.id,
+          sellerId: product.sellerId,
+          productName,
+          quantity: Number(item.quantity),
+          price,
+          cost: Number(product.costPrice || 0),
+          subtotal: itemSubtotal
+        });
       }
-    });
+
+      const txOrder = await tx.order.create({
+        data: {
+          publicId: generatePublicId(),
+          orderType: "pos",
+          channel: "store",
+          storeLocation: storeLocation || "",
+          processedById: userId,
+          subtotal: txSubtotal,
+          grandTotal: txSubtotal,
+          paymentMethod: paymentMethod || "cash",
+          paymentStatus: "completed",
+          paidAt: new Date(),
+          status: "delivered",
+          items: {
+            create: txOrderItemsData
+          }
+        }
+      });
+
+      return { order: txOrder, orderItemsData: txOrderItemsData, subtotal: txSubtotal };
+    }); // End $transaction
 
     const activeShift = await prisma.shift.findFirst({
       where: { userId: userId, status: "open" }

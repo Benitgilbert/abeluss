@@ -18,7 +18,7 @@ const AdminOrderDetails = () => {
         if (order) {
             setEditedItems(order.items.map(item => ({
                 ...item,
-                product: item.product?._id || item.product, // Ensure ID is kept
+                product: item.product?.id || item.product, // Ensure ID is kept
                 productName: item.productName || item.product?.name,
                 price: item.price,
                 quantity: item.quantity

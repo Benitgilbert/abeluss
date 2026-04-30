@@ -63,8 +63,8 @@ function OrderTable({ readOnly = false }) {
           </thead>
           <tbody>
             {orders.map((order) => (
-              <tr key={order._id} className="border-t">
-                <td className="p-2">{order._id.slice(-6)}</td>
+              <tr key={order.id} className="border-t">
+                <td className="p-2">{order.id.slice(-6)}</td>
                 <td className="p-2">{order.customer?.name || "N/A"}</td>
                 <td className="p-2">{order.product?.name || "N/A"}</td>
                 <td className="p-2 capitalize">{order.status}</td>
@@ -75,9 +75,9 @@ function OrderTable({ readOnly = false }) {
                   ) : (
                     <>
                       <select
-                        value={statusUpdate[order._id] || order.status}
+                        value={statusUpdate[order.id] || order.status}
                         onChange={(e) =>
-                          setStatusUpdate({ ...statusUpdate, [order._id]: e.target.value })
+                          setStatusUpdate({ ...statusUpdate, [order.id]: e.target.value })
                         }
                         className="border px-2 py-1 rounded text-sm"
                       >
@@ -90,7 +90,7 @@ function OrderTable({ readOnly = false }) {
                         )}
                       </select>
                       <button
-                        onClick={() => handleStatusChange(order._id, statusUpdate[order._id])}
+                        onClick={() => handleStatusChange(order.id, statusUpdate[order.id])}
                         className="ml-2 px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700"
                       >
                         Update

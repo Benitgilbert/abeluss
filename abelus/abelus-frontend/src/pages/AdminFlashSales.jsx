@@ -106,7 +106,7 @@ export default function AdminFlashSales() {
         try {
             const token = localStorage.getItem('authToken');
             const url = editingSale
-                ? `${API_URL}/flash-sales/${editingSale._id}`
+                ? `${API_URL}/flash-sales/${editingSale.id}`
                 : `${API_URL}/flash-sales`;
 
             const payload = {
@@ -167,7 +167,7 @@ export default function AdminFlashSales() {
 
         try {
             const token = localStorage.getItem('authToken');
-            const res = await fetch(`${API_URL}/flash-sales/${selectedSale._id}/products`, {
+            const res = await fetch(`${API_URL}/flash-sales/${selectedSale.id}/products`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -317,7 +317,7 @@ export default function AdminFlashSales() {
                             {flashSales.map((sale) => {
                                 const statusInfo = getSaleStatus(sale);
                                 return (
-                                    <div key={sale._id} className="bg-white dark:bg-charcoal-800 rounded-2xl overflow-hidden border border-cream-200 dark:border-charcoal-700 hover:shadow-lg transition-shadow">
+                                    <div key={sale.id} className="bg-white dark:bg-charcoal-800 rounded-2xl overflow-hidden border border-cream-200 dark:border-charcoal-700 hover:shadow-lg transition-shadow">
                                         {/* Banner */}
                                         <div className={`relative h-28 bg-gradient-to-r ${sale.bannerColor || 'from-terracotta-500 to-sand-400'} p-4`}>
                                             <span className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-semibold ${statusInfo.classes}`}>
@@ -360,7 +360,7 @@ export default function AdminFlashSales() {
                                                 {sale.products && sale.products.length > 0 ? (
                                                     <div className="space-y-1.5">
                                                         {sale.products.slice(0, 3).map((sp) => (
-                                                            <div key={sp._id} className="flex items-center justify-between py-1.5 px-2 bg-cream-50 dark:bg-charcoal-700 rounded-lg">
+                                                            <div key={sp.id} className="flex items-center justify-between py-1.5 px-2 bg-cream-50 dark:bg-charcoal-700 rounded-lg">
                                                                 <span className="text-xs text-charcoal-700 dark:text-charcoal-300 truncate flex-1">
                                                                     {sp.product?.name || 'Unknown Product'}
                                                                 </span>
@@ -368,7 +368,7 @@ export default function AdminFlashSales() {
                                                                     {sp.flashSalePrice?.toLocaleString()} Rwf
                                                                 </span>
                                                                 <button
-                                                                    onClick={() => handleRemoveProduct(sale._id, sp.product?._id)}
+                                                                    onClick={() => handleRemoveProduct(sale.id, sp.product?.id)}
                                                                     className="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
                                                                 >
                                                                     <FaTimes className="text-xs" />
@@ -395,7 +395,7 @@ export default function AdminFlashSales() {
                                                     <FaEdit /> Edit
                                                 </button>
                                                 <button
-                                                    onClick={() => handleDelete(sale._id)}
+                                                    onClick={() => handleDelete(sale.id)}
                                                     className="flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                                                 >
                                                     <FaTrash /> Delete
@@ -526,7 +526,7 @@ export default function AdminFlashSales() {
                                         >
                                             <option value="">Choose a product</option>
                                             {products.map((p) => (
-                                                <option key={p._id} value={p._id}>
+                                                <option key={p.id} value={p.id}>
                                                     {p.name} ({p.price?.toLocaleString()} Rwf)
                                                 </option>
                                             ))}

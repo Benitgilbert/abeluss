@@ -187,7 +187,7 @@ export default function DailyDeals() {
                             const imageUrl = assetUrl(product.image || product.images?.[0]);
 
                             return (
-                                <div key={`${product._id}-${index}`} className="group bg-white dark:bg-charcoal-800 rounded-3xl shadow-sm hover:shadow-2xl border border-cream-200 dark:border-charcoal-700 transition-all duration-500 overflow-hidden flex flex-col h-full transform hover:-translate-y-2">
+                                <div key={`${product.id}-${index}`} className="group bg-white dark:bg-charcoal-800 rounded-3xl shadow-sm hover:shadow-2xl border border-cream-200 dark:border-charcoal-700 transition-all duration-500 overflow-hidden flex flex-col h-full transform hover:-translate-y-2">
                                     <div className="relative">
                                         {product.discount > 0 && (
                                             <div className="absolute top-4 left-4 z-10 bg-red-600 text-white px-4 py-2 rounded-xl text-sm font-black flex items-center gap-1 shadow-lg shadow-red-500/20">
@@ -208,7 +208,7 @@ export default function DailyDeals() {
                                             </div>
                                         )}
 
-                                        <Link to={`/product/${product._id}`} className="block aspect-square overflow-hidden bg-cream-100 dark:bg-charcoal-900">
+                                        <Link to={`/product/${product.id}`} className="block aspect-square overflow-hidden bg-cream-100 dark:bg-charcoal-900">
                                             <img
                                                 src={imageUrl}
                                                 alt={product.name}
@@ -226,7 +226,7 @@ export default function DailyDeals() {
                                             <span className="text-xs text-charcoal-400 ml-1">({getRating(product.averageRating).toFixed(1)})</span>
                                         </div>
 
-                                        <Link to={`/product/${product._id}`} className="block mb-2 group/title">
+                                        <Link to={`/product/${product.id}`} className="block mb-2 group/title">
                                             <h3 className="text-xl font-bold text-gray-900 dark:text-white line-clamp-1 group-hover/title:text-red-500 transition-colors">{product.name}</h3>
                                         </Link>
 

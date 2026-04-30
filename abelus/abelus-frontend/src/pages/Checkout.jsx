@@ -274,7 +274,7 @@ export default function CheckoutPage() {
       };
 
       const orderRes = await api.post("/orders/create", orderPayload);
-      const orderId = orderRes.data._id; // MongoDB ID for API calls
+      const orderId = orderRes.data.id; // MongoDB ID for API calls
       const publicId = orderRes.data.publicId; // Public ID for user-facing display
 
       // 2. Process Payment
@@ -434,15 +434,15 @@ export default function CheckoutPage() {
                         <div
                           key={idx}
                           onClick={() => handleMethodChange(method)}
-                          className={`group p-4 rounded-2xl border-2 cursor-pointer flex justify-between items-center transition-all ${selectedMethod?._id === method._id
+                          className={`group p-4 rounded-2xl border-2 cursor-pointer flex justify-between items-center transition-all ${selectedMethod?.id === method.id
                             ? 'bg-violet-50 dark:bg-violet-900/10 border-violet-600 shadow-lg shadow-violet-500/10'
                             : 'bg-white dark:bg-slate-800 border-gray-100 dark:border-slate-700 hover:border-violet-400'}`}
                         >
                           <div className="flex items-center gap-4">
-                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${selectedMethod?._id === method._id ? 'border-violet-600' : 'border-gray-300 dark:border-slate-600 group-hover:border-violet-400'}`}>
-                              {selectedMethod?._id === method._id && <div className="w-2.5 h-2.5 bg-violet-600 rounded-full" />}
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${selectedMethod?.id === method.id ? 'border-violet-600' : 'border-gray-300 dark:border-slate-600 group-hover:border-violet-400'}`}>
+                              {selectedMethod?.id === method.id && <div className="w-2.5 h-2.5 bg-violet-600 rounded-full" />}
                             </div>
-                            <span className={`font-bold transition-colors ${selectedMethod?._id === method._id ? 'text-violet-900 dark:text-violet-300' : 'text-gray-700 dark:text-gray-300 group-hover:text-violet-600'}`}>{method.name}</span>
+                            <span className={`font-bold transition-colors ${selectedMethod?.id === method.id ? 'text-violet-900 dark:text-violet-300' : 'text-gray-700 dark:text-gray-300 group-hover:text-violet-600'}`}>{method.name}</span>
                           </div>
                           <span className="text-lg font-black text-violet-600 dark:text-violet-400">{method.cost === 0 ? "Free" : formatRwf(method.cost)}</span>
                         </div>

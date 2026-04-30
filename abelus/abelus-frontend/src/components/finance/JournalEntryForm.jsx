@@ -108,7 +108,7 @@ const JournalEntryForm = ({ onSuccess }) => {
                                         >
                                             <option value="">Select Account</option>
                                             {accounts.map((acc) => (
-                                                <option key={acc._id} value={acc._id}>
+                                                <option key={acc.id} value={acc.id}>
                                                     {acc.code} - {acc.name}
                                                 </option>
                                             ))}

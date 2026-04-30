@@ -39,7 +39,7 @@ export default function AdminTestimonials() {
         e.preventDefault();
         try {
             const token = localStorage.getItem('authToken');
-            const url = editingTestimonial ? `${API_URL}/testimonials/${editingTestimonial._id}` : `${API_URL}/testimonials`;
+            const url = editingTestimonial ? `${API_URL}/testimonials/${editingTestimonial.id}` : `${API_URL}/testimonials`;
             const res = await fetch(url, {
                 method: editingTestimonial ? 'PUT' : 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -121,7 +121,7 @@ export default function AdminTestimonials() {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {testimonials.map((testimonial) => (
-                                <div key={testimonial._id} className={`relative bg-white dark:bg-charcoal-800 rounded-2xl border border-cream-200 dark:border-charcoal-700 p-6 transition-all ${!testimonial.isActive ? 'opacity-60' : ''}`}>
+                                <div key={testimonial.id} className={`relative bg-white dark:bg-charcoal-800 rounded-2xl border border-cream-200 dark:border-charcoal-700 p-6 transition-all ${!testimonial.isActive ? 'opacity-60' : ''}`}>
                                     {/* Featured Badge */}
                                     {testimonial.featured && (
                                         <span className="absolute -top-2 -right-2 px-2.5 py-1 bg-sand-500 text-white rounded-full text-xs font-semibold flex items-center gap-1">
@@ -155,13 +155,13 @@ export default function AdminTestimonials() {
 
                                     {/* Actions */}
                                     <div className="flex items-center justify-between pt-4 border-t border-cream-200 dark:border-charcoal-700">
-                                        <button onClick={() => handleToggle(testimonial._id)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium text-sm transition-all ${testimonial.isActive ? 'text-sage-600 hover:bg-sage-50 dark:hover:bg-sage-900/20' : 'text-charcoal-400 hover:bg-charcoal-100 dark:hover:bg-charcoal-700'}`}>
+                                        <button onClick={() => handleToggle(testimonial.id)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium text-sm transition-all ${testimonial.isActive ? 'text-sage-600 hover:bg-sage-50 dark:hover:bg-sage-900/20' : 'text-charcoal-400 hover:bg-charcoal-100 dark:hover:bg-charcoal-700'}`}>
                                             {testimonial.isActive ? <FaToggleOn className="text-lg" /> : <FaToggleOff className="text-lg" />}
                                             {testimonial.isActive ? 'Active' : 'Inactive'}
                                         </button>
                                         <div className="flex gap-1">
                                             <button onClick={() => openModal(testimonial)} className="p-2 rounded-lg text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"><FaEdit /></button>
-                                            <button onClick={() => handleDelete(testimonial._id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"><FaTrash /></button>
+                                            <button onClick={() => handleDelete(testimonial.id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"><FaTrash /></button>
                                         </div>
                                     </div>
                                 </div>

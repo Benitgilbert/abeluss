@@ -228,7 +228,7 @@ function UserDashboard() {
                 ) : (
                   <div className="space-y-4">
                     {orders.map(order => (
-                      <div key={order._id} className="border dark:border-charcoal-700 rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gray-50 dark:bg-charcoal-900/50">
+                      <div key={order.id} className="border dark:border-charcoal-700 rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gray-50 dark:bg-charcoal-900/50">
                         <div>
                           <p className="font-semibold text-gray-800 dark:text-white">Order #{order.publicId}</p>
                           <p className="text-sm text-gray-500 dark:text-gray-400">{new Date(order.createdAt).toLocaleDateString()}</p>

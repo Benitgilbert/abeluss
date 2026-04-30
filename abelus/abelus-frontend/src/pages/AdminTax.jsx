@@ -52,7 +52,7 @@ function AdminTax() {
 
     const handleEdit = (rate) => {
         setFormData({ name: rate.name, country: rate.country, city: rate.city, rate: rate.rate, priority: rate.priority, shipping: rate.shipping });
-        setIsEdit(true); setEditId(rate._id); setShowModal(true);
+        setIsEdit(true); setEditId(rate.id); setShowModal(true);
     };
 
     const handleSubmit = async (e) => {
@@ -119,7 +119,7 @@ function AdminTax() {
                                     </thead>
                                     <tbody className="divide-y divide-cream-100 dark:divide-charcoal-700">
                                         {rates.map((rate) => (
-                                            <tr key={rate._id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
+                                            <tr key={rate.id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
                                                 <td className="px-6 py-4 text-sm font-medium text-charcoal-800 dark:text-white">{rate.name}</td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-1.5 text-sm text-charcoal-600 dark:text-charcoal-400">
@@ -145,7 +145,7 @@ function AdminTax() {
                                                 <td className="px-6 py-4 text-right">
                                                     <div className="flex justify-end gap-2">
                                                         <button onClick={() => handleEdit(rate)} className="p-2 text-charcoal-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"><FaEdit /></button>
-                                                        <button onClick={() => handleDelete(rate._id)} className="p-2 text-charcoal-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"><FaTrash /></button>
+                                                        <button onClick={() => handleDelete(rate.id)} className="p-2 text-charcoal-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"><FaTrash /></button>
                                                     </div>
                                                 </td>
                                             </tr>

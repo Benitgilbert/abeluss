@@ -46,7 +46,7 @@ function ProductCreateEditModal({ product, onClose, onSaved }) {
     description: product?.description || "",
     price: product?.price || "",
     stock: product?.stock || "",
-    selectedCategories: product?.categories?.map(c => typeof c === 'object' ? (c.id || c._id) : c) || [],
+    selectedCategories: product?.categories?.map(c => typeof c === 'object' ? (c.id || c.id) : c) || [],
     image: product?.image || "",
     type: product?.type || "simple",
     customizable: product?.customizable || false,
@@ -54,8 +54,8 @@ function ProductCreateEditModal({ product, onClose, onSaved }) {
     customizationOptions: product?.customizationOptions || [],
     isDigital: product?.isDigital || false,
     downloadLink: product?.downloadLink || "",
-    upSells: product?.upSells?.map((p) => (typeof p === "object" ? (p.id || p._id) : p)) || [],
-    crossSells: product?.crossSells?.map((p) => (typeof p === "object" ? (p.id || p._id) : p)) || [],
+    upSells: product?.upSells?.map((p) => (typeof p === "object" ? (p.id || p.id) : p)) || [],
+    crossSells: product?.crossSells?.map((p) => (typeof p === "object" ? (p.id || p.id) : p)) || [],
     shippingClass: product?.shippingClass || "",
     attributes: parseAttributes(product?.attributes),
     variations: parseVariations(product?.variations),
@@ -315,7 +315,7 @@ function ProductCreateEditModal({ product, onClose, onSaved }) {
 
       const config = { headers: { "Content-Type": "multipart/form-data" } };
       const res = isEdit
-        ? await api.put(`/products/${product.id || product._id}`, fd, config)
+        ? await api.put(`/products/${product.id || product.id}`, fd, config)
         : await api.post("/products", fd, config);
       onSaved(res.data);
     } catch (err) {
@@ -399,7 +399,7 @@ function ProductCreateEditModal({ product, onClose, onSaved }) {
                     <p className="col-span-full text-sm text-gray-400 dark:text-gray-500 italic">No categories available</p>
                   ) : (
                     categories.map(cat => {
-                      const catId = cat.id || cat._id;
+                      const catId = cat.id || cat.id;
                       const isChecked = form.selectedCategories.includes(catId);
                       return (
                         <label key={catId} className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all text-sm ${
@@ -567,7 +567,7 @@ function ProductCreateEditModal({ product, onClose, onSaved }) {
                   >
                     <option value="">+ Add Global Attribute</option>
                     {globalAttributes.map(attr => (
-                      <option key={attr._id} value={attr.name}>{attr.name}</option>
+                      <option key={attr.id} value={attr.name}>{attr.name}</option>
                     ))}
                   </select>
                   <button
@@ -600,7 +600,7 @@ function ProductCreateEditModal({ product, onClose, onSaved }) {
                           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 dark:text-white text-sm"
                         />
                         <datalist id={`global-attributes-${index}`}>
-                          {globalAttributes.map(ga => <option key={ga._id} value={ga.name} />)}
+                          {globalAttributes.map(ga => <option key={ga.id} value={ga.name} />)}
                         </datalist>
                       </div>
                       <div className="md:col-span-3">
@@ -617,7 +617,7 @@ function ProductCreateEditModal({ product, onClose, onSaved }) {
                             />
                             <datalist id={`attr-values-${index}`}>
                               {globalAttr.values.map(val => (
-                                <option key={val._id} value={val.name} />
+                                <option key={val.id} value={val.name} />
                               ))}
                             </datalist>
                           </div>
@@ -740,7 +740,7 @@ function ProductCreateEditModal({ product, onClose, onSaved }) {
                   onChange={(e) => setForm({ ...form, upSells: Array.from(e.target.selectedOptions, o => o.value) })}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 dark:text-white transition-all text-sm h-48"
                 >
-                  {allProducts.map(p => <option key={p.id || p._id} value={p.id || p._id}>{p.name}</option>)}
+                  {allProducts.map(p => <option key={p.id || p.id} value={p.id || p.id}>{p.name}</option>)}
                 </select>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Hold Ctrl (Windows) or cmd (Mac) to select multiple.</p>
               </div>
@@ -752,7 +752,7 @@ function ProductCreateEditModal({ product, onClose, onSaved }) {
                   onChange={(e) => setForm({ ...form, crossSells: Array.from(e.target.selectedOptions, o => o.value) })}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 dark:text-white transition-all text-sm h-48"
                 >
-                  {allProducts.map(p => <option key={p.id || p._id} value={p.id || p._id}>{p.name}</option>)}
+                  {allProducts.map(p => <option key={p.id || p.id} value={p.id || p.id}>{p.name}</option>)}
                 </select>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Products to promote in the cart.</p>
               </div>
@@ -770,7 +770,7 @@ function ProductCreateEditModal({ product, onClose, onSaved }) {
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 dark:text-white transition-all text-sm"
                 >
                   <option value="">No Shipping Class</option>
-                  {shippingClasses.map(sc => <option key={sc._id} value={sc._id}>{sc.name}</option>)}
+                  {shippingClasses.map(sc => <option key={sc.id} value={sc.id}>{sc.name}</option>)}
                 </select>
               </div>
             </div>

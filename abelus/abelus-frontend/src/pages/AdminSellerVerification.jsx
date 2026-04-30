@@ -53,7 +53,7 @@ export default function AdminSellerVerification() {
         setProcessing(true);
         try {
             const token = localStorage.getItem('authToken');
-            const res = await fetch(`${API_URL}/seller-verification/${selectedSeller._id}/verify`, {
+            const res = await fetch(`${API_URL}/seller-verification/${selectedSeller.id}/verify`, {
                 method: 'PUT', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action, rejectionReason: action === 'reject' ? rejectionReason : undefined })
             });
@@ -149,7 +149,7 @@ export default function AdminSellerVerification() {
                                     </thead>
                                     <tbody className="divide-y divide-cream-100 dark:divide-charcoal-700">
                                         {sellers.map((seller) => (
-                                            <tr key={seller._id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
+                                            <tr key={seller.id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-10 h-10 rounded-full bg-cream-200 dark:bg-charcoal-600 flex items-center justify-center text-charcoal-500 dark:text-charcoal-300">
@@ -167,7 +167,7 @@ export default function AdminSellerVerification() {
                                                 <td className="px-6 py-4">{getStatusBadge(seller.rdbVerification?.documentStatus)}</td>
                                                 <td className="px-6 py-4 text-sm text-charcoal-600 dark:text-charcoal-400">{formatDate(seller.createdAt)}</td>
                                                 <td className="px-6 py-4 text-center">
-                                                    <button onClick={() => viewSellerDetails(seller._id)} className="p-2 text-terracotta-500 hover:bg-terracotta-50 dark:hover:bg-terracotta-900/20 rounded-lg transition-colors" title="Review Documents">
+                                                    <button onClick={() => viewSellerDetails(seller.id)} className="p-2 text-terracotta-500 hover:bg-terracotta-50 dark:hover:bg-terracotta-900/20 rounded-lg transition-colors" title="Review Documents">
                                                         <FaEye />
                                                     </button>
                                                 </td>

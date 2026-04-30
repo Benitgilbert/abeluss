@@ -41,7 +41,7 @@ const PrintPortal = () => {
         setSubmitting(true);
         try {
             const fd = new FormData();
-            fd.append("serviceId", selectedService.id || selectedService._id);
+            fd.append("serviceId", selectedService.id || selectedService.id);
             fd.append("file", file);
             fd.append("quantity", quantity);
             fd.append("notes", notes);
@@ -131,20 +131,20 @@ const PrintPortal = () => {
                                                 </div>
                                             ) : services.map(s => (
                                                 <button
-                                                    key={s.id || s._id}
+                                                    key={s.id || s.id}
                                                     type="button"
                                                     onClick={() => setSelectedService(s)}
                                                     className={`text-left p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${
-                                                        selectedService?.id === s.id || selectedService?._id === s._id
+                                                        selectedService?.id === s.id || selectedService?.id === s.id
                                                         ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 shadow-md'
                                                         : 'border-gray-100 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-800'
                                                     }`}
                                                 >
                                                     <div>
-                                                        <p className={`font-bold ${selectedService?.id === s.id || selectedService?._id === s._id ? 'text-indigo-700 dark:text-indigo-300' : 'text-gray-900 dark:text-white'}`}>{s.name}</p>
+                                                        <p className={`font-bold ${selectedService?.id === s.id || selectedService?.id === s.id ? 'text-indigo-700 dark:text-indigo-300' : 'text-gray-900 dark:text-white'}`}>{s.name}</p>
                                                         <p className="text-xs text-gray-500">Starting from RWF {s.price.toLocaleString()}</p>
                                                     </div>
-                                                    {selectedService?.id === s.id || selectedService?._id === s._id ? <FaCheckCircle className="text-indigo-600" /> : <div className="w-5 h-5 rounded-full border-2 border-gray-200 dark:border-gray-700" />}
+                                                    {selectedService?.id === s.id || selectedService?.id === s.id ? <FaCheckCircle className="text-indigo-600" /> : <div className="w-5 h-5 rounded-full border-2 border-gray-200 dark:border-gray-700" />}
                                                 </button>
                                             ))}
                                         </div>

@@ -6,16 +6,25 @@ import prisma from "../prisma.js";
 export const getMyNotifications = async (req, res, next) => {
     try {
         const { page = 1, limit = 20, unreadOnly } = req.query;
+        const limitValue = Number(limit);
+        const cursor = req.query.cursor || undefined;
 
         const where = { recipientId: req.user.id };
         if (unreadOnly === 'true') where.isRead = false;
 
         const notifications = await prisma.notification.findMany({
             where,
-            orderBy: { createdAt: 'desc' },
-            skip: (Number(page) - 1) * Number(limit),
-            take: Number(limit)
+            orderBy: { id: 'desc' },
+            take: limitValue + 1,
+            ...(cursor ? { skip: 1, cursor: { id: cursor } } : { skip: (Number(page) - 1) * limitValue })
         });
+
+        let nextCursor = null;
+        const results = [...notifications];
+        if (results.length > limitValue) {
+            const nextItem = results.pop();
+            nextCursor = nextItem.id;
+        }
 
         const total = await prisma.notification.count({ where });
         const unreadCount = await prisma.notification.count({
@@ -24,13 +33,14 @@ export const getMyNotifications = async (req, res, next) => {
 
         res.json({
             success: true,
-            data: notifications,
+            data: results,
             unreadCount,
+            nextCursor,
             pagination: {
                 page: Number(page),
-                limit: Number(limit),
+                limit: limitValue,
                 total,
-                pages: Math.ceil(total / Number(limit))
+                pages: Math.ceil(total / limitValue)
             }
         });
     } catch (error) {

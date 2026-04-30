@@ -56,7 +56,7 @@ function AdminCoupons() {
             isActive: coupon.isActive
         });
         setIsEdit(true);
-        setEditId(coupon._id);
+        setEditId(coupon.id);
         setShowModal(true);
     };
 
@@ -130,7 +130,7 @@ function AdminCoupons() {
                                     </thead>
                                     <tbody className="divide-y divide-cream-100 dark:divide-charcoal-700">
                                         {coupons.map((coupon) => (
-                                            <tr key={coupon._id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
+                                            <tr key={coupon.id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-10 h-10 rounded-xl bg-terracotta-100 dark:bg-terracotta-900/20 flex items-center justify-center">
@@ -170,7 +170,7 @@ function AdminCoupons() {
                                                         <button onClick={() => handleEdit(coupon)} className="p-2 rounded-lg text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" title="Edit">
                                                             <FaEdit />
                                                         </button>
-                                                        <button onClick={() => handleDelete(coupon._id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Delete">
+                                                        <button onClick={() => handleDelete(coupon.id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Delete">
                                                             <FaTrash />
                                                         </button>
                                                     </div>

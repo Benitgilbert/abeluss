@@ -1,7 +1,7 @@
 const convertToCSV = (orders) => {
   const headers = ["Order ID", "Product", "Customer", "Qty", "Status", "Date"];
   const rows = orders.map(order => [
-    order._id.toString(),
+    order.id.toString(),
     order.product?.name || "",
     order.customer?.email || "",
     order.quantity,

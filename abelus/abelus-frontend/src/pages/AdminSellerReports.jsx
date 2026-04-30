@@ -161,7 +161,7 @@ Metrics:
                     ) : (
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {reports.map((report) => (
-                                <div key={report._id} className="bg-white dark:bg-charcoal-800 rounded-2xl border border-cream-200 dark:border-charcoal-700 overflow-hidden hover:shadow-lg transition-shadow">
+                                <div key={report.id} className="bg-white dark:bg-charcoal-800 rounded-2xl border border-cream-200 dark:border-charcoal-700 overflow-hidden hover:shadow-lg transition-shadow">
                                     {/* Card Header */}
                                     <div className="flex items-center justify-between p-5 border-b border-cream-100 dark:border-charcoal-700">
                                         <div className="flex items-center gap-3">

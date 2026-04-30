@@ -171,6 +171,11 @@ export const checkPaymentStatus = async (req, res, next) => {
 // Webhook Handler
 export const handleMomoWebhook = async (req, res) => {
   try {
+    const { validateWebhook } = await import("../services/momoService.js");
+    if (!validateWebhook(req)) {
+      return res.status(401).end();
+    }
+
     const { resourceId, status } = req.body; 
 
     const order = await prisma.order.findFirst({

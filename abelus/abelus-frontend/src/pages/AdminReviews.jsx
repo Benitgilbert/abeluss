@@ -207,7 +207,7 @@ export default function AdminReviews() {
                                     </thead>
                                     <tbody className="divide-y divide-cream-100 dark:divide-charcoal-700">
                                         {reviews.map((review) => (
-                                            <tr key={review._id} className={`hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors ${review.reported ? 'bg-red-50/50 dark:bg-red-900/10' : ''}`}>
+                                            <tr key={review.id} className={`hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors ${review.reported ? 'bg-red-50/50 dark:bg-red-900/10' : ''}`}>
                                                 <td className="px-6 py-4">
                                                     <span className="font-medium text-charcoal-800 dark:text-white">{review.product?.name || 'Unknown'}</span>
                                                 </td>
@@ -223,14 +223,14 @@ export default function AdminReviews() {
                                                 <td className="px-6 py-4">{getStatusBadge(review.status)}</td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center justify-center gap-1">
-                                                        <button onClick={() => viewReviewDetails(review._id)} className="p-2 rounded-lg text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" title="View"><FaEye /></button>
+                                                        <button onClick={() => viewReviewDetails(review.id)} className="p-2 rounded-lg text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" title="View"><FaEye /></button>
                                                         {review.status !== 'approved' && (
-                                                            <button onClick={() => approveReview(review._id)} className="p-2 rounded-lg text-sage-500 hover:bg-sage-50 dark:hover:bg-sage-900/20 transition-colors" title="Approve"><FaCheck /></button>
+                                                            <button onClick={() => approveReview(review.id)} className="p-2 rounded-lg text-sage-500 hover:bg-sage-50 dark:hover:bg-sage-900/20 transition-colors" title="Approve"><FaCheck /></button>
                                                         )}
                                                         {review.status !== 'rejected' && (
-                                                            <button onClick={() => viewReviewDetails(review._id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Reject"><FaTimes /></button>
+                                                            <button onClick={() => viewReviewDetails(review.id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Reject"><FaTimes /></button>
                                                         )}
-                                                        <button onClick={() => deleteReview(review._id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Delete"><FaTrash /></button>
+                                                        <button onClick={() => deleteReview(review.id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Delete"><FaTrash /></button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -329,7 +329,7 @@ function ReviewModal({ review, onClose, onApprove, onReject, onReply, onDelete, 
                             <h5 className="text-sm font-bold text-charcoal-700 dark:text-charcoal-300 mb-2">Add Reply</h5>
                             <textarea value={replyText} onChange={(e) => setReplyText(e.target.value)} placeholder="Write your reply..."
                                 rows={3} className="w-full px-4 py-2.5 bg-cream-100 dark:bg-charcoal-700 border border-transparent focus:border-terracotta-500 rounded-xl text-charcoal-800 dark:text-white outline-none transition-colors resize-none" />
-                            <button onClick={() => onReply(review._id, replyText)} disabled={processing || !replyText}
+                            <button onClick={() => onReply(review.id, replyText)} disabled={processing || !replyText}
                                 className="flex items-center gap-2 mt-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white rounded-xl font-medium transition-all">
                                 <FaReply /> Send Reply
                             </button>
@@ -348,16 +348,16 @@ function ReviewModal({ review, onClose, onApprove, onReject, onReply, onDelete, 
                     {/* Actions */}
                     <div className="flex flex-wrap gap-3 pt-4 border-t border-cream-200 dark:border-charcoal-700">
                         {review.status !== 'approved' && (
-                            <button onClick={() => onApprove(review._id)} disabled={processing} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-sage-500 hover:bg-sage-600 disabled:opacity-50 text-white rounded-xl font-medium transition-all">
+                            <button onClick={() => onApprove(review.id)} disabled={processing} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-sage-500 hover:bg-sage-600 disabled:opacity-50 text-white rounded-xl font-medium transition-all">
                                 <FaCheck /> Approve
                             </button>
                         )}
                         {review.status !== 'rejected' && (
-                            <button onClick={() => onReject(review._id, rejectReason)} disabled={processing} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white rounded-xl font-medium transition-all">
+                            <button onClick={() => onReject(review.id, rejectReason)} disabled={processing} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white rounded-xl font-medium transition-all">
                                 <FaTimes /> Reject
                             </button>
                         )}
-                        <button onClick={() => onDelete(review._id)} className="flex items-center justify-center gap-2 px-4 py-2.5 bg-charcoal-500 hover:bg-charcoal-600 text-white rounded-xl font-medium transition-all">
+                        <button onClick={() => onDelete(review.id)} className="flex items-center justify-center gap-2 px-4 py-2.5 bg-charcoal-500 hover:bg-charcoal-600 text-white rounded-xl font-medium transition-all">
                             <FaTrash /> Delete
                         </button>
                     </div>

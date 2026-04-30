@@ -52,7 +52,7 @@ const SellerPrintOrders = () => {
         try {
             setSubmitting(true);
             const res = await api.post("/orders/submit-quote", {
-                orderId: activeInquiry._id,
+                orderId: activeInquiry.id,
                 quoteAmount: Number(quoteAmount)
             });
 
@@ -106,9 +106,9 @@ const SellerPrintOrders = () => {
                                         <div className="divide-y divide-gray-100 dark:divide-gray-700">
                                             {inquiries.map(inq => (
                                                 <button
-                                                    key={inq._id}
+                                                    key={inq.id}
                                                     onClick={() => handleSelectInquiry(inq)}
-                                                    className={`w-full p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors flex items-center justify-between group ${activeInquiry?._id === inq._id ? 'bg-indigo-50/50 dark:bg-indigo-900/20 border-r-4 border-indigo-600' : ''}`}
+                                                    className={`w-full p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors flex items-center justify-between group ${activeInquiry?.id === inq.id ? 'bg-indigo-50/50 dark:bg-indigo-900/20 border-r-4 border-indigo-600' : ''}`}
                                                 >
                                                     <div>
                                                         <p className="text-xs font-mono text-indigo-600 dark:text-indigo-400 font-bold mb-1">#{inq.publicId}</p>
@@ -119,7 +119,7 @@ const SellerPrintOrders = () => {
                                                             {new Date(inq.createdAt).toLocaleDateString()} • {inq.user?.name || inq.guestInfo?.name || 'Guest'}
                                                         </p>
                                                     </div>
-                                                    <FaChevronRight className={`text-gray-300 group-hover:text-indigo-400 transition-transform ${activeInquiry?._id === inq._id ? 'translate-x-1 text-indigo-500' : ''}`} />
+                                                    <FaChevronRight className={`text-gray-300 group-hover:text-indigo-400 transition-transform ${activeInquiry?.id === inq.id ? 'translate-x-1 text-indigo-500' : ''}`} />
                                                 </button>
                                             ))}
                                         </div>

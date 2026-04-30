@@ -50,7 +50,7 @@ function UserTable({ onCreate }) {
   };
 
   const handleEditSave = (updatedUser) => {
-    setUsers(users.map((u) => (u._id === updatedUser._id ? updatedUser : u)));
+    setUsers(users.map((u) => (u.id === updatedUser.id ? updatedUser : u)));
     setMessage("success:User updated successfully");
   };
 
@@ -58,7 +58,7 @@ function UserTable({ onCreate }) {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
     try {
       await axios.delete(`/auth/users/${userId}`);
-      setUsers(users.filter((u) => u._id !== userId));
+      setUsers(users.filter((u) => u.id !== userId));
       setMessage("success:User deleted successfully");
     } catch (err) {
       console.error("Delete failed:", err);
@@ -271,7 +271,7 @@ function UserTable({ onCreate }) {
               </tr>
             ) : (
               pageItems.map((user) => (
-                <tr key={user._id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
+                <tr key={user.id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="font-medium text-charcoal-800 dark:text-white">{user.name}</div>
                     <div className="text-xs text-charcoal-500 dark:text-charcoal-400 md:hidden">{user.email}</div>
@@ -294,7 +294,7 @@ function UserTable({ onCreate }) {
                         <FaEdit />
                       </button>
                       <button
-                        onClick={() => handleDelete(user._id)}
+                        onClick={() => handleDelete(user.id)}
                         className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                         title="Delete"
                       >

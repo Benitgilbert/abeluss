@@ -5,6 +5,7 @@ import {
 } from "../middleware/authMiddleware.js";
 import * as authController from "../controllers/authController.js";
 import { uploadProfileImage } from "../middleware/uploadMiddleware.js";
+import { authLimiter } from "../middleware/rateLimiter.js";
 
 const router = express.Router();
 
@@ -17,7 +18,7 @@ router.get("/team", authController.getTeamMembers);
  * Authenticated User Routes
  */
 router.get("/me", verifyToken, authController.getMe);
-router.post("/complete-registration", verifyToken, authController.completeRegistration);
+router.post("/complete-registration", authLimiter, verifyToken, authController.completeRegistration);
 router.put(
   "/me",
   verifyToken,
@@ -37,14 +38,14 @@ router.put("/users/:id", verifyAdmin, authController.updateUser);
 router.delete("/users/:id", verifyAdmin, authController.deleteUser);
 
 /**
- * Legacy / Stubbed Routes (prevent breakage)
+ * Legacy / Stubbed Routes (rate-limited to prevent abuse)
  */
-router.post("/register", (req, res) => res.status(410).json({ message: "Gone: Use Supabase Auth on frontend" }));
-router.post("/login", (req, res) => res.status(410).json({ message: "Gone: Use Supabase Auth on frontend" }));
-router.post("/refresh", (req, res) => res.status(410).json({ message: "Gone: Use Supabase Auth on frontend" }));
-router.post("/admin/login-step1", (req, res) => res.status(410).json({ message: "Gone: Use Supabase Auth on frontend" }));
-router.post("/admin/login-step2", (req, res) => res.status(410).json({ message: "Gone: Use Supabase Auth on frontend" }));
-router.post("/request-password-reset", (req, res) => res.status(410).json({ message: "Gone: Use Supabase Auth on frontend" }));
-router.post("/confirm-password-reset", (req, res) => res.status(410).json({ message: "Gone: Use Supabase Auth on frontend" }));
+router.post("/register", authLimiter, (req, res) => res.status(410).json({ message: "Gone: Use Supabase Auth on frontend" }));
+router.post("/login", authLimiter, (req, res) => res.status(410).json({ message: "Gone: Use Supabase Auth on frontend" }));
+router.post("/refresh", authLimiter, (req, res) => res.status(410).json({ message: "Gone: Use Supabase Auth on frontend" }));
+router.post("/admin/login-step1", authLimiter, (req, res) => res.status(410).json({ message: "Gone: Use Supabase Auth on frontend" }));
+router.post("/admin/login-step2", authLimiter, (req, res) => res.status(410).json({ message: "Gone: Use Supabase Auth on frontend" }));
+router.post("/request-password-reset", authLimiter, (req, res) => res.status(410).json({ message: "Gone: Use Supabase Auth on frontend" }));
+router.post("/confirm-password-reset", authLimiter, (req, res) => res.status(410).json({ message: "Gone: Use Supabase Auth on frontend" }));
 
 export default router;

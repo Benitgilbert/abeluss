@@ -49,7 +49,7 @@ export default function AdminPayouts() {
     const handleProcess = async (action, transactionId = '', rejectionReason = '') => {
         setProcessing(true);
         try {
-            const res = await api.put(`/commissions/payouts/${selectedPayout.id || selectedPayout._id}`, {
+            const res = await api.put(`/commissions/payouts/${selectedPayout.id || selectedPayout.id}`, {
                 action, transactionId, rejectionReason
             });
             if (res.data.success) { 
@@ -162,7 +162,7 @@ export default function AdminPayouts() {
                                     </thead>
                                     <tbody className="divide-y divide-cream-100 dark:divide-charcoal-700">
                                         {payouts.map((payout) => (
-                                            <tr key={payout._id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
+                                            <tr key={payout.id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
                                                 <td className="px-6 py-4 text-sm font-mono text-charcoal-600 dark:text-charcoal-400">{payout.payoutId}</td>
                                                 <td className="px-6 py-4">
                                                     <div>

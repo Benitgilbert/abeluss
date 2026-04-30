@@ -177,7 +177,7 @@ const SellerPayouts = () => {
                                         </thead>
                                         <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                                             {payouts.map(payout => (
-                                                <tr key={payout._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                                <tr key={payout.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                                                     <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
                                                         {new Date(payout.createdAt).toLocaleDateString()}
                                                     </td>

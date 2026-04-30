@@ -19,30 +19,43 @@ export const getAllSellers = async (req, res, next) => {
             ];
         }
 
+        const limitValue = Number(limit);
+        const cursor = req.query.cursor || undefined;
+
         const sellers = await prisma.user.findMany({
             where,
             select: {
                 id: true, name: true, email: true, storeName: true, storeDescription: true,
                 storeLogo: true, storePhone: true, sellerStatus: true, createdAt: true
             },
-            orderBy: { createdAt: 'desc' },
-            skip: (Number(page) - 1) * Number(limit),
-            take: Number(limit)
+            orderBy: { id: 'desc' }, // Using ID for cursor stability
+            take: limitValue + 1,
+            ...(cursor ? { skip: 1, cursor: { id: cursor } } : { skip: (Number(page) - 1) * limitValue })
         });
 
-        const total = await prisma.user.count({ where });
-        const pendingCount = await prisma.user.count({ where: { role: "seller", sellerStatus: "pending" } });
-        const activeCount = await prisma.user.count({ where: { role: "seller", sellerStatus: "active" } });
-        const rejectedCount = await prisma.user.count({ where: { role: "seller", sellerStatus: "rejected" } });
+        let nextCursor = null;
+        const results = [...sellers];
+        if (results.length > limitValue) {
+            const nextItem = results.pop();
+            nextCursor = nextItem.id;
+        }
+
+        const [total, pendingCount, activeCount, rejectedCount] = await Promise.all([
+            prisma.user.count({ where }),
+            prisma.user.count({ where: { role: "seller", sellerStatus: "pending" } }),
+            prisma.user.count({ where: { role: "seller", sellerStatus: "active" } }),
+            prisma.user.count({ where: { role: "seller", sellerStatus: "rejected" } })
+        ]);
 
         res.json({
             success: true,
-            data: sellers,
+            data: results,
+            nextCursor,
             pagination: {
                 page: Number(page),
-                limit: Number(limit),
+                limit: limitValue,
                 total,
-                pages: Math.ceil(total / Number(limit))
+                pages: Math.ceil(total / limitValue)
             },
             stats: {
                 total: pendingCount + activeCount + rejectedCount,
@@ -316,7 +329,7 @@ export const getSellerPerformanceReports = async (req, res, next) => {
             const performanceScore = Math.max(0, Math.min(100, Math.round(30 + revScore + orderScore + ratingScore - cancelPenalty)));
 
             return {
-                _id: s.id,
+                id: s.id,
                 seller: {
                     name: s.name,
                     email: s.email,
@@ -352,6 +365,73 @@ export const getSellerPerformanceReports = async (req, res, next) => {
         });
     } catch (error) {
         console.error("Seller performance report error:", error);
+        next(error);
+    }
+};
+
+/**
+ * 🏪 Get public seller storefront
+ */
+export const getStorefront = async (req, res, next) => {
+    try {
+        const { slug } = req.params;
+        const { page = 1, limit = 20 } = req.query;
+
+        const seller = await prisma.user.findFirst({
+            where: { 
+                storeSlug: slug,
+                sellerStatus: 'active'
+            },
+            select: {
+                id: true,
+                name: true,
+                storeName: true,
+                storeDescription: true,
+                storeLogo: true,
+                storePhone: true,
+                createdAt: true
+            }
+        });
+
+        if (!seller) {
+            return res.status(404).json({ message: "Store not found" });
+        }
+
+        const skip = (Number(page) - 1) * Number(limit);
+        const take = Number(limit);
+
+        const products = await prisma.product.findMany({
+            where: {
+                sellerId: seller.id,
+                visibility: 'public',
+                approvalStatus: 'approved'
+            },
+            orderBy: { createdAt: 'desc' },
+            skip,
+            take
+        });
+
+        const totalProducts = await prisma.product.count({
+            where: {
+                sellerId: seller.id,
+                visibility: 'public',
+                approvalStatus: 'approved'
+            }
+        });
+
+        res.json({
+            success: true,
+            data: {
+                seller,
+                products,
+                pagination: {
+                    total: totalProducts,
+                    page: Number(page),
+                    pages: Math.ceil(totalProducts / take)
+                }
+            }
+        });
+    } catch (error) {
         next(error);
     }
 };

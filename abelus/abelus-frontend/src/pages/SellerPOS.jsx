@@ -94,7 +94,7 @@ export default function SellerPOS() {
 
     useEffect(() => {
         if (selectedClient) {
-            fetchContractPrices(selectedClient.id || selectedClient._id);
+            fetchContractPrices(selectedClient.id);
         } else {
             setClientContractPrices([]);
         }
@@ -103,13 +103,13 @@ export default function SellerPOS() {
     const addToCart = useCallback((product, isVariation = false) => {
         if (product.stock <= 0) return;
         setCart(prevCart => {
-            const uniqueId = isVariation ? `${product._id || product.id}-${product.variationId}` : (product._id || product.id);
-            const existing = prevCart.find((item) => (item.uniqueId || item._id || item.id) === uniqueId);
+            const uniqueId = isVariation ? `${product.id}-${product.variationId}` : product.id;
+            const existing = prevCart.find((item) => (item.uniqueId || item.id) === uniqueId);
 
             if (existing) {
                 if (existing.quantity >= product.stock) return prevCart;
                 return prevCart.map((item) =>
-                    (item.uniqueId || item._id || item.id) === uniqueId ? { ...item, quantity: item.quantity + 1 } : item
+                    (item.uniqueId || item.id) === uniqueId ? { ...item, quantity: item.quantity + 1 } : item
                 );
             } else {
                 return [...prevCart, { ...product, quantity: 1, uniqueId, variationId: product.variationId }];
@@ -236,7 +236,7 @@ export default function SellerPOS() {
         }
         const productToAdd = {
             ...selectedProductForVariation,
-            _id: selectedProductForVariation._id || selectedProductForVariation.id, 
+            id: selectedProductForVariation.id, 
             variationId: variation.sku, 
             name: `${selectedProductForVariation.name} - ${attrString}`,
             price: variation.price,
@@ -249,13 +249,13 @@ export default function SellerPOS() {
 
     const getItemPrice = useCallback((item) => {
         if (item.manualPrice !== undefined) return item.manualPrice;
-        const cp = clientContractPrices.find(p => p.productId === (item._id || item.id));
+        const cp = clientContractPrices.find(p => p.productId === item.id);
         return cp ? cp.price : (item.price || 0);
     }, [clientContractPrices]);
 
     const updatePrice = (uniqueId, newPrice) => {
         setCart(prev => prev.map(item => {
-            if ((item.uniqueId || item._id || item.id) === uniqueId) {
+            if ((item.uniqueId || item.id) === uniqueId) {
                 return { ...item, manualPrice: parseFloat(newPrice) || 0 };
             }
             return item;
@@ -267,13 +267,13 @@ export default function SellerPOS() {
     };
 
     const removeFromCart = (uniqueId) => {
-        setCart(cart.filter((item) => (item.uniqueId || item._id || item.id) !== uniqueId));
+        setCart(cart.filter((item) => (item.uniqueId || item.id) !== uniqueId));
     };
 
     const updateQuantity = (uniqueId, delta) => {
         setCart(
             cart.map((item) => {
-                if ((item.uniqueId || item._id || item.id) === uniqueId) {
+                if ((item.uniqueId || item.id) === uniqueId) {
                     const newQty = Math.max(1, item.quantity + delta);
                     // Skip stock check for services
                     if (item.type !== 'service' && newQty > (item.stock || 0)) return item;
@@ -310,19 +310,19 @@ export default function SellerPOS() {
         try {
             const res = await api.post("/orders/pos", {
                 items: cart.map((item) => ({
-                    product: item._id || item.id,
+                    product: item.id,
                     quantity: item.quantity,
                     variationId: item.variationId,
                     price: getItemPrice(item)
                 })),
                 paymentMethod: method,
                 phone: phone,
-                clientId: selectedClient?.id || selectedClient?._id,
+                clientId: selectedClient?.id,
                 receivedAmount
             });
 
             if (method === "mtn_momo" && res.data.status === "pending") {
-                setPendingOrder(res.data._id);
+                setPendingOrder(res.data.id);
                 return;
             }
 
@@ -411,7 +411,7 @@ export default function SellerPOS() {
             });
             if (res.data.success) {
                 setShowCloseShiftModal(false);
-                const reportRes = await api.get(`/shifts/${res.data.data._id}/report`);
+                const reportRes = await api.get(`/shifts/${res.data.data.id}/report`);
                 if (reportRes.data.success) {
                     setShiftReport(reportRes.data.data);
                 }
@@ -834,7 +834,7 @@ export default function SellerPOS() {
                                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                                     {filteredProducts.map((product) => (
                                         <div
-                                            key={product._id || product.id}
+                                            key={product.id || product.id}
                                             onClick={() => handleProductClick(product)}
                                             className={`group bg-white dark:bg-gray-700 rounded-xl border border-gray-100 dark:border-gray-600 overflow-hidden cursor-pointer hover:shadow-lg transition-all transform hover:-translate-y-1 relative ${product.stock <= 0 && product.type !== 'variable' ? 'opacity-60 pointer-events-none grayscale' : ''
                                                 }`}
@@ -935,7 +935,7 @@ export default function SellerPOS() {
                                             <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-30 max-h-48 overflow-y-auto">
                                                 {clients.filter(c => c.name.toLowerCase().includes(clientSearchTerm.toLowerCase())).map(client => (
                                                     <div
-                                                        key={client.id || client._id}
+                                                        key={client.id || client.id}
                                                         onClick={() => {
                                                             setSelectedClient(client);
                                                             setClientSearchTerm("");
@@ -962,7 +962,7 @@ export default function SellerPOS() {
                                 </div>
                             ) : (
                                 cart.map((item) => (
-                                    <div key={item.uniqueId || item._id || item.id} className="bg-white dark:bg-gray-700 border border-gray-100 dark:border-gray-600 rounded-xl p-3 shadow-sm flex justify-between items-center group">
+                                    <div key={item.uniqueId || item.id || item.id} className="bg-white dark:bg-gray-700 border border-gray-100 dark:border-gray-600 rounded-xl p-3 shadow-sm flex justify-between items-center group">
                                         <div className="flex-1 min-w-0 mr-3">
                                             <h5 className="font-bold text-gray-800 dark:text-white text-sm truncate">{item.name}</h5>
                                             <div className="flex items-center gap-1 mt-1">
@@ -970,7 +970,7 @@ export default function SellerPOS() {
                                                 <input 
                                                     type="number"
                                                     value={getItemPrice(item)}
-                                                    onChange={(e) => updatePrice(item.uniqueId || item._id || item.id, e.target.value)}
+                                                    onChange={(e) => updatePrice(item.uniqueId || item.id || item.id, e.target.value)}
                                                     className="w-20 bg-transparent border-b border-indigo-200 dark:border-indigo-800 focus:border-indigo-500 outline-none text-indigo-600 dark:text-indigo-400 text-sm font-bold p-0"
                                                 />
                                                 <span className="text-gray-400 text-[10px] ml-1">× {item.quantity}</span>
@@ -978,21 +978,21 @@ export default function SellerPOS() {
                                         </div>
                                         <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 p-1 rounded-lg border border-gray-200 dark:border-gray-600">
                                             <button
-                                                onClick={() => updateQuantity(item.uniqueId || item._id || item.id, -1)}
+                                                onClick={() => updateQuantity(item.uniqueId || item.id || item.id, -1)}
                                                 className="w-7 h-7 flex items-center justify-center rounded bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                                             >
                                                 <FaMinus size={10} />
                                             </button>
                                             <span className="w-6 text-center text-sm font-bold text-gray-800 dark:text-white">{item.quantity}</span>
                                             <button
-                                                onClick={() => updateQuantity(item.uniqueId || item._id || item.id, 1)}
+                                                onClick={() => updateQuantity(item.uniqueId || item.id || item.id, 1)}
                                                 className="w-7 h-7 flex items-center justify-center rounded bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                                             >
                                                 <FaPlus size={10} />
                                             </button>
                                         </div>
                                         <button
-                                            onClick={() => removeFromCart(item.uniqueId || item._id || item.id)}
+                                            onClick={() => removeFromCart(item.uniqueId || item.id || item.id)}
                                             className="ml-2 w-7 h-7 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
                                         >
                                             <FaTrash size={12} />

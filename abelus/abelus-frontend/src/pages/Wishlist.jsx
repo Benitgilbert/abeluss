@@ -83,8 +83,8 @@ export default function Wishlist() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {products.map((p) => (
-                <div key={p._id} className="group bg-white dark:bg-slate-900 rounded-3xl shadow-sm hover:shadow-2xl border border-gray-100 dark:border-slate-800 transition-all duration-500 overflow-hidden flex flex-col h-full transform hover:-translate-y-2">
-                  <Link to={`/product/${p._id}`} className="relative block aspect-square overflow-hidden bg-gray-50 dark:bg-slate-950">
+                <div key={p.id} className="group bg-white dark:bg-slate-900 rounded-3xl shadow-sm hover:shadow-2xl border border-gray-100 dark:border-slate-800 transition-all duration-500 overflow-hidden flex flex-col h-full transform hover:-translate-y-2">
+                  <Link to={`/product/${p.id}`} className="relative block aspect-square overflow-hidden bg-gray-50 dark:bg-slate-950">
                     {p.image ? (
                       <img
                         src={assetUrl(p.image)}
@@ -99,7 +99,7 @@ export default function Wishlist() {
                     <button
                       onClick={(e) => {
                         e.preventDefault();
-                        remove(p._id);
+                        remove(p.id);
                       }}
                       className="absolute top-4 right-4 p-3 bg-white/90 dark:bg-slate-900/90 rounded-2xl text-red-500 shadow-lg backdrop-blur-sm transition-all hover:bg-red-500 hover:text-white transform hover:rotate-12 active:scale-90 z-20"
                       title="Remove from wishlist"
@@ -109,7 +109,7 @@ export default function Wishlist() {
                   </Link>
 
                   <div className="p-6 flex flex-col flex-grow">
-                    <Link to={`/product/${p._id}`} className="block group/title">
+                    <Link to={`/product/${p.id}`} className="block group/title">
                       <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 line-clamp-1 group-hover/title:text-pink-500 transition-colors">{p.name}</h3>
                     </Link>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 line-clamp-2 leading-relaxed flex-grow">{p.description}</p>
@@ -121,7 +121,7 @@ export default function Wishlist() {
                     <button
                       onClick={() => {
                         if (p.customizable || p.type === 'variable') {
-                          window.location.href = `/product/${p._id}`;
+                          window.location.href = `/product/${p.id}`;
                         } else {
                           addItem(p, { quantity: 1 });
                         }

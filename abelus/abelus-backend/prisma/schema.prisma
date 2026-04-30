@@ -2,7 +2,8 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearchPostgres"]
 }
 
 datasource db {
@@ -114,6 +115,8 @@ model User {
   giftCards         GiftCard[]
   generatedReports  ReportLog[]    @relation("GeneratedReports")
   sellerReports     SellerReport[] @relation("SellerReports")
+  wishlist          Wishlist?
+  storeSlug         String?        @unique
 
   // Staff Management
   managedById       String?
@@ -168,6 +171,8 @@ model Product {
 
   salesCount        Int                @default(0)
   viewCount         Int                @default(0)
+  averageRating     Float              @default(0)
+  reviewCount       Int                @default(0)
   isDigital         Boolean            @default(false)
   downloadLink      String?
   attributes        Json?              @default("[]")
@@ -870,4 +875,12 @@ model SellerReport {
   sentAt          DateTime?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+model Wishlist {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productIds String[] @default([])
+  updatedAt  DateTime @updatedAt
 }

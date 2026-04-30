@@ -113,7 +113,7 @@ const SellerOrders = () => {
                                         </thead>
                                         <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                                             {filteredOrders.map(order => (
-                                                <tr key={order._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                                <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                                                     <td className="px-6 py-4 font-mono text-xs text-indigo-600 dark:text-indigo-400 font-medium">#{order.publicId}</td>
                                                     <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{new Date(order.createdAt).toLocaleDateString()}</td>
                                                     <td className="px-6 py-4">
@@ -131,7 +131,7 @@ const SellerOrders = () => {
                                                     <td className="px-6 py-4">{getStatusBadge(order.status)}</td>
                                                     <td className="px-6 py-4">
                                                         <Link
-                                                            to={`/seller/orders/${order._id}`}
+                                                            to={`/seller/orders/${order.id}`}
                                                             className="p-2 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors flex items-center justify-center w-fit"
                                                             title="View Details"
                                                         >

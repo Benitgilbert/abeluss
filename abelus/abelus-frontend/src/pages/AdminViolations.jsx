@@ -293,7 +293,7 @@ export default function AdminViolations() {
                                         </thead>
                                         <tbody className="divide-y divide-cream-100 dark:divide-charcoal-700">
                                             {violations.map((violation) => (
-                                                <tr key={violation._id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
+                                                <tr key={violation.id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
                                                     <td className="px-6 py-4">
                                                         <div className="font-medium text-charcoal-800 dark:text-white">
                                                             {violation.seller?.storeName || violation.seller?.name}
@@ -325,14 +325,14 @@ export default function AdminViolations() {
                                                             {violation.status !== 'dismissed' && (
                                                                 <>
                                                                     <button
-                                                                        onClick={() => handleDismiss(violation._id)}
+                                                                        onClick={() => handleDismiss(violation.id)}
                                                                         className="p-2 rounded-lg text-sage-500 hover:bg-sage-50 dark:hover:bg-sage-900/20 transition-colors"
                                                                         title="Dismiss"
                                                                     >
                                                                         <FaCheck />
                                                                     </button>
                                                                     <button
-                                                                        onClick={() => handleEscalate(violation._id)}
+                                                                        onClick={() => handleEscalate(violation.id)}
                                                                         className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                                                                         title="Escalate"
                                                                     >
@@ -351,7 +351,7 @@ export default function AdminViolations() {
                                 {/* Mobile Cards */}
                                 <div className="md:hidden divide-y divide-cream-100 dark:divide-charcoal-700">
                                     {violations.map((violation) => (
-                                        <div key={violation._id} className="p-4">
+                                        <div key={violation.id} className="p-4">
                                             <div className="flex justify-between items-start mb-3">
                                                 <div>
                                                     <h3 className="font-medium text-charcoal-800 dark:text-white">
@@ -379,10 +379,10 @@ export default function AdminViolations() {
                                                     </button>
                                                     {violation.status !== 'dismissed' && (
                                                         <>
-                                                            <button onClick={() => handleDismiss(violation._id)} className="p-2 rounded-lg text-sage-500 hover:bg-sage-50 dark:hover:bg-sage-900/20">
+                                                            <button onClick={() => handleDismiss(violation.id)} className="p-2 rounded-lg text-sage-500 hover:bg-sage-50 dark:hover:bg-sage-900/20">
                                                                 <FaCheck />
                                                             </button>
-                                                            <button onClick={() => handleEscalate(violation._id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
+                                                            <button onClick={() => handleEscalate(violation.id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
                                                                 <FaExclamationTriangle />
                                                             </button>
                                                         </>

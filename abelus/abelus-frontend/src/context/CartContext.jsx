@@ -52,7 +52,7 @@ export function CartProvider({ children }) {
     } = options;
 
     const productId =
-      typeof productOrId === "string" ? productOrId : productOrId?._id;
+      typeof productOrId === "string" ? productOrId : productOrId?.id;
 
     if (!productId) {
       throw new Error("Product ID is required to add to cart");
@@ -105,7 +105,7 @@ export function CartProvider({ children }) {
       if (typeof productIdOrIndex === "number") {
         const rawItems = cart?.items || [];
         const target = rawItems[productIdOrIndex];
-        productId = target?.product?._id || target?.product;
+        productId = target?.product?.id || target?.product;
       }
 
       if (!productId) throw new Error("Product ID is required to remove item");
@@ -164,7 +164,7 @@ export function CartProvider({ children }) {
     cloudLink: it.customizations?.cloudLink || "",
     cloudPassword: it.customizations?.cloudPassword || "",
     variationId: it.variationId || null,
-    _id: it.product?._id || it.product,
+    id: it.product?.id || it.product,
   }));
 
   const itemCount =
@@ -183,7 +183,7 @@ export function CartProvider({ children }) {
   const updateQty = async (index, quantity) => {
     const target = items[index];
     if (!target) return;
-    const productId = target._id;
+    const productId = target.id;
     return updateItem(productId, quantity);
   };
 
@@ -197,7 +197,7 @@ export function CartProvider({ children }) {
     const ids = uniqueIndices
       .map((i) => raw[i])
       .filter(Boolean)
-      .map((it) => it.product?._id || it.product);
+      .map((it) => it.product?.id || it.product);
 
     // Remove each product from cart sequentially to keep things simple
     for (const id of ids) {

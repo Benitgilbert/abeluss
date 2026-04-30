@@ -35,7 +35,7 @@ export default function AdminCustomerQueries() {
     // Bulk selection handlers
     const handleSelectAll = (e) => {
         if (e.target.checked) {
-            setSelectedLogs(filteredLogs.map(log => log._id));
+            setSelectedLogs(filteredLogs.map(log => log.id));
         } else {
             setSelectedLogs([]);
         }
@@ -56,7 +56,7 @@ export default function AdminCustomerQueries() {
             await api.delete("/chatbot/logs", { data: { ids: selectedLogs } });
 
             // Update UI
-            setLogs(logs.filter(log => !selectedLogs.includes(log._id)));
+            setLogs(logs.filter(log => !selectedLogs.includes(log.id)));
             setSelectedLogs([]);
             toast.success("Query deleted successfully");
         } catch (err) {
@@ -134,12 +134,12 @@ export default function AdminCustomerQueries() {
                                     </thead>
                                     <tbody className="divide-y divide-cream-100 dark:divide-charcoal-700">
                                         {filteredLogs.map((log) => (
-                                            <tr key={log._id} className={`hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors ${selectedLogs.includes(log._id) ? 'bg-terracotta-50/50 dark:bg-terracotta-900/10' : ''}`}>
+                                            <tr key={log.id} className={`hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors ${selectedLogs.includes(log.id) ? 'bg-terracotta-50/50 dark:bg-terracotta-900/10' : ''}`}>
                                                 <td className="px-6 py-4 text-center">
                                                     <input
                                                         type="checkbox"
-                                                        checked={selectedLogs.includes(log._id)}
-                                                        onChange={() => handleSelectOne(log._id)}
+                                                        checked={selectedLogs.includes(log.id)}
+                                                        onChange={() => handleSelectOne(log.id)}
                                                         className="w-4 h-4 rounded border-gray-300 text-terracotta-500 focus:ring-terracotta-500"
                                                     />
                                                 </td>

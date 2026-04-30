@@ -80,7 +80,7 @@ export default function AdminBanners() {
         e.preventDefault();
         try {
             const token = localStorage.getItem('authToken');
-            const url = editingBanner ? `${API_URL}/banners/${editingBanner._id}` : `${API_URL}/banners`;
+            const url = editingBanner ? `${API_URL}/banners/${editingBanner.id}` : `${API_URL}/banners`;
             const payload = {
                 ...form,
                 startDate: form.startDate ? new Date(form.startDate).toISOString() : null,
@@ -174,7 +174,7 @@ export default function AdminBanners() {
                             {banners.map((banner) => {
                                 const statusInfo = getStatusInfo(banner);
                                 return (
-                                    <div key={banner._id} className="bg-white dark:bg-charcoal-800 rounded-2xl border border-cream-200 dark:border-charcoal-700 overflow-hidden shadow-sm">
+                                    <div key={banner.id} className="bg-white dark:bg-charcoal-800 rounded-2xl border border-cream-200 dark:border-charcoal-700 overflow-hidden shadow-sm">
                                         {/* Preview */}
                                         <div className="relative h-40" style={{ background: banner.backgroundImage ? `url(${banner.backgroundImage}) center/cover` : `linear-gradient(135deg, ${banner.gradientFrom}, ${banner.gradientTo})` }}>
                                             <span className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-semibold ${statusInfo.classes}`}>{statusInfo.label}</span>
@@ -202,13 +202,13 @@ export default function AdminBanners() {
 
                                         {/* Actions */}
                                         <div className="flex items-center justify-between px-4 py-3 border-t border-cream-200 dark:border-charcoal-700">
-                                            <button onClick={() => handleToggle(banner._id)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium text-sm transition-all ${banner.isActive ? 'text-sage-600 hover:bg-sage-50 dark:hover:bg-sage-900/20' : 'text-charcoal-400 hover:bg-charcoal-100 dark:hover:bg-charcoal-700'}`}>
+                                            <button onClick={() => handleToggle(banner.id)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium text-sm transition-all ${banner.isActive ? 'text-sage-600 hover:bg-sage-50 dark:hover:bg-sage-900/20' : 'text-charcoal-400 hover:bg-charcoal-100 dark:hover:bg-charcoal-700'}`}>
                                                 {banner.isActive ? <FaToggleOn className="text-lg" /> : <FaToggleOff className="text-lg" />}
                                                 {banner.isActive ? 'Active' : 'Inactive'}
                                             </button>
                                             <div className="flex gap-1">
                                                 <button onClick={() => openModal(banner)} className="p-2 rounded-lg text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"><FaEdit /></button>
-                                                <button onClick={() => handleDelete(banner._id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"><FaTrash /></button>
+                                                <button onClick={() => handleDelete(banner.id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"><FaTrash /></button>
                                             </div>
                                         </div>
                                     </div>

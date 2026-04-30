@@ -99,7 +99,7 @@ function TrendingProductsSidebar() {
                     </p>
 
                     <Link
-                        to={`/product/${currentProduct._id}`}
+                        to={`/product/${currentProduct.id}`}
                         className="inline-flex items-center gap-3 px-10 py-5 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-white/20 transition-all group"
                     >
                         View Details

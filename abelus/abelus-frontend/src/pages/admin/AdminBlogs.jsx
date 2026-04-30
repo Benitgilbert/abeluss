@@ -31,7 +31,7 @@ export default function AdminBlogs() {
         if (!window.confirm("Are you sure you want to delete this blog post?")) return;
         try {
             await api.delete(`/blogs/${id}`);
-            setBlogs(blogs.filter(blog => blog._id !== id));
+            setBlogs(blogs.filter(blog => blog.id !== id));
         } catch (err) {
             console.error("Failed to delete blog", err);
             alert("Failed to delete blog post");
@@ -107,7 +107,7 @@ export default function AdminBlogs() {
                                     </thead>
                                     <tbody className="divide-y divide-cream-100 dark:divide-charcoal-700">
                                         {filteredBlogs.map((blog) => (
-                                            <tr key={blog._id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
+                                            <tr key={blog.id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
                                                 <td className="px-6 py-4">
                                                     <div className="w-16 h-10 rounded-lg overflow-hidden bg-cream-100 dark:bg-charcoal-700">
                                                         {blog.image ? (
@@ -132,14 +132,14 @@ export default function AdminBlogs() {
                                                 <td className="px-6 py-4 text-right">
                                                     <div className="flex items-center justify-end gap-2">
                                                         <Link
-                                                            to={`/admin/blogs/edit/${blog._id}`}
+                                                            to={`/admin/blogs/edit/${blog.id}`}
                                                             className="p-2 text-charcoal-400 hover:text-terracotta-500 transition-colors"
                                                             title="Edit"
                                                         >
                                                             <FaEdit />
                                                         </Link>
                                                         <button
-                                                            onClick={() => handleDelete(blog._id)}
+                                                            onClick={() => handleDelete(blog.id)}
                                                             className="p-2 text-charcoal-400 hover:text-red-500 transition-colors"
                                                             title="Delete"
                                                         >

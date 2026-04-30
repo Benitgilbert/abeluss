@@ -79,7 +79,7 @@ export const getActiveFlashSales = async (req, res, next) => {
             const timeRemaining = sale.endDate.getTime() - now.getTime();
 
             return {
-                _id: sale.id,
+                id: sale.id,
                 name: sale.name,
                 description: sale.description,
                 startDate: sale.startDate,
@@ -88,7 +88,7 @@ export const getActiveFlashSales = async (req, res, next) => {
                 bannerColor: sale.bannerColor,
                 timeRemaining: timeRemaining > 0 ? timeRemaining : 0,
                 products: sale.products.map((sp) => ({
-                    _id: sp.product?.id,
+                    id: sp.product?.id,
                     name: sp.product?.name,
                     originalPrice: sp.product?.price,
                     flashSalePrice: sp.flashSalePrice,
@@ -101,7 +101,7 @@ export const getActiveFlashSales = async (req, res, next) => {
                     soldCount: sp.soldCount,
                     remaining: sp.stockLimit ? sp.stockLimit - sp.soldCount : null,
                     isAvailable: sp.stockLimit === null || sp.soldCount < sp.stockLimit
-                })).filter(p => p._id) // Filter out products that may have been deleted
+                })).filter(p => p.id) // Filter out products that may have been deleted
             };
         });
 

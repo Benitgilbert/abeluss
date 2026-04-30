@@ -271,8 +271,8 @@ export default function CartPage() {
               <div className="mt-20">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8 pr-4">Complete your order</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {Array.from(new Map(items.flatMap(item => item.product.crossSells || []).map(p => [p._id, p])).values()).map(p => (
-                    <Link key={p._id} to={`/product/${p.slug || p._id}`} className="group bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 dark:border-slate-800">
+                  {Array.from(new Map(items.flatMap(item => item.product.crossSells || []).map(p => [p.id, p])).values()).map(p => (
+                    <Link key={p.id} to={`/product/${p.slug || p.id}`} className="group bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 dark:border-slate-800">
                       <div className="aspect-square overflow-hidden bg-gray-50 dark:bg-slate-950">
                         {p.image ? (
                           <img src={process.env.REACT_APP_API_URL + p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />

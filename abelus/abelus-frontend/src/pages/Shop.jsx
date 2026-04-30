@@ -27,12 +27,12 @@ const getRating = (rating) => {
 
 const WishlistButton = ({ product }) => {
   const { ids, toggle } = useWishlist();
-  const isWishlisted = ids.includes(product._id);
+  const isWishlisted = ids.includes(product.id);
 
   const toggleWishlist = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    toggle(product._id);
+    toggle(product.id);
   };
 
   return (
@@ -90,7 +90,7 @@ export default function Shop() {
 
   const handleAddToCart = async (product) => {
     if (product.customizable) {
-      window.location.href = `/product/${product._id}`;
+      window.location.href = `/product/${product.id}`;
       return;
     }
     try {
@@ -487,12 +487,12 @@ export default function Shop() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                   {products.map((p) => (
                     <div
-                      key={p._id}
+                      key={p.id}
                       className="group bg-white dark:bg-charcoal-800 rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 border border-cream-200 dark:border-charcoal-700 flex flex-col"
                     >
                       {/* Image Container */}
                       <div className="relative aspect-square bg-cream-100 dark:bg-charcoal-700 overflow-hidden">
-                        <Link to={`/product/${p._id}`} className="block h-full">
+                        <Link to={`/product/${p.id}`} className="block h-full">
                           {(p.image || p.images?.[0]) ? (
                             <img
                               src={assetUrl(p.image || p.images?.[0])}
@@ -547,7 +547,7 @@ export default function Shop() {
 
                       {/* Product Info */}
                       <div className="p-5 flex flex-col flex-1">
-                        <Link to={`/product/${p._id}`}>
+                        <Link to={`/product/${p.id}`}>
                           <h3 className="font-bold text-charcoal-800 dark:text-white mb-2 line-clamp-1 group-hover:text-terracotta-500 dark:group-hover:text-terracotta-400 transition-colors text-base">
                             {p.name}
                           </h3>
@@ -567,7 +567,7 @@ export default function Shop() {
                             <span className="text-xs text-charcoal-400 ml-1">({getRating(p.averageRating).toFixed(1)})</span>
                           </div>
                           <Link
-                            to={`/product/${p._id}`}
+                            to={`/product/${p.id}`}
                             className="text-terracotta-500 dark:text-terracotta-400 text-sm font-bold hover:underline"
                           >
                             View →

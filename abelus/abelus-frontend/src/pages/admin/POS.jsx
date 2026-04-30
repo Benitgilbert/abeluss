@@ -74,7 +74,7 @@ const POS = () => {
             if (res.data.success) {
                 setShowCloseShiftModal(false);
                 // Fetch report
-                const reportRes = await axios.get(`/shifts/${res.data.data._id}/report`);
+                const reportRes = await axios.get(`/shifts/${res.data.data.id}/report`);
                 if (reportRes.data.success) {
                     setShiftReport(reportRes.data.data);
                 }
@@ -132,7 +132,7 @@ const POS = () => {
 
     useEffect(() => {
         if (selectedClient) {
-            fetchContractPrices(selectedClient.id || selectedClient._id);
+            fetchContractPrices(selectedClient.id || selectedClient.id);
         } else {
             setClientContractPrices([]);
         }
@@ -180,12 +180,12 @@ const POS = () => {
 
     const addToCart = (product) => {
         if (product.stock <= 0) return;
-        const existing = cart.find((item) => item._id === product._id);
+        const existing = cart.find((item) => item.id === product.id);
         if (existing) {
             if (existing.quantity >= product.stock) return;
             setCart(
                 cart.map((item) =>
-                    item._id === product._id ? { ...item, quantity: item.quantity + 1 } : item
+                    item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
                 )
             );
         } else {
@@ -194,14 +194,14 @@ const POS = () => {
     };
 
     const removeFromCart = (productId) => {
-        setCart(cart.filter((item) => item._id !== productId));
+        setCart(cart.filter((item) => item.id !== productId));
     };
 
     const updateQuantity = (productId, delta) => {
         setCart(
             cart.map((item) => {
-                if (item._id === productId) {
-                    const product = products.find(p => p._id === productId);
+                if (item.id === productId) {
+                    const product = products.find(p => p.id === productId);
                     const newQty = Math.max(1, item.quantity + delta);
                     if (newQty > product.stock) return item;
                     return { ...item, quantity: newQty };
@@ -212,7 +212,7 @@ const POS = () => {
     };
 
     const getItemPrice = (item) => {
-        const cp = clientContractPrices.find(p => p.productId === item._id || p.productId === item.id);
+        const cp = clientContractPrices.find(p => p.productId === item.id || p.productId === item.id);
         return cp ? cp.price : item.price;
     };
 
@@ -236,16 +236,16 @@ const POS = () => {
         try {
             const res = await axios.post("/orders/pos", {
                 items: cart.map((item) => ({
-                    product: item._id || item.id,
+                    product: item.id || item.id,
                     quantity: item.quantity,
                 })),
                 paymentMethod: method,
                 phone: phone,
-                clientId: selectedClient?.id || selectedClient?._id
+                clientId: selectedClient?.id || selectedClient?.id
             });
 
             if (method === "mtn_momo" && res.data.status === "pending") {
-                setPendingOrder(res.data._id);
+                setPendingOrder(res.data.id);
                 return;
             }
 
@@ -504,7 +504,7 @@ const POS = () => {
                                 <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 pb-20">
                                     {filteredProducts.map((product) => (
                                         <div
-                                            key={product._id}
+                                            key={product.id}
                                             onClick={() => addToCart(product)}
                                             className={`group bg-white dark:bg-charcoal-800 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-cream-100 dark:border-charcoal-700 overflow-hidden flex flex-col ${product.stock <= 0 ? 'opacity-60 pointer-events-none grayscale' : ''}`}
                                         >
@@ -614,7 +614,7 @@ const POS = () => {
                                             <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-charcoal-800 border border-cream-200 dark:border-charcoal-700 rounded-xl shadow-xl z-30 max-h-48 overflow-y-auto">
                                                 {clients.filter(c => c.name.toLowerCase().includes(clientSearchTerm.toLowerCase())).map(client => (
                                                     <div
-                                                        key={client.id || client._id}
+                                                        key={client.id || client.id}
                                                         onClick={() => {
                                                             setSelectedClient(client);
                                                             setClientSearchTerm("");
@@ -643,7 +643,7 @@ const POS = () => {
                                 </div>
                             ) : (
                                 cart.map((item) => (
-                                    <div key={item._id} className="bg-white dark:bg-charcoal-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-charcoal-700 flex flex-col gap-3 group hover:border-terracotta-200 dark:hover:border-terracotta-900 transition-colors">
+                                    <div key={item.id} className="bg-white dark:bg-charcoal-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-charcoal-700 flex flex-col gap-3 group hover:border-terracotta-200 dark:hover:border-terracotta-900 transition-colors">
                                         <div className="flex justify-between items-start">
                                             <div>
                                                 <h4 className="font-bold text-sm text-charcoal-800 dark:text-white line-clamp-1">{item.name}</h4>
@@ -659,21 +659,21 @@ const POS = () => {
                                         <div className="flex items-center justify-between pt-2 border-t border-gray-50 dark:border-charcoal-700/50">
                                             <div className="flex items-center gap-3 bg-gray-50 dark:bg-charcoal-700 rounded-lg p-1">
                                                 <button
-                                                    onClick={() => updateQuantity(item._id, -1)}
+                                                    onClick={() => updateQuantity(item.id, -1)}
                                                     className="w-6 h-6 flex items-center justify-center rounded bg-white dark:bg-charcoal-600 text-gray-600 dark:text-gray-300 shadow-sm hover:text-terracotta-500 transition-colors"
                                                 >
                                                     <FaMinus size={8} />
                                                 </button>
                                                 <span className="w-6 text-center font-bold text-sm text-charcoal-800 dark:text-white">{item.quantity}</span>
                                                 <button
-                                                    onClick={() => updateQuantity(item._id, 1)}
+                                                    onClick={() => updateQuantity(item.id, 1)}
                                                     className="w-6 h-6 flex items-center justify-center rounded bg-white dark:bg-charcoal-600 text-gray-600 dark:text-gray-300 shadow-sm hover:text-terracotta-500 transition-colors"
                                                 >
                                                     <FaPlus size={8} />
                                                 </button>
                                             </div>
                                             <button
-                                                onClick={() => removeFromCart(item._id)}
+                                                onClick={() => removeFromCart(item.id)}
                                                 className="text-gray-300 hover:text-red-500 transition-colors p-1"
                                                 title="Remove item"
                                             >

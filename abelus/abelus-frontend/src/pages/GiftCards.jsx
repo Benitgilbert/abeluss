@@ -31,10 +31,10 @@ const GiftCards = () => {
                 console.error("Failed to fetch gift card products:", error);
                 // Fallback to defaults if API fails
                 setGiftCardOptions([
-                    { _id: "gc25", amount: 25000, label: "Starter", color: "from-violet-500 to-indigo-600" },
-                    { _id: "gc50", amount: 50000, label: "Premium", color: "from-terracotta-500 to-amber-500" },
-                    { _id: "gc100", amount: 100000, label: "Luxury", color: "from-charcoal-700 to-charcoal-900" },
-                    { _id: "gc_custom", amount: 0, label: "Custom", color: "from-emerald-500 to-teal-600", isCustom: true },
+                    { id: "gc25", amount: 25000, label: "Starter", color: "from-violet-500 to-indigo-600" },
+                    { id: "gc50", amount: 50000, label: "Premium", color: "from-terracotta-500 to-amber-500" },
+                    { id: "gc100", amount: 100000, label: "Luxury", color: "from-charcoal-700 to-charcoal-900" },
+                    { id: "gc_custom", amount: 0, label: "Custom", color: "from-emerald-500 to-teal-600", isCustom: true },
                 ]);
             }
         };
@@ -138,7 +138,7 @@ const GiftCards = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                         {giftCardOptions.map((opt) => (
-                            <div key={opt._id || opt.id} className="group relative bg-white dark:bg-slate-900 rounded-3xl p-1 shadow-sm hover:shadow-2xl transition-all duration-500 border border-gray-100 dark:border-slate-800">
+                            <div key={opt.id || opt.id} className="group relative bg-white dark:bg-slate-900 rounded-3xl p-1 shadow-sm hover:shadow-2xl transition-all duration-500 border border-gray-100 dark:border-slate-800">
                                 <div className={`aspect-[1.6/1] rounded-2xl bg-gradient-to-br ${opt.color} p-6 flex flex-col justify-between text-white relative overflow-hidden`}>
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
                                     <div className="z-10">

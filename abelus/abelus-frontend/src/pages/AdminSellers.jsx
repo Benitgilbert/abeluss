@@ -299,7 +299,7 @@ export default function AdminSellers() {
                                     </thead>
                                     <tbody className="divide-y divide-cream-100 dark:divide-charcoal-700">
                                         {sellers.map((seller) => (
-                                            <tr key={seller._id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
+                                            <tr key={seller.id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-10 h-10 rounded-xl bg-terracotta-100 dark:bg-terracotta-900/20 flex items-center justify-center overflow-hidden">
@@ -332,30 +332,30 @@ export default function AdminSellers() {
                                                 <td className="px-6 py-4">{getStatusBadge(seller.sellerStatus)}</td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center justify-center gap-1">
-                                                        <button onClick={() => viewSellerDetails(seller._id)} className="p-2 rounded-lg text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" title="View">
+                                                        <button onClick={() => viewSellerDetails(seller.id)} className="p-2 rounded-lg text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" title="View">
                                                             <FaEye />
                                                         </button>
                                                         {seller.sellerStatus === 'pending' && (
                                                             <>
-                                                                <button onClick={() => updateSellerStatus(seller._id, 'active')} className="p-2 rounded-lg text-sage-500 hover:bg-sage-50 dark:hover:bg-sage-900/20 transition-colors" title="Approve">
+                                                                <button onClick={() => updateSellerStatus(seller.id, 'active')} className="p-2 rounded-lg text-sage-500 hover:bg-sage-50 dark:hover:bg-sage-900/20 transition-colors" title="Approve">
                                                                     <FaCheck />
                                                                 </button>
-                                                                <button onClick={() => updateSellerStatus(seller._id, 'rejected')} className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Reject">
+                                                                <button onClick={() => updateSellerStatus(seller.id, 'rejected')} className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Reject">
                                                                     <FaTimes />
                                                                 </button>
                                                             </>
                                                         )}
                                                         {seller.sellerStatus === 'active' && (
-                                                            <button onClick={() => updateSellerStatus(seller._id, 'rejected')} className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Suspend">
+                                                            <button onClick={() => updateSellerStatus(seller.id, 'rejected')} className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Suspend">
                                                                 <FaTimes />
                                                             </button>
                                                         )}
                                                         {seller.sellerStatus === 'rejected' && (
-                                                            <button onClick={() => updateSellerStatus(seller._id, 'active')} className="p-2 rounded-lg text-sage-500 hover:bg-sage-50 dark:hover:bg-sage-900/20 transition-colors" title="Reactivate">
+                                                            <button onClick={() => updateSellerStatus(seller.id, 'active')} className="p-2 rounded-lg text-sage-500 hover:bg-sage-50 dark:hover:bg-sage-900/20 transition-colors" title="Reactivate">
                                                                 <FaCheck />
                                                             </button>
                                                         )}
-                                                        <button onClick={() => deleteSeller(seller._id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Delete">
+                                                        <button onClick={() => deleteSeller(seller.id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Delete">
                                                             <FaTrash />
                                                         </button>
                                                     </div>
@@ -522,11 +522,11 @@ export default function AdminSellers() {
                                                         className="w-full px-4 py-2.5 bg-cream-100 dark:bg-charcoal-700 border border-transparent focus:border-terracotta-500 rounded-xl text-charcoal-800 dark:text-white outline-none transition-colors resize-none"
                                                     />
                                                     <div className="flex gap-3">
-                                                        <button onClick={() => verifyDocuments(selectedSeller._id, 'approve')} disabled={processing}
+                                                        <button onClick={() => verifyDocuments(selectedSeller.id, 'approve')} disabled={processing}
                                                             className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-sage-500 hover:bg-sage-600 disabled:opacity-50 text-white rounded-xl font-medium transition-all">
                                                             <FaCheck /> Approve
                                                         </button>
-                                                        <button onClick={() => verifyDocuments(selectedSeller._id, 'reject', rejectionReason)} disabled={processing}
+                                                        <button onClick={() => verifyDocuments(selectedSeller.id, 'reject', rejectionReason)} disabled={processing}
                                                             className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white rounded-xl font-medium transition-all">
                                                             <FaTimes /> Reject
                                                         </button>

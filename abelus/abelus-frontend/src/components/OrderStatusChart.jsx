@@ -25,9 +25,9 @@ function OrderStatusChart() {
                     refunded: '#6b7280'    // gray-500
                 };
 
-                const labels = statusCounts.map(s => s._id?.charAt(0).toUpperCase() + s._id?.slice(1) || 'Unknown');
+                const labels = statusCounts.map(s => s.id?.charAt(0).toUpperCase() + s.id?.slice(1) || 'Unknown');
                 const values = statusCounts.map(s => s.count);
-                const colors = statusCounts.map(s => statusColors[s._id] || '#9ca3af');
+                const colors = statusCounts.map(s => statusColors[s.id] || '#9ca3af');
 
                 setData({
                     labels,

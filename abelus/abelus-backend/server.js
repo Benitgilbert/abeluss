@@ -9,7 +9,6 @@ import dotenv from "dotenv";
 import prisma from "./prisma.js";
 import { errorHandler, notFound } from "./middleware/errorHandler.js";
 import logger from "./config/logger.js";
-import { mongoCompat } from "./middleware/mongoCompat.js";
 
 // ✅ Import routes at top level for better Vercel performance
 import dashboardRoutes from "./routes/dashboardRoutes.js";
@@ -39,6 +38,7 @@ import brandPartnerRoutes from "./routes/brandPartnerRoutes.js";
 import siteSettingsRoutes from "./routes/siteSettingsRoutes.js";
 import newsletterRoutes from "./routes/newsletterRoutes.js";
 import giftCardRoutes from "./routes/giftCardRoutes.js";
+import wishlistRoutes from "./routes/wishlistRoutes.js";
 import shiftRoutes from "./routes/shiftRoutes.js";
 import abonneRoutes from "./routes/abonneRoutes.js";
 import giftCardProductRoutes from "./routes/giftCardProductRoutes.js";
@@ -91,7 +91,6 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(passport.initialize());
 app.use(cookieParser());
-app.use(mongoCompat);
 
 // ✅ Request Logging Middleware
 app.use(
@@ -139,6 +138,7 @@ app.use("/api/analytics", analyticsRoutes);
 app.use("/api/blogs", blogRoutes);
 app.use("/api/finance", financeRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/flash-sales", flashSaleRoutes);
 app.use("/api/banners", bannerRoutes);
 app.use("/api/testimonials", testimonialRoutes);
@@ -176,8 +176,9 @@ app.use(errorHandler);
 
 // ✅ Database Connection & Server Start
 const isVercel = process.env.VERCEL === '1' || !!process.env.VERCEL;
+const isTest = process.env.NODE_ENV === 'test';
 
-if (!isVercel) {
+if (!isVercel && !isTest) {
   const startServer = async () => {
     try {
       await prisma.$connect();

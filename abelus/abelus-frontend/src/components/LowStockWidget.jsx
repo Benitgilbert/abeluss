@@ -73,7 +73,7 @@ function LowStockWidget() {
             ) : (
                 <div className="space-y-3 overflow-y-auto pr-1 max-h-[300px] scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-charcoal-600">
                     {products.map((product) => (
-                        <div key={product._id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-charcoal-700/50 hover:bg-gray-100 dark:hover:bg-charcoal-700 transition-colors">
+                        <div key={product.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-charcoal-700/50 hover:bg-gray-100 dark:hover:bg-charcoal-700 transition-colors">
                             <div className="flex items-center gap-3 min-w-0">
                                 <div className="w-10 h-10 rounded-lg bg-white dark:bg-charcoal-600 border border-gray-100 dark:border-charcoal-500 overflow-hidden flex-shrink-0">
                                     {product.image ? (

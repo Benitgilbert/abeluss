@@ -11,7 +11,7 @@ const LedgerView = () => {
         axios.get("/finance/accounts").then((res) => {
             setAccounts(res.data);
             if (res.data.length > 0) {
-                setSelectedAccount(res.data[0]._id);
+                setSelectedAccount(res.data[0].id);
             }
         });
     }, []);
@@ -37,7 +37,7 @@ const LedgerView = () => {
     const getEntryForAccount = (transaction, accountId) => {
         if (!transaction.entries) return null;
         return transaction.entries.find((e) => {
-            const entryAccountId = typeof e.account === 'object' ? e.account._id : e.account;
+            const entryAccountId = typeof e.account === 'object' ? e.account.id : e.account;
             return entryAccountId === accountId;
         });
     };
@@ -53,7 +53,7 @@ const LedgerView = () => {
                         onChange={(e) => setSelectedAccount(e.target.value)}
                     >
                         {accounts.map((acc) => (
-                            <option key={acc._id} value={acc._id}>
+                            <option key={acc.id} value={acc.id}>
                                 {acc.code} - {acc.name}
                             </option>
                         ))}
@@ -86,7 +86,7 @@ const LedgerView = () => {
                             {transactions.map((tx) => {
                                 const entry = getEntryForAccount(tx, selectedAccount);
                                 return (
-                                    <tr key={tx._id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
+                                    <tr key={tx.id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
                                         <td className="px-6 py-4 text-charcoal-600 dark:text-charcoal-400 whitespace-nowrap">
                                             {new Date(tx.date).toLocaleDateString()}
                                         </td>

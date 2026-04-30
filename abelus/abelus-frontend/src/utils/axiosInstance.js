@@ -47,4 +47,4 @@ instance.interceptors.response.use(
   }
 );
 
-export default instance;
+export default instance;

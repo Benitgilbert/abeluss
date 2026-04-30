@@ -163,7 +163,7 @@ const AdminOrders = () => {
                                         </tr>
                                     ) : (
                                         orders.map((order) => (
-                                            <tr key={order._id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
+                                            <tr key={order.id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
                                                 <td className="px-6 py-4">
                                                     <span className="font-mono text-sm text-charcoal-600 dark:text-charcoal-300">
                                                         #{order.publicId}
@@ -202,7 +202,7 @@ const AdminOrders = () => {
                                                 </td>
                                                 <td className="px-6 py-4 text-center">
                                                     <Link
-                                                        to={`/admin/orders/${order._id}`}
+                                                        to={`/admin/orders/${order.id}`}
                                                         className="inline-flex items-center justify-center w-9 h-9 rounded-lg text-terracotta-500 hover:bg-terracotta-50 dark:hover:bg-terracotta-900/20 transition-colors"
                                                         title="View Details"
                                                     >
@@ -230,7 +230,7 @@ const AdminOrders = () => {
                                 </div>
                             ) : (
                                 orders.map((order) => (
-                                    <div key={order._id} className="p-4 hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
+                                    <div key={order.id} className="p-4 hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
                                         <div className="flex justify-between items-start mb-3">
                                             <div>
                                                 <div className="flex items-center gap-2 mb-1">
@@ -264,7 +264,7 @@ const AdminOrders = () => {
                                                 </span>
                                             </div>
                                             <Link
-                                                to={`/admin/orders/${order._id}`}
+                                                to={`/admin/orders/${order.id}`}
                                                 className="p-2 rounded-lg text-terracotta-500 hover:bg-terracotta-50 dark:hover:bg-terracotta-900/20"
                                             >
                                                 <FaEye />

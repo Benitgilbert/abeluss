@@ -85,7 +85,7 @@ export const getCategoryByIdOrSlug = async (req, res, next) => {
     const path = [];
     let current = category;
     while (current) {
-      path.unshift({ _id: current.id, name: current.name, slug: current.slug });
+      path.unshift({ id: current.id, name: current.name, slug: current.slug });
       if (current.parentId) {
         current = await prisma.category.findUnique({ where: { id: current.parentId } });
       } else {
@@ -157,7 +157,7 @@ export const createCategory = async (req, res, next) => {
 export const updateCategory = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { _id, id: _, parent, parentId, createdAt, updatedAt, ...updateData } = req.body;
+    const { id: _, parent, parentId, createdAt, updatedAt, ...updateData } = req.body;
 
     // If parent/parentId is provided, ensure it's mapped correctly
     if (parent !== undefined || parentId !== undefined) {

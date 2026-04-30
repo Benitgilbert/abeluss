@@ -57,7 +57,7 @@ function ProductTable() {
     if (!window.confirm("Delete this product?")) return;
     try {
       await api.delete(`/products/${id}`);
-      setProducts((prev) => prev.filter((p) => p._id !== id));
+      setProducts((prev) => prev.filter((p) => p.id !== id));
       setMessage("success:Product deleted");
     } catch (err) {
       console.error("Delete failed:", err);
@@ -67,7 +67,7 @@ function ProductTable() {
 
   const handleSaved = (saved) => {
     if (editing) {
-      setProducts((prev) => prev.map((p) => (p._id === saved._id ? saved : p)));
+      setProducts((prev) => prev.map((p) => (p.id === saved.id ? saved : p)));
       setEditing(null);
       setMessage("success:Product updated");
     } else {
@@ -83,7 +83,7 @@ function ProductTable() {
 
   const toggleSelectAll = () => {
     if (selectedIds.length === pageItems.length) setSelectedIds([]);
-    else setSelectedIds(pageItems.map(p => p._id));
+    else setSelectedIds(pageItems.map(p => p.id));
   };
 
   const handleBulkAction = async () => {
@@ -93,19 +93,19 @@ function ProductTable() {
     try {
       if (bulkAction === "delete") {
         await Promise.all(selectedIds.map(id => api.delete(`/products/${id}`)));
-        setProducts(prev => prev.filter(p => !selectedIds.includes(p._id)));
+        setProducts(prev => prev.filter(p => !selectedIds.includes(p.id)));
         setMessage(`success:Deleted ${selectedIds.length} products`);
       } else if (bulkAction === "stock") {
         const val = parseInt(bulkValue);
         if (isNaN(val)) return alert("Invalid stock value");
         await Promise.all(selectedIds.map(id => api.put(`/products/${id}`, { stock: val })));
-        setProducts(prev => prev.map(p => selectedIds.includes(p._id) ? { ...p, stock: val } : p));
+        setProducts(prev => prev.map(p => selectedIds.includes(p.id) ? { ...p, stock: val } : p));
         setMessage(`success:Updated stock for ${selectedIds.length} products`);
       } else if (bulkAction === "price") {
         const val = parseFloat(bulkValue);
         if (isNaN(val)) return alert("Invalid price value");
         await Promise.all(selectedIds.map(id => api.put(`/products/${id}`, { price: val })));
-        setProducts(prev => prev.map(p => selectedIds.includes(p._id) ? { ...p, price: val } : p));
+        setProducts(prev => prev.map(p => selectedIds.includes(p.id) ? { ...p, price: val } : p));
         setMessage(`success:Updated price for ${selectedIds.length} products`);
       }
       setSelectedIds([]);
@@ -257,12 +257,12 @@ function ProductTable() {
               pageItems.map((p) => {
                 const isLowStock = p.stock !== null && p.stock < 5;
                 return (
-                  <tr key={p._id} className={`hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors ${isLowStock ? 'bg-red-50/50 dark:bg-red-900/10' : ''}`}>
+                  <tr key={p.id} className={`hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors ${isLowStock ? 'bg-red-50/50 dark:bg-red-900/10' : ''}`}>
                     <td className="px-4 py-4">
                       <input
                         type="checkbox"
-                        checked={selectedIds.includes(p._id)}
-                        onChange={() => toggleSelect(p._id)}
+                        checked={selectedIds.includes(p.id)}
+                        onChange={() => toggleSelect(p.id)}
                         className="w-4 h-4 rounded border-charcoal-300 text-terracotta-500 focus:ring-terracotta-500"
                       />
                     </td>
@@ -319,7 +319,7 @@ function ProductTable() {
                           <FaEdit />
                         </button>
                         <button
-                          onClick={() => handleDelete(p._id)}
+                          onClick={() => handleDelete(p.id)}
                           className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                           title="Delete"
                         >

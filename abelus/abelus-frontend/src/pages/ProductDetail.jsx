@@ -220,7 +220,7 @@ export default function ProductDetail() {
                   {product.seller && (
                     <div className="flex items-center gap-2 text-sm">
                       <span className="text-gray-500 dark:text-gray-400">Sold by:</span>
-                      <Link to={`/shop?seller=${product.seller._id}`} className="font-semibold text-violet-600 dark:text-violet-400 hover:underline">
+                      <Link to={`/shop?seller=${product.seller.id}`} className="font-semibold text-violet-600 dark:text-violet-400 hover:underline">
                         {product.seller.storeName || product.seller.name}
                       </Link>
                     </div>
@@ -342,12 +342,12 @@ export default function ProductDetail() {
                     <FaShoppingCart /> {product.type === 'variable' && !currentVariation ? 'Select Options' : 'Add to Cart'}
                   </button>
                   <button
-                    onClick={() => toggle(product._id)}
-                    className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-2xl font-bold border-2 transition-all ${has(product._id)
+                    onClick={() => toggle(product.id)}
+                    className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-2xl font-bold border-2 transition-all ${has(product.id)
                       ? 'bg-red-50 border-red-200 text-red-600 dark:bg-red-900/10 dark:border-red-900/30'
                       : 'bg-white dark:bg-slate-900 border-gray-100 dark:border-slate-800 text-gray-700 dark:text-gray-300 hover:border-red-400'}`}
                   >
-                    <FaHeart className={has(product._id) ? "text-red-500" : ""} /> {has(product._id) ? 'Saved' : 'Wishlist'}
+                    <FaHeart className={has(product.id) ? "text-red-500" : ""} /> {has(product.id) ? 'Saved' : 'Wishlist'}
                   </button>
                 </div>
               </div>
@@ -367,7 +367,7 @@ export default function ProductDetail() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {recommendations.slice(0, 3).map(rec => (
-                  <Link key={rec._id} to={`/product/${rec.slug || rec._id}`} className="flex bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-amber-100 dark:border-slate-800 group">
+                  <Link key={rec.id} to={`/product/${rec.slug || rec.id}`} className="flex bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-amber-100 dark:border-slate-800 group">
                     <div className="w-1/3 bg-gray-50 dark:bg-slate-950 relative overflow-hidden">
                       {rec.image ? (
                         <img src={assetUrl(rec.image)} alt={rec.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
@@ -401,7 +401,7 @@ export default function ProductDetail() {
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">You may also like</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {relatedProducts.map(p => (
-                  <Link key={p._id} to={`/product/${p.slug || p._id}`} className="group bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 dark:border-slate-800">
+                  <Link key={p.id} to={`/product/${p.slug || p.id}`} className="group bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-gray-100 dark:border-slate-800">
                     <div className="aspect-square overflow-hidden bg-gray-50 dark:bg-slate-950">
                       {p.image ? (
                         <img src={assetUrl(p.image)} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />

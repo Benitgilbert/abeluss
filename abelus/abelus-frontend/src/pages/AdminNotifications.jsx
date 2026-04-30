@@ -28,7 +28,7 @@ const AdminNotifications = () => {
     const handleMarkAsRead = async (id) => {
         try {
             await api.put(`/notifications/${id}/read`);
-            setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
+            setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
         } catch (error) { console.error("Failed to mark as read:", error); }
     };
 
@@ -43,7 +43,7 @@ const AdminNotifications = () => {
         if (!window.confirm("Delete this notification?")) return;
         try {
             await api.delete(`/notifications/${id}`);
-            setNotifications(prev => prev.filter(n => n._id !== id));
+            setNotifications(prev => prev.filter(n => n.id !== id));
         } catch (error) { console.error("Failed to delete notification:", error); }
     };
 
@@ -119,7 +119,7 @@ const AdminNotifications = () => {
                         ) : (
                             <div className="divide-y divide-cream-100 dark:divide-charcoal-700">
                                 {notifications.map(n => (
-                                    <div key={n._id} className={`group p-6 flex gap-4 transition-colors hover:bg-cream-50 dark:hover:bg-charcoal-700/50 ${!n.isRead ? 'bg-blue-50/50 dark:bg-blue-900/5' : ''}`}>
+                                    <div key={n.id} className={`group p-6 flex gap-4 transition-colors hover:bg-cream-50 dark:hover:bg-charcoal-700/50 ${!n.isRead ? 'bg-blue-50/50 dark:bg-blue-900/5' : ''}`}>
                                         <div className="shrink-0 pt-1">
                                             {getIcon(n.type)}
                                         </div>
@@ -136,11 +136,11 @@ const AdminNotifications = () => {
 
                                             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 {!n.isRead && (
-                                                    <button onClick={() => handleMarkAsRead(n._id)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 rounded-lg transition-colors">
+                                                    <button onClick={() => handleMarkAsRead(n.id)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 rounded-lg transition-colors">
                                                         <FaCheck /> Mark as Read
                                                     </button>
                                                 )}
-                                                <button onClick={() => handleDelete(n._id)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-charcoal-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
+                                                <button onClick={() => handleDelete(n.id)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-charcoal-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
                                                     <FaTrash /> Delete
                                                 </button>
                                             </div>

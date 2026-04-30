@@ -193,7 +193,7 @@ export default function AdminSubscribers() {
                                     </thead>
                                     <tbody className="divide-y divide-cream-100 dark:divide-charcoal-700">
                                         {subscribers.map((sub) => (
-                                            <tr key={sub._id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
+                                            <tr key={sub.id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
                                                 <td className="px-6 py-4 text-sm text-charcoal-800 dark:text-white font-medium flex items-center gap-2">
                                                     <FaEnvelope className="text-charcoal-400" /> {sub.email}
                                                 </td>
@@ -205,7 +205,7 @@ export default function AdminSubscribers() {
                                                 <td className="px-6 py-4 text-sm text-charcoal-600 dark:text-charcoal-400 capitalize">{sub.source || 'homepage'}</td>
                                                 <td className="px-6 py-4 text-sm text-charcoal-600 dark:text-charcoal-400">{new Date(sub.subscribedAt).toLocaleDateString()}</td>
                                                 <td className="px-6 py-4 text-right">
-                                                    <button onClick={() => handleDelete(sub._id)} className="p-2 text-charcoal-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"><FaTrash /></button>
+                                                    <button onClick={() => handleDelete(sub.id)} className="p-2 text-charcoal-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"><FaTrash /></button>
                                                 </td>
                                             </tr>
                                         ))}

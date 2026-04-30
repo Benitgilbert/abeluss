@@ -37,7 +37,7 @@ function Topbar({ onMenuClick, title }) {
   const markAsRead = async (id) => {
     try {
       await api.put(`/notifications/${id}/read`);
-      setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (err) {
       console.error('Failed to mark as read');
@@ -171,8 +171,8 @@ function Topbar({ onMenuClick, title }) {
                 ) : (
                   notifications.map(n => (
                     <div
-                      key={n._id}
-                      onClick={() => !n.isRead && markAsRead(n._id)}
+                      key={n.id}
+                      onClick={() => !n.isRead && markAsRead(n.id)}
                       className={`
                         flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors
                         hover:bg-cream-50 dark:hover:bg-charcoal-700/50

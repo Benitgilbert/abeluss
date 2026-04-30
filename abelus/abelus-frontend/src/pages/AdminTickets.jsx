@@ -52,7 +52,7 @@ export default function AdminTickets() {
         setProcessing(true);
         try {
             const token = localStorage.getItem('authToken');
-            const res = await fetch(`${API_URL}/tickets/admin/${selectedTicket._id}/message`, {
+            const res = await fetch(`${API_URL}/tickets/admin/${selectedTicket.id}/message`, {
                 method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: replyText })
             });
             const data = await res.json();
@@ -68,7 +68,7 @@ export default function AdminTickets() {
                 method: 'PUT', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ status })
             });
             const data = await res.json();
-            if (data.success) { setSuccess(`Ticket ${status.replace('_', ' ')}`); fetchTickets(); if (showModal && selectedTicket?._id === id) setSelectedTicket({ ...selectedTicket, status }); }
+            if (data.success) { setSuccess(`Ticket ${status.replace('_', ' ')}`); fetchTickets(); if (showModal && selectedTicket?.id === id) setSelectedTicket({ ...selectedTicket, status }); }
         } catch (err) { setError('Failed to update status'); }
     };
 
@@ -187,7 +187,7 @@ export default function AdminTickets() {
                                     </thead>
                                     <tbody className="divide-y divide-cream-100 dark:divide-charcoal-700">
                                         {tickets.map(ticket => (
-                                            <tr key={ticket._id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
+                                            <tr key={ticket.id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
                                                 <td className="px-6 py-4">
                                                     <span className="font-mono text-sm text-terracotta-600 dark:text-terracotta-400">{ticket.ticketId}</span>
                                                 </td>
@@ -204,8 +204,8 @@ export default function AdminTickets() {
                                                 <td className="px-6 py-4">{getStatusBadge(ticket.status)}</td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center justify-center gap-1">
-                                                        <button onClick={() => viewTicketDetails(ticket._id)} className="p-2 rounded-lg text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" title="View"><FaEye /></button>
-                                                        <button onClick={() => deleteTicket(ticket._id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Delete"><FaTrash /></button>
+                                                        <button onClick={() => viewTicketDetails(ticket.id)} className="p-2 rounded-lg text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" title="View"><FaEye /></button>
+                                                        <button onClick={() => deleteTicket(ticket.id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Delete"><FaTrash /></button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -290,7 +290,7 @@ export default function AdminTickets() {
                                         <h5 className="text-sm font-bold text-charcoal-700 dark:text-charcoal-300 mb-2">Update Status</h5>
                                         <div className="flex flex-wrap gap-2">
                                             {['in_progress', 'waiting', 'resolved', 'closed'].map(s => (
-                                                <button key={s} onClick={() => updateStatus(selectedTicket._id, s)} disabled={selectedTicket.status === s}
+                                                <button key={s} onClick={() => updateStatus(selectedTicket.id, s)} disabled={selectedTicket.status === s}
                                                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed capitalize ${s === 'in_progress' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/20 dark:text-blue-400' :
                                                         s === 'waiting' ? 'bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-orange-900/20 dark:text-orange-400' :
                                                             s === 'resolved' ? 'bg-sage-100 text-sage-700 hover:bg-sage-200 dark:bg-sage-900/20 dark:text-sage-400' :

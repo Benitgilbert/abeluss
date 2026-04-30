@@ -5,13 +5,17 @@ import {
     updateSellerStatus,
     getSellerProducts,
     deleteSeller,
-    getSellerPerformanceReports
+    getSellerPerformanceReports,
+    getStorefront
 } from "../controllers/sellerController.js";
 import { verifyAdmin } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// All routes are admin-protected
+// Public routes
+router.get("/storefront/:slug", getStorefront);
+
+// Admin routes
 router.get("/", verifyAdmin, getAllSellers);
 router.get("/performance-reports", verifyAdmin, getSellerPerformanceReports);
 router.get("/:id", verifyAdmin, getSellerDetails);

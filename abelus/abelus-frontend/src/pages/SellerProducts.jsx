@@ -40,7 +40,7 @@ const SellerProducts = () => {
         if (window.confirm("Are you sure you want to delete this product?")) {
             try {
                 await api.delete(`/products/${id}`);
-                setProducts(products.filter((p) => p._id !== id));
+                setProducts(products.filter((p) => p.id !== id));
             } catch (err) {
                 alert("Failed to delete product");
             }
@@ -49,7 +49,7 @@ const SellerProducts = () => {
 
     const handleSaved = (saved) => {
         if (editing) {
-            setProducts((prev) => prev.map((p) => (p._id === saved._id ? saved : p)));
+            setProducts((prev) => prev.map((p) => (p.id === saved.id ? saved : p)));
             setEditing(null);
         } else {
             setProducts((prev) => [saved, ...prev]);
@@ -139,7 +139,7 @@ const SellerProducts = () => {
                                         </thead>
                                         <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                                             {filteredProducts.map((product) => (
-                                                <tr key={product._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group">
+                                                <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group">
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-4">
                                                             <div className="h-12 w-12 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden bg-gray-50 dark:bg-gray-700 flex-shrink-0">
@@ -184,7 +184,7 @@ const SellerProducts = () => {
                                                     <td className="px-6 py-4 text-right">
                                                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                             <Link
-                                                                to={`/product/${product._id}`}
+                                                                to={`/product/${product.id}`}
                                                                 className="p-2 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors"
                                                                 title="View"
                                                             >
@@ -198,7 +198,7 @@ const SellerProducts = () => {
                                                                 <FaEdit />
                                                             </button>
                                                             <button
-                                                                onClick={() => handleDelete(product._id)}
+                                                                onClick={() => handleDelete(product.id)}
                                                                 className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
                                                                 title="Delete"
                                                             >

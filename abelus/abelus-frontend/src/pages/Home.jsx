@@ -26,18 +26,18 @@ const getRating = (rating) => {
 // Product Card Component
 const ProductCard = ({ product }) => {
   const { ids, toggle } = useWishlist();
-  const isWishlisted = ids.includes(product._id);
+  const isWishlisted = ids.includes(product.id);
 
   const toggleWishlist = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    toggle(product._id);
+    toggle(product.id);
   };
 
   return (
     <div className="group bg-white dark:bg-charcoal-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-cream-300 dark:border-charcoal-600">
       <div className="relative aspect-square bg-cream-100 dark:bg-charcoal-900 overflow-hidden">
-        <Link to={`/product/${product._id}`}>
+        <Link to={`/product/${product.id}`}>
           {(product.image || product.images?.[0]) ? (
             <img
               src={assetUrl(
@@ -57,7 +57,7 @@ const ProductCard = ({ product }) => {
         </button>
       </div>
       <div className="p-4">
-        <Link to={`/product/${product._id}`}>
+        <Link to={`/product/${product.id}`}>
           <h3 className="font-semibold text-charcoal-800 dark:text-cream-100 line-clamp-2 mb-2 group-hover:text-terracotta-500 dark:group-hover:text-terracotta-400 transition">{product.name}</h3>
         </Link>
         <div className="flex items-center gap-1 mb-2">
@@ -80,7 +80,7 @@ const ProductCard = ({ product }) => {
             <span className="text-xl font-bold text-charcoal-900 dark:text-white">{formatRwf(product.price)}</span>
           )}
           <Link
-            to={`/product/${product._id}`}
+            to={`/product/${product.id}`}
             className="text-terracotta-500 dark:text-terracotta-400 hover:text-terracotta-600 dark:hover:text-terracotta-300 text-sm font-medium"
           >
             View →
@@ -165,13 +165,13 @@ export default function Home() {
       const siteSettingsData = siteSettingsRes.data;
 
       if (Array.isArray(featuredData)) {
-        setFeatured(featuredData.filter(item => item && item._id));
+        setFeatured(featuredData.filter(item => item && item.id));
       } else if (featuredData.success && Array.isArray(featuredData.products)) {
-        setFeatured(featuredData.products.filter(item => item && item._id));
+        setFeatured(featuredData.products.filter(item => item && item.id));
       }
 
       if (Array.isArray(trendingData)) {
-        setTrending(trendingData.filter(item => item && item._id));
+        setTrending(trendingData.filter(item => item && item.id));
       }
 
       // Process categories with fallback images/colors
@@ -476,7 +476,7 @@ export default function Home() {
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {featured.slice(0, 8).map((product) => (
-                  <ProductCard key={product._id} product={product} />
+                  <ProductCard key={product.id} product={product} />
                 ))}
               </div>
             )}
@@ -535,7 +535,7 @@ export default function Home() {
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {trending.slice(0, 8).map((product) => (
-                  <ProductCard key={product._id} product={product} />
+                  <ProductCard key={product.id} product={product} />
                 ))}
               </div>
             )}
@@ -553,7 +553,7 @@ export default function Home() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {testimonials.slice(0, 6).map((testimonial, idx) => (
-                  <div key={testimonial._id || idx} className="bg-white dark:bg-charcoal-800 rounded-2xl p-6 shadow-sm border border-cream-200 dark:border-charcoal-700">
+                  <div key={testimonial.id || idx} className="bg-white dark:bg-charcoal-800 rounded-2xl p-6 shadow-sm border border-cream-200 dark:border-charcoal-700">
                     <div className="flex items-center gap-1 mb-4">
                       {[...Array(testimonial.rating || 5)].map((_, i) => (
                         <FaStar key={i} className="text-sand-400" />
@@ -589,7 +589,7 @@ export default function Home() {
                 {brandPartners.map((partner, idx) => (
                   partner.logo ? (
                     <a
-                      key={partner._id || idx}
+                      key={partner.id || idx}
                       href={partner.websiteUrl || '#'}
                       target={partner.websiteUrl ? '_blank' : '_self'}
                       rel="noopener noreferrer"
@@ -603,7 +603,7 @@ export default function Home() {
                     </a>
                   ) : (
                     <div
-                      key={partner._id || idx}
+                      key={partner.id || idx}
                       className="text-2xl font-bold text-charcoal-400 dark:text-charcoal-500 hover:text-terracotta-500 dark:hover:text-terracotta-400 transition-colors cursor-pointer"
                     >
                       {partner.name}
@@ -636,7 +636,7 @@ export default function Home() {
                   heart: <FaHeart className="text-2xl" />
                 };
                 return (
-                  <div key={badge._id || idx} className="flex items-center gap-4">
+                  <div key={badge.id || idx} className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-terracotta-50 dark:bg-charcoal-700 rounded-xl flex items-center justify-center text-terracotta-500 dark:text-terracotta-400">
                       {iconMap[badge.icon] || <FaShieldAlt className="text-2xl" />}
                     </div>

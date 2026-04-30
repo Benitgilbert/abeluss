@@ -2,6 +2,29 @@ import prisma from "../prisma.js";
 import { notifyReviewCreated } from "./notificationController.js";
 
 /**
+ * 🛠️ Utility: Recalculate product rating stats
+ */
+const recalculateProductRating = async (productId) => {
+    try {
+        const stats = await prisma.review.aggregate({
+            where: { productId },
+            _avg: { rating: true },
+            _count: { rating: true }
+        });
+
+        await prisma.product.update({
+            where: { id: productId },
+            data: {
+                averageRating: stats._avg.rating || 0,
+                reviewCount: stats._count.rating || 0
+            }
+        });
+    } catch (error) {
+        console.error("Failed to recalculate product rating:", error);
+    }
+};
+
+/**
  * ⭐ Add a review
  */
 export const addReview = async (req, res) => {
@@ -36,6 +59,9 @@ export const addReview = async (req, res) => {
                 comment,
             }
         });
+
+        // Recalculate rating stats
+        await recalculateProductRating(productId);
 
         // 🚨 Automatic Violation Trigger: Low Rating
         if (Number(rating) <= 2) {
@@ -109,6 +135,9 @@ export const updateReview = async (req, res) => {
             }
         });
 
+        // Recalculate rating stats
+        await recalculateProductRating(review.productId);
+
         res.json(updatedReview);
     } catch (err) {
         res.status(400).json({ message: err.message });
@@ -135,6 +164,9 @@ export const deleteReview = async (req, res) => {
         await prisma.review.delete({
             where: { id: reviewId }
         });
+
+        // Recalculate rating stats
+        await recalculateProductRating(review.productId);
 
         res.json({ message: "Review deleted" });
     } catch (err) {

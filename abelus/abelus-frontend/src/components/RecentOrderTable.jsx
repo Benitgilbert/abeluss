@@ -65,9 +65,9 @@ function RecentOrderTable({ endpoint = "/analytics/recent-orders", refreshKey })
               </tr>
             )}
             {orders.map((order) => (
-              <tr key={order._id} className="hover:bg-gray-50 dark:hover:bg-charcoal-700/30 transition-colors group">
+              <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-charcoal-700/30 transition-colors group">
                 <td className="py-3 text-sm font-mono text-charcoal-600 dark:text-charcoal-300">
-                  #{order.publicId || order._id.slice(-6).toUpperCase()}
+                  #{order.publicId || order.id.slice(-6).toUpperCase()}
                 </td>
                 <td className="py-3 text-sm text-charcoal-800 dark:text-gray-200 font-medium">
                   {order.customer?.name || order.guestInfo?.name || "Guest"}

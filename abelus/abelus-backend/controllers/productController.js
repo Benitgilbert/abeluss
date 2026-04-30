@@ -204,7 +204,7 @@ export const createProduct = async (req, res) => {
           
           let searchItem = item;
           if (typeof item === 'object' && item !== null) {
-            searchItem = item.id || item._id || item.name || item.slug;
+            searchItem = item.id || item.name || item.slug;
           }
           
           if (!searchItem) continue;
@@ -332,35 +332,58 @@ export const getAllProducts = async (req, res) => {
       if (req.query.maxPrice) where.price.lte = Number(req.query.maxPrice);
     }
 
-    let products = await prisma.product.findMany({
-      where,
-      include: { seller: { select: { id: true, name: true, storeName: true } } },
-      take: 200 // Prevent massive loads before fuse search
-    });
-
     if (req.query.search) {
-      const fuse = new Fuse(products, {
-        keys: ["name", "description", "tags"],
-        threshold: 0.4,
-        includeScore: true
-      });
-      const results = fuse.search(req.query.search);
-      products = results.map(r => r.item);
+      const searchQuery = req.query.search.split(' ').join(' & ');
+      if (where.OR) {
+        // If category is also set, we need to wrap them
+        where.AND = [
+          { OR: where.OR },
+          { OR: [
+            { name: { search: searchQuery } },
+            { description: { search: searchQuery } }
+          ]}
+        ];
+        delete where.OR;
+      } else {
+        where.OR = [
+          { name: { search: searchQuery } },
+          { description: { search: searchQuery } }
+        ];
+      }
     }
 
     const limit = Math.min(parseInt(req.query.limit) || 0, 100) || undefined;
     const sort = req.query.sort || undefined;
+    let orderBy = { createdAt: 'desc' };
 
-    if (sort && !req.query.search) {
-      if (sort === "price-asc") products.sort((a, b) => a.price - b.price);
-      else if (sort === "price-desc") products.sort((a, b) => b.price - a.price);
-      else if (sort === "newest") products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    if (sort) {
+      if (sort === "price-asc") orderBy = { price: 'asc' };
+      else if (sort === "price-desc") orderBy = { price: 'desc' };
     }
 
-    if (limit) products = products.slice(0, limit);
+    const limitValue = limit || 50;
+    const cursor = req.query.cursor || undefined;
+
+    let products = await prisma.product.findMany({
+      where,
+      include: { seller: { select: { id: true, name: true, storeName: true } } },
+      orderBy,
+      take: limitValue + 1,
+      ...(cursor && { skip: 1, cursor: { id: cursor } })
+    });
+
+    let nextCursor = null;
+    if (products.length > limitValue) {
+      const nextItem = products.pop();
+      nextCursor = nextItem.id;
+    }
 
     const enriched = await attachFlashSaleInfo(products);
-    res.json(enriched);
+    res.json({
+      success: true,
+      data: enriched,
+      nextCursor
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -371,23 +394,15 @@ export const getSuggestions = async (req, res) => {
     const { q } = req.query;
     if (!q) return res.json([]);
 
-    const products = await prisma.product.findMany({
+    const suggestions = await prisma.product.findMany({
       where: {
         visibility: 'public',
-        approvalStatus: 'approved'
+        approvalStatus: 'approved',
+        name: { search: q.split(' ').join(' & ') }
       },
       select: { id: true, name: true, price: true, image: true },
-      take: 100
+      take: 8
     });
-
-    const fuse = new Fuse(products, {
-      keys: ["name"],
-      threshold: 0.4,
-      includeScore: true
-    });
-
-    const results = fuse.search(q);
-    const suggestions = results.slice(0, 8).map(r => r.item);
 
     res.json(suggestions);
   } catch (err) {
@@ -576,7 +591,7 @@ export const updateProduct = async (req, res) => {
           
           let searchItem = item;
           if (typeof item === 'object' && item !== null) {
-            searchItem = item.id || item._id || item.name || item.slug;
+            searchItem = item.id || item.name || item.slug;
           }
 
           if (!searchItem) continue;

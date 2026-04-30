@@ -86,7 +86,7 @@ const SellerAbonne = () => {
     const handleViewFiche = async (client) => {
         setSelectedClient(client);
         try {
-            const res = await axios.get(`/abonnes/${client._id}/fiche`);
+            const res = await axios.get(`/abonnes/${client.id}/fiche`);
             if (res.data.success) {
                 setClientFiche(res.data.transactions);
                 setShowFicheModal(true);
@@ -101,10 +101,10 @@ const SellerAbonne = () => {
         if (!payAmount || isNaN(payAmount) || payAmount <= 0) return alert("Enter a valid amount");
 
         try {
-            const res = await axios.post(`/abonnes/${selectedClient._id}/pay`, { amount: Number(payAmount) });
+            const res = await axios.post(`/abonnes/${selectedClient.id}/pay`, { amount: Number(payAmount) });
             if (res.data.success) {
                 // Update client in list
-                setClients(clients.map(c => c._id === selectedClient._id ? res.data.data : c));
+                setClients(clients.map(c => c.id === selectedClient.id ? res.data.data : c));
                 setShowPayModal(false);
                 setPayAmount("");
                 alert("Payment recorded successfully!");
@@ -117,7 +117,7 @@ const SellerAbonne = () => {
     const handleViewPrices = async (client) => {
         setSelectedClient(client);
         try {
-            const res = await axios.get(`/abonnes/${client._id}/prices`);
+            const res = await axios.get(`/abonnes/${client.id}/prices`);
             if (res.data.success) {
                 setContractPrices(res.data.data);
                 setShowPriceModal(true);
@@ -133,10 +133,10 @@ const SellerAbonne = () => {
         
         try {
             setSavingPrice(true);
-            const res = await axios.post(`/abonnes/${selectedClient._id}/prices`, newPrice);
+            const res = await axios.post(`/abonnes/${selectedClient.id}/prices`, newPrice);
             if (res.data.success) {
                 // Refresh prices
-                const freshRes = await axios.get(`/abonnes/${selectedClient._id}/prices`);
+                const freshRes = await axios.get(`/abonnes/${selectedClient.id}/prices`);
                 setContractPrices(freshRes.data.data);
                 setNewPrice({ productId: "", price: "" });
             }
@@ -150,7 +150,7 @@ const SellerAbonne = () => {
     const handleDeletePrice = async (priceId) => {
         if (!window.confirm("Remove this contract price?")) return;
         try {
-            const res = await axios.delete(`/abonnes/${selectedClient._id}/prices/${priceId}`);
+            const res = await axios.delete(`/abonnes/${selectedClient.id}/prices/${priceId}`);
             if (res.data.success) {
                 setContractPrices(contractPrices.filter(p => p.id !== priceId));
             }
@@ -220,7 +220,7 @@ const SellerAbonne = () => {
                                             (c.phone && c.phone.includes(clientSearchTerm))
                                         )
                                         .map(client => (
-                                        <tr key={client._id} className="hover:bg-gray-50 dark:hover:bg-charcoal-700/30 transition-colors">
+                                        <tr key={client.id} className="hover:bg-gray-50 dark:hover:bg-charcoal-700/30 transition-colors">
                                             <td className="p-4 font-bold text-charcoal-900 dark:text-white">{client.name}</td>
                                             <td className="p-4 text-gray-600 dark:text-gray-400 text-sm">
                                                 {client.phone || client.email || "N/A"}
@@ -480,7 +480,7 @@ const SellerAbonne = () => {
                                     {allProducts
                                         .filter(p => p.name.toLowerCase().includes(productSearchTerm.toLowerCase()))
                                         .map(p => (
-                                            <option key={p._id || p.id} value={p._id || p.id}>
+                                            <option key={p.id || p.id} value={p.id || p.id}>
                                                 {p.name} (Normal: {p.price.toLocaleString()})
                                             </option>
                                         ))}

@@ -172,7 +172,7 @@ export const getDashboardAnalytics = async (req, res) => {
         by: ['status'],
         _count: { _all: true }
     });
-    const statusCounts = statusBreakdown.map(s => ({ _id: s.status, count: s._count._all }));
+    const statusCounts = statusBreakdown.map(s => ({ id: s.status, count: s._count._all }));
 
     const topProductsRaw = await prisma.orderItem.groupBy({
         by: ['productId'],
@@ -182,9 +182,16 @@ export const getDashboardAnalytics = async (req, res) => {
         take: 5
     });
 
-    const topProducts = await Promise.all(topProductsRaw.map(async (tp) => {
-        const product = await prisma.product.findUnique({ where: { id: tp.productId }, select: { name: true } });
-        return { productName: product?.name || 'N/A', count: tp._sum.quantity };
+    const productIds = topProductsRaw.map(tp => tp.productId);
+    const products = await prisma.product.findMany({
+        where: { id: { in: productIds } },
+        select: { id: true, name: true }
+    });
+    const productMap = Object.fromEntries(products.map(p => [p.id, p]));
+
+    const topProducts = topProductsRaw.map((tp) => ({
+        productName: productMap[tp.productId]?.name || 'N/A',
+        count: tp._sum.quantity
     }));
 
     const [totalSellers, activeSellers, pendingSellers, rejectedSellers] = await Promise.all([

@@ -73,9 +73,9 @@ const AdminAbonne = () => {
     const handleUpdateClient = async (e) => {
         e.preventDefault();
         try {
-            const res = await axios.put(`/abonnes/${selectedClient._id}`, selectedClient);
+            const res = await axios.put(`/abonnes/${selectedClient.id}`, selectedClient);
             if (res.data.success) {
-                setClients(clients.map(c => c._id === selectedClient._id ? res.data.data : c));
+                setClients(clients.map(c => c.id === selectedClient.id ? res.data.data : c));
                 setShowEditModal(false);
                 alert("Client updated successfully!");
             }
@@ -89,7 +89,7 @@ const AdminAbonne = () => {
         try {
             const res = await axios.delete(`/abonnes/${id}`);
             if (res.data.success) {
-                setClients(clients.filter(c => c._id !== id));
+                setClients(clients.filter(c => c.id !== id));
                 alert("Client deleted.");
             }
         } catch (err) {
@@ -100,7 +100,7 @@ const AdminAbonne = () => {
     const handleViewFiche = async (client) => {
         setSelectedClient(client);
         try {
-            const res = await axios.get(`/abonnes/${client._id}/fiche`);
+            const res = await axios.get(`/abonnes/${client.id}/fiche`);
             if (res.data.success) {
                 setClientFiche(res.data.transactions);
                 setShowFicheModal(true);
@@ -116,7 +116,7 @@ const AdminAbonne = () => {
         setShowPriceModal(true);
         try {
             const [pricesRes, prodRes] = await Promise.all([
-                axios.get(`/abonnes/${client._id}/prices`),
+                axios.get(`/abonnes/${client.id}/prices`),
                 axios.get("/orders/admin/pos-products")
             ]);
             if (pricesRes.data.success) setContractPrices(pricesRes.data.data);
@@ -131,7 +131,7 @@ const AdminAbonne = () => {
     const updatePrice = async (productId, price) => {
         if (!price || price < 0) return;
         try {
-            const res = await axios.post(`/abonnes/${selectedClient._id}/prices`, {
+            const res = await axios.post(`/abonnes/${selectedClient.id}/prices`, {
                 productId,
                 price: Number(price)
             });
@@ -151,7 +151,7 @@ const AdminAbonne = () => {
 
     const removePrice = async (productId) => {
         try {
-            const res = await axios.delete(`/abonnes/${selectedClient._id}/prices/${productId}`);
+            const res = await axios.delete(`/abonnes/${selectedClient.id}/prices/${productId}`);
             if (res.data.success) {
                 setContractPrices(contractPrices.filter(p => p.productId !== productId));
             }
@@ -165,9 +165,9 @@ const AdminAbonne = () => {
         if (!payAmount || isNaN(payAmount) || payAmount <= 0) return alert("Enter a valid amount");
 
         try {
-            const res = await axios.post(`/abonnes/${selectedClient._id}/pay`, { amount: Number(payAmount) });
+            const res = await axios.post(`/abonnes/${selectedClient.id}/pay`, { amount: Number(payAmount) });
             if (res.data.success) {
-                setClients(clients.map(c => c._id === selectedClient._id ? res.data.data : c));
+                setClients(clients.map(c => c.id === selectedClient.id ? res.data.data : c));
                 setShowPayModal(false);
                 setPayAmount("");
                 alert("Payment recorded successfully!");
@@ -228,10 +228,10 @@ const AdminAbonne = () => {
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 dark:divide-charcoal-700">
                                     {clients.map(client => (
-                                        <tr key={client._id} className="hover:bg-gray-50 dark:hover:bg-charcoal-700/30 transition-colors group">
+                                        <tr key={client.id} className="hover:bg-gray-50 dark:hover:bg-charcoal-700/30 transition-colors group">
                                             <td className="p-4">
                                                 <div className="font-bold text-charcoal-900 dark:text-white">{client.name}</div>
-                                                <div className="text-[10px] text-gray-400 font-mono mt-0.5">ID: {client._id}</div>
+                                                <div className="text-[10px] text-gray-400 font-mono mt-0.5">ID: {client.id}</div>
                                             </td>
                                             <td className="p-4 text-gray-600 dark:text-gray-400 text-sm">
                                                 <p>{client.phone || "No Phone"}</p>
@@ -259,7 +259,7 @@ const AdminAbonne = () => {
                                                         <FaTags size={16} />
                                                     </button>
                                                     <button
-                                                        onClick={() => handleDeleteClient(client._id)}
+                                                        onClick={() => handleDeleteClient(client.id)}
                                                         className="p-2 text-charcoal-400 hover:text-red-500 transition-colors"
                                                         title="Delete Client"
                                                     >
@@ -436,9 +436,9 @@ const AdminAbonne = () => {
                                 <div className="text-center py-20 text-gray-400"><FaSpinner className="animate-spin text-3xl mx-auto mb-2" /> Loading data...</div>
                             ) : (
                                 products.filter(p => p.name.toLowerCase().includes(priceSearch.toLowerCase())).map(product => {
-                                    const customPrice = getCustomPrice(product._id);
+                                    const customPrice = getCustomPrice(product.id);
                                     return (
-                                        <div key={product._id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-charcoal-700/40 rounded-2xl border border-gray-100 dark:border-charcoal-600 hover:border-terracotta-200 transition-colors group">
+                                        <div key={product.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-charcoal-700/40 rounded-2xl border border-gray-100 dark:border-charcoal-600 hover:border-terracotta-200 transition-colors group">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-12 h-12 rounded-xl bg-white dark:bg-charcoal-600 flex items-center justify-center overflow-hidden border border-gray-100 dark:border-charcoal-500">
                                                     {product.image ? (
@@ -461,12 +461,12 @@ const AdminAbonne = () => {
                                                         placeholder={product.price}
                                                         className={`w-32 pl-10 pr-3 py-2 bg-white dark:bg-charcoal-800 border-2 rounded-xl text-sm font-bold outline-none transition-all ${customPrice ? 'border-terracotta-500 text-terracotta-600' : 'border-gray-200 dark:border-charcoal-600 text-gray-400 focus:border-terracotta-500'}`}
                                                         value={customPrice || ""}
-                                                        onChange={(e) => updatePrice(product._id, e.target.value)}
+                                                        onChange={(e) => updatePrice(product.id, e.target.value)}
                                                     />
                                                 </div>
                                                 {customPrice && (
                                                     <button
-                                                        onClick={() => removePrice(product._id)}
+                                                        onClick={() => removePrice(product.id)}
                                                         className="p-2 text-gray-300 hover:text-red-500 transition-colors"
                                                         title="Remove override"
                                                     >

@@ -118,7 +118,7 @@ export default function Blog() {
               ) : (
                 <div className="space-y-16">
                   {filteredPosts.map((post) => (
-                    <article key={post._id} className="group bg-white dark:bg-charcoal-800 rounded-[40px] shadow-sm hover:shadow-2xl border border-cream-200 dark:border-charcoal-700 transition-all duration-500 overflow-hidden transform hover:-translate-y-2">
+                    <article key={post.id} className="group bg-white dark:bg-charcoal-800 rounded-[40px] shadow-sm hover:shadow-2xl border border-cream-200 dark:border-charcoal-700 transition-all duration-500 overflow-hidden transform hover:-translate-y-2">
                       {post.image && (
                         <div className="aspect-[21/9] overflow-hidden">
                           <img
@@ -146,11 +146,11 @@ export default function Blog() {
                           </button>
                         </div>
                         <h2 className="text-3xl md:text-4xl font-black text-charcoal-800 dark:text-white mb-6 leading-tight group-hover:text-terracotta-500 dark:group-hover:text-terracotta-400 transition-colors">
-                          <Link to={`/blog/${post._id}`}>{post.title}</Link>
+                          <Link to={`/blog/${post.id}`}>{post.title}</Link>
                         </h2>
                         <p className="text-lg text-charcoal-500 dark:text-charcoal-400 mb-8 leading-relaxed line-clamp-3">{post.excerpt}</p>
                         <Link
-                          to={`/blog/${post._id}`}
+                          to={`/blog/${post.id}`}
                           className="inline-flex items-center gap-2 text-terracotta-500 dark:text-terracotta-400 font-black text-lg group/link"
                         >
                           Read More <span className="group-hover:translate-x-2 transition-transform duration-300">&rarr;</span>

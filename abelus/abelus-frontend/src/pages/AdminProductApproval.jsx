@@ -113,7 +113,7 @@ export default function AdminProductApproval() {
     };
 
     const toggleSelect = (id) => setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-    const toggleSelectAll = () => selectedIds.length === products.length ? setSelectedIds([]) : setSelectedIds(products.map(p => p._id));
+    const toggleSelectAll = () => selectedIds.length === products.length ? setSelectedIds([]) : setSelectedIds(products.map(p => p.id));
     const formatCurrency = (amount) => `RWF ${amount?.toLocaleString() || 0}`;
 
     const getStatusBadge = (status) => {
@@ -223,10 +223,10 @@ export default function AdminProductApproval() {
                                     </thead>
                                     <tbody className="divide-y divide-cream-100 dark:divide-charcoal-700">
                                         {products.map((product) => (
-                                            <tr key={product._id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
+                                            <tr key={product.id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
                                                 {(statusFilter === 'pending' || statusFilter === 'all') && (
                                                     <td className="px-4 py-4">
-                                                        <input type="checkbox" checked={selectedIds.includes(product._id)} onChange={() => toggleSelect(product._id)}
+                                                        <input type="checkbox" checked={selectedIds.includes(product.id)} onChange={() => toggleSelect(product.id)}
                                                             className="w-4 h-4 rounded border-charcoal-300 text-terracotta-500 focus:ring-terracotta-500" />
                                                     </td>
                                                 )}
@@ -246,11 +246,11 @@ export default function AdminProductApproval() {
                                                 <td className="px-6 py-4">{getStatusBadge(product.approvalStatus)}</td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center justify-center gap-1">
-                                                        <button onClick={() => viewProductDetails(product._id)} className="p-2 rounded-lg text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" title="Review"><FaEye /></button>
+                                                        <button onClick={() => viewProductDetails(product.id)} className="p-2 rounded-lg text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" title="Review"><FaEye /></button>
                                                         {(product.approvalStatus === 'pending' || !product.approvalStatus) && (
                                                             <>
-                                                                <button onClick={() => approveProduct(product._id)} className="p-2 rounded-lg text-sage-500 hover:bg-sage-50 dark:hover:bg-sage-900/20 transition-colors" title="Approve"><FaCheck /></button>
-                                                                <button onClick={() => viewProductDetails(product._id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Reject"><FaTimes /></button>
+                                                                <button onClick={() => approveProduct(product.id)} className="p-2 rounded-lg text-sage-500 hover:bg-sage-50 dark:hover:bg-sage-900/20 transition-colors" title="Approve"><FaCheck /></button>
+                                                                <button onClick={() => viewProductDetails(product.id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Reject"><FaTimes /></button>
                                                             </>
                                                         )}
                                                     </div>
@@ -367,10 +367,10 @@ function ProductReviewModal({ product, onClose, onApprove, onReject, processing,
                     {/* Actions */}
                     {product.approvalStatus === 'pending' && (
                         <div className="flex gap-3 pt-4">
-                            <button onClick={() => onApprove(product._id)} disabled={processing} className="flex-1 flex items-center justify-center gap-2 py-3 bg-sage-500 hover:bg-sage-600 disabled:opacity-50 text-white rounded-xl font-medium transition-all">
+                            <button onClick={() => onApprove(product.id)} disabled={processing} className="flex-1 flex items-center justify-center gap-2 py-3 bg-sage-500 hover:bg-sage-600 disabled:opacity-50 text-white rounded-xl font-medium transition-all">
                                 <FaCheck /> {processing ? 'Processing...' : 'Approve'}
                             </button>
-                            <button onClick={() => onReject(product._id, rejectionReason)} disabled={processing} className="flex-1 flex items-center justify-center gap-2 py-3 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white rounded-xl font-medium transition-all">
+                            <button onClick={() => onReject(product.id, rejectionReason)} disabled={processing} className="flex-1 flex items-center justify-center gap-2 py-3 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white rounded-xl font-medium transition-all">
                                 <FaTimes /> Reject
                             </button>
                         </div>

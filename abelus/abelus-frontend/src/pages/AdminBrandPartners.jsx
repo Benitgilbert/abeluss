@@ -37,7 +37,7 @@ export default function AdminBrandPartners() {
         e.preventDefault();
         try {
             const token = localStorage.getItem('authToken');
-            const url = editingPartner ? `${API_URL}/brand-partners/${editingPartner._id}` : `${API_URL}/brand-partners`;
+            const url = editingPartner ? `${API_URL}/brand-partners/${editingPartner.id}` : `${API_URL}/brand-partners`;
             const formData = new FormData();
             formData.append('name', form.name);
             formData.append('websiteUrl', form.websiteUrl);
@@ -78,7 +78,7 @@ export default function AdminBrandPartners() {
             const token = localStorage.getItem('authToken');
             await fetch(`${API_URL}/brand-partners/reorder`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ partners: newPartners.map((p, idx) => ({ id: p._id, order: idx })) })
+                body: JSON.stringify({ partners: newPartners.map((p, idx) => ({ id: p.id, order: idx })) })
             });
             fetchPartners();
         } catch (err) { setError('Failed to reorder'); }
@@ -147,7 +147,7 @@ export default function AdminBrandPartners() {
                                     </thead>
                                     <tbody className="divide-y divide-cream-100 dark:divide-charcoal-700">
                                         {partners.map((partner, index) => (
-                                            <tr key={partner._id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
+                                            <tr key={partner.id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
                                                 <td className="px-4 py-4">
                                                     <div className="flex flex-col gap-1">
                                                         <button onClick={() => handleMove(index, 'up')} disabled={index === 0}
@@ -188,11 +188,11 @@ export default function AdminBrandPartners() {
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center justify-center gap-1">
-                                                        <button onClick={() => handleToggle(partner._id)} className={`p-2 rounded-lg transition-colors ${partner.isActive ? 'text-sage-500 hover:bg-sage-50 dark:hover:bg-sage-900/20' : 'text-charcoal-400 hover:bg-charcoal-100 dark:hover:bg-charcoal-700'}`}>
+                                                        <button onClick={() => handleToggle(partner.id)} className={`p-2 rounded-lg transition-colors ${partner.isActive ? 'text-sage-500 hover:bg-sage-50 dark:hover:bg-sage-900/20' : 'text-charcoal-400 hover:bg-charcoal-100 dark:hover:bg-charcoal-700'}`}>
                                                             {partner.isActive ? <FaToggleOn className="text-lg" /> : <FaToggleOff className="text-lg" />}
                                                         </button>
                                                         <button onClick={() => openModal(partner)} className="p-2 rounded-lg text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"><FaEdit /></button>
-                                                        <button onClick={() => handleDelete(partner._id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"><FaTrash /></button>
+                                                        <button onClick={() => handleDelete(partner.id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"><FaTrash /></button>
                                                     </div>
                                                 </td>
                                             </tr>

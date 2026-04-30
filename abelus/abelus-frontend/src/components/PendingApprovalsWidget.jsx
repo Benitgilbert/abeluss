@@ -81,7 +81,7 @@ function PendingApprovalsWidget() {
                 <>
                     <div className="flex-1 overflow-y-auto space-y-3 pr-1 max-h-[220px] scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-charcoal-600">
                         {approvals.map((seller) => (
-                            <div key={seller._id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-charcoal-700/50 hover:bg-gray-100 dark:hover:bg-charcoal-700 transition-colors">
+                            <div key={seller.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-charcoal-700/50 hover:bg-gray-100 dark:hover:bg-charcoal-700 transition-colors">
                                 <div className="min-w-0">
                                     <p className="font-semibold text-charcoal-800 dark:text-white text-sm truncate">{seller.name}</p>
                                     <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{seller.storeName || 'No store name'}</p>

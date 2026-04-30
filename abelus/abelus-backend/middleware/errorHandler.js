@@ -22,21 +22,23 @@ const errorHandler = (err, req, res, next) => {
   let message = err.message || "Internal Server Error";
 
   // Handle specific error types
-  if (err.name === "ValidationError") {
-    // Mongoose validation error
-    statusCode = 400;
-    message = Object.values(err.errors)
-      .map((e) => e.message)
-      .join(", ");
-  } else if (err.name === "CastError") {
-    // Invalid ObjectId
-    statusCode = 400;
-    message = "Invalid ID format";
-  } else if (err.code === 11000) {
-    // MongoDB duplicate key error
+  if (err.code === 'P2002') {
+    // Prisma unique constraint violation
     statusCode = 409;
-    const field = Object.keys(err.keyPattern)[0];
+    const field = err.meta?.target?.[0] || 'Field';
     message = `${field} already exists`;
+  } else if (err.code === 'P2025') {
+    // Prisma record not found
+    statusCode = 404;
+    message = err.meta?.cause || "Record not found";
+  } else if (err.code === 'P2000') {
+    // Prisma invalid input
+    statusCode = 400;
+    message = "Invalid input value (too long for field)";
+  } else if (err.code === 'P2003') {
+    // Prisma foreign key constraint fails
+    statusCode = 400;
+    message = "Foreign key constraint failed";
   } else if (err.name === "JsonWebTokenError") {
     // JWT errors
     statusCode = 401;

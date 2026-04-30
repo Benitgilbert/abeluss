@@ -37,7 +37,7 @@ function TopOrderedProductsTable() {
         )}
         {products.map((product, idx) => (
           <div
-            key={product._id}
+            key={product.id}
             className="flex items-center justify-between p-3 bg-gray-50 dark:bg-charcoal-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-charcoal-700 transition-colors group"
           >
             <div className="flex items-center gap-3">

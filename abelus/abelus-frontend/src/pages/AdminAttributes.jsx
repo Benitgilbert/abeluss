@@ -56,7 +56,7 @@ function AdminAttributes() {
     };
 
     const handleEdit = (attribute) => {
-        setEditingId(attribute._id);
+        setEditingId(attribute.id);
         setFormData({ name: attribute.name, type: attribute.type, values: attribute.values });
         setShowModal(true);
     };
@@ -122,7 +122,7 @@ function AdminAttributes() {
                                     </thead>
                                     <tbody className="divide-y divide-cream-100 dark:divide-charcoal-700">
                                         {attributes.map((attr) => (
-                                            <tr key={attr._id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
+                                            <tr key={attr.id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-10 h-10 rounded-xl bg-terracotta-100 dark:bg-terracotta-900/20 flex items-center justify-center">
@@ -160,7 +160,7 @@ function AdminAttributes() {
                                                         <button onClick={() => handleEdit(attr)} className="p-2 rounded-lg text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" title="Edit">
                                                             <FaEdit />
                                                         </button>
-                                                        <button onClick={() => handleDelete(attr._id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Delete">
+                                                        <button onClick={() => handleDelete(attr.id)} className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Delete">
                                                             <FaTrash />
                                                         </button>
                                                     </div>

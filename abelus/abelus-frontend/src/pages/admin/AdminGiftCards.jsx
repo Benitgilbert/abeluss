@@ -131,7 +131,7 @@ const AdminGiftCards = () => {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            await updateGiftCardStatus(selectedCard._id, {
+            await updateGiftCardStatus(selectedCard.id, {
                 currentBalance: parseFloat(formData.currentBalance),
                 recipientEmail: formData.recipientEmail,
                 message: formData.message,
@@ -157,7 +157,7 @@ const AdminGiftCards = () => {
     const handleDelete = async () => {
         setIsSubmitting(true);
         try {
-            await deleteGiftCard(selectedCard._id);
+            await deleteGiftCard(selectedCard.id);
             showSuccess("Gift Card deleted successfully!");
             setShowDeleteModal(false);
             fetchGiftCards();
@@ -278,13 +278,13 @@ const AdminGiftCards = () => {
                                         </tr>
                                     ) : (
                                         giftCards.map((card) => (
-                                            <tr key={card._id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
+                                            <tr key={card.id} className="hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
                                                 <td className="px-6 py-4">
                                                     <div className="font-mono text-sm font-bold text-terracotta-500">
                                                         {card.code}
                                                     </div>
                                                     <div className="text-[10px] text-charcoal-400 uppercase tracking-tighter mt-0.5">
-                                                        Ref: {card._id.substring(0, 8)}
+                                                        Ref: {card.id.substring(0, 8)}
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
@@ -325,7 +325,7 @@ const AdminGiftCards = () => {
                                                         {/* Status Toggle */}
                                                         {card.status === "Active" ? (
                                                             <button
-                                                                onClick={() => handleStatusUpdate(card._id, "Expired")}
+                                                                onClick={() => handleStatusUpdate(card.id, "Expired")}
                                                                 className="w-8 h-8 flex items-center justify-center rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                                                                 title="Expire"
                                                             >
@@ -333,7 +333,7 @@ const AdminGiftCards = () => {
                                                             </button>
                                                         ) : (
                                                             <button
-                                                                onClick={() => handleStatusUpdate(card._id, "Active")}
+                                                                onClick={() => handleStatusUpdate(card.id, "Active")}
                                                                 className="w-8 h-8 flex items-center justify-center rounded-lg text-sage-500 hover:bg-sage-50 dark:hover:bg-sage-900/20 transition-colors"
                                                                 title="Re-activate"
                                                             >
@@ -371,7 +371,7 @@ const AdminGiftCards = () => {
                                 </div>
                             ) : (
                                 giftCards.map((card) => (
-                                    <div key={card._id} className="p-4 hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
+                                    <div key={card.id} className="p-4 hover:bg-cream-50 dark:hover:bg-charcoal-700/50 transition-colors">
                                         <div className="flex justify-between items-start mb-3">
                                             <div>
                                                 <span className="font-mono text-sm font-bold text-terracotta-500">
