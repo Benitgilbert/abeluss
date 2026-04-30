@@ -3,6 +3,8 @@ import { Link, useLocation } from "react-router-dom";
 
 function SellerSidebar({ isOpen, onClose }) {
     const location = useLocation();
+    const userRole = localStorage.getItem('userRole');
+    const isCashier = userRole === 'cashier';
 
     const getLinkClass = (path) => {
         const baseClass = "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group";
@@ -32,7 +34,9 @@ function SellerSidebar({ isOpen, onClose }) {
                         <h1 className="text-2xl font-black bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent tracking-tight">
                             ABELUS
                         </h1>
-                        <p className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-bold mt-1">Seller Portal</p>
+                        <p className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-bold mt-1">
+                            {isCashier ? "Cashier Portal" : "Seller Portal"}
+                        </p>
                     </div>
                     {/* Close Button for Mobile */}
                     <button onClick={onClose} className="lg:hidden text-gray-400 hover:text-white transition-colors">
@@ -47,10 +51,12 @@ function SellerSidebar({ isOpen, onClose }) {
                             <FaChartBar className="text-lg opacity-70 group-hover:opacity-100" />
                             <span>Dashboard</span>
                         </Link>
-                        <Link to="/seller/profile" className={getLinkClass('/seller/profile')} onClick={onClose}>
-                            <FaStore className="text-lg opacity-70 group-hover:opacity-100" />
-                            <span>My Store</span>
-                        </Link>
+                        {!isCashier && (
+                            <Link to="/seller/profile" className={getLinkClass('/seller/profile')} onClick={onClose}>
+                                <FaStore className="text-lg opacity-70 group-hover:opacity-100" />
+                                <span>My Store</span>
+                            </Link>
+                        )}
                     </div>
 
                     <div className="space-y-1">
@@ -59,21 +65,23 @@ function SellerSidebar({ isOpen, onClose }) {
                             <FaShoppingCart className="text-lg opacity-70 group-hover:opacity-100" />
                             <span>Open POS</span>
                         </Link>
-                        <Link to="/seller/products" className={getLinkClass('/seller/products')} onClick={onClose}>
-                            <FaPlus className="text-lg opacity-70 group-hover:opacity-100" />
-                            <span>Add Product</span>
-                        </Link>
+                        {!isCashier && (
+                            <Link to="/seller/products" className={getLinkClass('/seller/products')} onClick={onClose}>
+                                <FaPlus className="text-lg opacity-70 group-hover:opacity-100" />
+                                <span>Add Product</span>
+                            </Link>
+                        )}
                     </div>
 
                     <div className="space-y-1">
                         <div className="px-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Management</div>
                         <Link to="/seller/products" className={getLinkClass('/seller/products')} onClick={onClose}>
                             <FaBox className="text-lg opacity-70 group-hover:opacity-100" />
-                            <span>My Products</span>
+                            <span>{isCashier ? "Inventory" : "My Products"}</span>
                         </Link>
                         <Link to="/seller/orders" className={getLinkClass('/seller/orders')} onClick={onClose}>
                             <FaList className="text-lg opacity-70 group-hover:opacity-100" />
-                            <span>My Orders</span>
+                            <span>{isCashier ? "Store Orders" : "My Orders"}</span>
                         </Link>
                         <Link to="/seller/print-orders" className={getLinkClass('/seller/print-orders')} onClick={onClose}>
                             <FaPrint className="text-lg opacity-70 group-hover:opacity-100 text-blue-400" />
@@ -83,18 +91,23 @@ function SellerSidebar({ isOpen, onClose }) {
                             <FaUserFriends className="text-lg opacity-70 group-hover:opacity-100" />
                             <span>Client Abonnés</span>
                         </Link>
-                        <Link to="/seller/payouts" className={getLinkClass('/seller/payouts')} onClick={onClose}>
-                            <FaMoneyBillWave className="text-lg opacity-70 group-hover:opacity-100" />
-                            <span>Payouts</span>
-                        </Link>
-                        <Link to="/seller/team" className={getLinkClass('/seller/team')} onClick={onClose}>
-                            <FaUserShield className="text-lg opacity-70 group-hover:opacity-100" />
-                            <span>My Team</span>
-                        </Link>
-                        <Link to="/seller/reports" className={getLinkClass('/seller/reports')} onClick={onClose}>
-                            <FaChartBar className="text-lg opacity-70 group-hover:opacity-100" />
-                            <span>Reports</span>
-                        </Link>
+                        
+                        {!isCashier && (
+                            <>
+                                <Link to="/seller/payouts" className={getLinkClass('/seller/payouts')} onClick={onClose}>
+                                    <FaMoneyBillWave className="text-lg opacity-70 group-hover:opacity-100" />
+                                    <span>Payouts</span>
+                                </Link>
+                                <Link to="/seller/team" className={getLinkClass('/seller/team')} onClick={onClose}>
+                                    <FaUserShield className="text-lg opacity-70 group-hover:opacity-100" />
+                                    <span>My Team</span>
+                                </Link>
+                                <Link to="/seller/reports" className={getLinkClass('/seller/reports')} onClick={onClose}>
+                                    <FaChartBar className="text-lg opacity-70 group-hover:opacity-100" />
+                                    <span>Reports</span>
+                                </Link>
+                            </>
+                        )}
                     </div>
                 </div>
 

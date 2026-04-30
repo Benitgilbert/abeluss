@@ -315,9 +315,15 @@ export default function Header() {
                         </Link>
                       )}
                       
-                      {(user?.role === 'seller' || user?.role === 'cashier') && (
+                      {user?.role === 'seller' && (
                         <Link to="/seller/dashboard" className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-400 font-bold hover:bg-charcoal-700 rounded-lg transition-colors">
                           <LuLayoutDashboard className="w-4 h-4" /> Seller Dashboard
+                        </Link>
+                      )}
+
+                      {user?.role === 'cashier' && (
+                        <Link to="/seller/dashboard" className="flex items-center gap-3 px-4 py-2.5 text-sm text-indigo-400 font-bold hover:bg-charcoal-700 rounded-lg transition-colors">
+                          <LuLayoutDashboard className="w-4 h-4" /> Cashier Dashboard
                         </Link>
                       )}
 

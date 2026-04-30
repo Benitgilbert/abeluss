@@ -46,7 +46,7 @@ function Login() {
         navigate(from, { replace: true });
       } else if (role === "admin") {
         navigate("/admin");
-      } else if (role === "seller") {
+      } else if (role === "seller" || role === "cashier") {
         navigate("/seller/dashboard");
       } else {
         navigate("/dashboard");

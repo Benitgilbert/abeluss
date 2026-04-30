@@ -216,13 +216,15 @@ export default function SellerDashboard() {
         <div className="flex h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
             <SellerSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
             <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-                <Topbar onMenuClick={() => setSidebarOpen(true)} title="Dashboard" />
+                <Topbar onMenuClick={() => setSidebarOpen(true)} title={user?.role === 'cashier' ? "Cashier Dashboard" : "Dashboard"} />
                 <main className="flex-1 overflow-y-auto p-4 md:p-8">
                     <div className="max-w-7xl mx-auto">
                         {/* Welcome Header */}
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                             <div>
-                                <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Welcome back, {user?.name || 'Seller'}!</h1>
+                                <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
+                                    {user?.role === 'cashier' ? "Cashier Workstation" : `Welcome back, ${user?.name || 'Seller'}!`}
+                                </h1>
                                 <p className="text-gray-500 dark:text-gray-400 mt-1">Here's what's happening with your store today.</p>
                             </div>
                             <Link
