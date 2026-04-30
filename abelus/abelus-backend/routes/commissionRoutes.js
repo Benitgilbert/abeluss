@@ -34,11 +34,11 @@ router.put("/payouts/:id", verifyAdmin, processPayout);
 // ============ SELLER ROUTES ============
 
 // Seller earnings summary
-router.get("/my-earnings", authMiddleware(["seller"]), getSellerEarningsSummary);
+router.get("/my-earnings", authMiddleware(["seller", "admin", "cashier"]), getSellerEarningsSummary);
 
 // Seller payout requests
-router.post("/my-payouts", authMiddleware(["seller"]), requestPayout);
-router.get("/my-payouts", authMiddleware(["seller"]), getMyPayouts);
-router.delete("/my-payouts/:id", authMiddleware(["seller"]), cancelPayout);
+router.post("/my-payouts", authMiddleware(["seller", "admin"]), requestPayout);
+router.get("/my-payouts", authMiddleware(["seller", "admin"]), getMyPayouts);
+router.delete("/my-payouts/:id", authMiddleware(["seller", "admin"]), cancelPayout);
 
 export default router;
