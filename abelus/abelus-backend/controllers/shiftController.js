@@ -123,3 +123,41 @@ export const getShiftReport = async (req, res) => {
         res.status(500).json({ success: false, message: "Server Error" });
     }
 };
+
+/**
+ * 🕒 Get active shift stats for dashboard
+ */
+export const getActiveShiftStats = async (req, res) => {
+    try {
+        const shift = await prisma.shift.findFirst({
+            where: { userId: req.user.id, status: "open" }
+        });
+
+        if (!shift) {
+            return res.status(200).json({ 
+                success: true, 
+                data: {
+                    isOpen: false,
+                    moneyInDrawer: 0,
+                    cashSales: 0,
+                    momoSales: 0,
+                    debtCollected: 0
+                } 
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: {
+                isOpen: true,
+                moneyInDrawer: shift.expectedEndingDrawerAmount,
+                cashSales: shift.totalCashSales,
+                momoSales: shift.totalMomoSales,
+                debtCollected: shift.totalDebtCollected
+            }
+        });
+    } catch (error) {
+        logger.error({ err: error }, "Failed to get active shift stats");
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
+};

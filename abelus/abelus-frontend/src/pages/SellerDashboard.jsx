@@ -46,6 +46,13 @@ export default function SellerDashboard() {
         availableBalance: 0,
         pendingPayouts: 0
     });
+    const [shiftStats, setShiftStats] = useState({
+        isOpen: false,
+        moneyInDrawer: 0,
+        cashSales: 0,
+        momoSales: 0,
+        debtCollected: 0
+    });
     const [recentOrders, setRecentOrders] = useState([]);
     const [topProducts, setTopProducts] = useState([]);
     const [revenueData, setRevenueData] = useState({ labels: [], datasets: [] });
@@ -141,6 +148,16 @@ export default function SellerDashboard() {
                         ]
                     });
                 } catch (err) { }
+            }
+
+            // Get active shift stats
+            try {
+                const shiftRes = await api.get('/shifts/active-stats');
+                if (shiftRes.data.success) {
+                    setShiftStats(shiftRes.data.data);
+                }
+            } catch (err) {
+                console.error('Failed to fetch shift stats', err);
             }
 
         } catch (err) {
@@ -259,6 +276,18 @@ export default function SellerDashboard() {
                                 <div>
                                     <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Products</p>
                                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mt-1">{stats.totalProducts}</h3>
+                                </div>
+                            </div>
+
+                            {/* Money in Drawer (New Card) */}
+                            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center gap-4 hover:shadow-md transition-all">
+                                <div className="p-3 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400">
+                                    <FaMoneyBillWave size={24} />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Money in Drawer</p>
+                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mt-1">{formatCurrency(shiftStats.moneyInDrawer)}</h3>
+                                    {!shiftStats.isOpen && <p className="text-[10px] text-red-500 font-bold mt-0.5">SHIFT CLOSED</p>}
                                 </div>
                             </div>
                         </div>
