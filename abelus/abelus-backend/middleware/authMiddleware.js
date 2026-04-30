@@ -18,13 +18,28 @@ export const authMiddleware = (requiredRoles = []) => {
       }
 
       // 2. Fetch user from our public table to get role and other metadata
-      const user = await prisma.user.findUnique({
+      let user = await prisma.user.findUnique({
         where: { id: sbUser.id }
       });
 
+      // SELF-HEALING: If user exists in Auth but not in our public table, create them now.
+      // This prevents "User not found" errors if the DB trigger failed or was delayed.
       if (!user) {
-        console.warn(`User ${sbUser.id} not found in application database`);
-        return res.status(401).json({ message: "User not found in application database" });
+        console.warn(`User ${sbUser.id} missing from public.User table. Attempting to heal...`);
+        try {
+          user = await prisma.user.create({
+            data: {
+              id: sbUser.id,
+              email: sbUser.email,
+              name: sbUser.user_metadata?.name || sbUser.email.split('@')[0],
+              role: (sbUser.user_metadata?.role || "customer"),
+            }
+          });
+          console.info(`Successfully healed user record for ${sbUser.email}`);
+        } catch (createErr) {
+          console.error("Failed to heal user record:", createErr.message);
+          return res.status(401).json({ message: "User account is in an inconsistent state" });
+        }
       }
 
       // 3. Attach user to request

@@ -12,8 +12,8 @@ router.get("/report", authMiddleware(["admin", "seller"]), reportLimiter, report
 
 
 
-// Get all orders (admin)
-router.get("/", authMiddleware(["admin"]), orderController.getOrders);
+// Get all orders (admin/staff)
+router.get("/", authMiddleware(["admin", "cashier", "inventory", "delivery"]), orderController.getOrders);
 
 // Customer places an order (supports file upload)
 router.post("/", authMiddleware(["customer"]), upload.single("customFile"), orderController.placeOrder);
@@ -31,10 +31,10 @@ router.get("/my-orders", authMiddleware(["customer", "admin"]), orderController.
 router.get("/seller", authMiddleware(["seller", "admin"]), orderController.getSellerOrders);
 
 // Order Management (Detail, Status, Items, Notes)
-router.get("/:id", authMiddleware(["admin", "seller"]), orderController.getOrderById);
-router.put("/:id/status", authMiddleware(["admin", "seller"]), orderController.updateOrderStatus);
+router.get("/:id", authMiddleware(["admin", "seller", "cashier", "inventory", "delivery"]), orderController.getOrderById);
+router.put("/:id/status", authMiddleware(["admin", "seller", "cashier", "delivery"]), orderController.updateOrderStatus);
 router.put("/:id/items", authMiddleware(["admin"]), orderController.updateOrderItems);
-router.post("/:id/notes", authMiddleware(["admin", "seller"]), orderController.addOrderNote);
+router.post("/:id/notes", authMiddleware(["admin", "seller", "cashier"]), orderController.addOrderNote);
 
 router.get("/report/logs", authMiddleware(["admin"]), reportLimiter, orderController.getReportLogs);
 router.get("/analytics", authMiddleware(["admin"]), analyticsLimiter, orderController.getOrderAnalytics);
@@ -62,6 +62,6 @@ router.get("/admin/pos-products", authMiddleware(["admin"]), orderController.get
 router.get("/seller/my-orders", authMiddleware(["admin", "seller", "cashier"]), orderController.getSellerOrders);
 
 // Barcode lookup for POS scanning
-router.get("/pos/lookup", authMiddleware(["admin", "seller"]), orderController.lookupByBarcode);
+router.get("/pos/lookup", authMiddleware(["admin", "seller", "cashier"]), orderController.lookupByBarcode);
 
 export default router;
