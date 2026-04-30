@@ -142,7 +142,11 @@ export const getRevenueData = async (req, res) => {
 
     const orders = await prisma.order.findMany({
       where: { status: "delivered", createdAt: { gte: startDate } },
-      select: { grandTotal: true, createdAt: true, items: { select: { quantity: true } } }
+      select: { 
+        grandTotal: true, 
+        createdAt: true, 
+        items: { select: { quantity: true } } 
+      }
     });
 
     const stats = {};
@@ -152,7 +156,6 @@ export const getRevenueData = async (req, res) => {
       let label;
       if (period === "day") label = order.createdAt.toISOString().split('T')[0];
       else if (period === "week") {
-          // ISO Week (simplified)
           const onejan = new Date(order.createdAt.getFullYear(), 0, 1);
           const week = Math.ceil((((order.createdAt.getTime() - onejan.getTime()) / 86400000) + onejan.getDay() + 1) / 7);
           label = `Week ${week}`;
@@ -162,7 +165,7 @@ export const getRevenueData = async (req, res) => {
 
       if (!stats[label]) stats[label] = { revenue: 0, sales: 0 };
       stats[label].revenue += order.grandTotal;
-      stats[label].sales += order.items.reduce((sum, i) => sum + i.quantity, 0);
+      stats[label].sales += (order.items || []).reduce((sum, i) => sum + (i.quantity || 0), 0);
     });
 
     const formattedData = Object.entries(stats).map(([label, data]) => ({
@@ -174,7 +177,10 @@ export const getRevenueData = async (req, res) => {
     res.json(formattedData);
   } catch (err) {
     console.error("Revenue data fetch failed:", err);
-    res.status(500).json({ message: "Failed to load revenue data." });
+    res.status(500).json({ 
+      message: "Failed to load revenue data.",
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 };
 

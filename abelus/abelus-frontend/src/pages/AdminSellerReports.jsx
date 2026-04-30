@@ -5,6 +5,7 @@ import {
 } from 'react-icons/fa';
 import Sidebar from '../components/Sidebar';
 import Topbar from '../components/Topbar';
+import api from '../utils/axiosInstance';
 
 export default function AdminSellerReports() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -16,31 +17,23 @@ export default function AdminSellerReports() {
     });
     const [error, setError] = useState('');
 
-    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-
     const fetchReports = useCallback(async () => {
         setLoading(true);
         setError('');
         try {
-            const token = localStorage.getItem('authToken');
-            const res = await fetch(`${API_URL}/sellers/performance-reports?date=${selectedMonth}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            const data = await res.json();
-            if (data.success) {
-                setReports(data.data);
+            const res = await api.get(`/sellers/performance-reports?date=${selectedMonth}`);
+            if (res.data.success) {
+                setReports(res.data.data);
             } else {
-                setError(data.message || 'Failed to fetch reports');
+                setError(res.data.message || 'Failed to fetch reports');
             }
         } catch (err) {
             console.error('Fetch reports error:', err);
-            setError('Failed to fetch reports');
+            setError(err.response?.data?.message || 'Failed to fetch reports');
         } finally {
             setLoading(false);
         }
-    }, [selectedMonth, API_URL]);
+    }, [selectedMonth]);
 
     useEffect(() => {
         fetchReports();

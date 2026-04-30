@@ -27,16 +27,8 @@ export const getDashboardAnalytics = async (req, res) => {
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
 
-    // Dynamic Filter
-    const filter = isStaff ? { 
-        OR: [
-            { customerId: effectiveSellerId }, // Not really relevant for seller but keeping for pattern
-            { items: { some: { sellerId: effectiveSellerId } } },
-            { processedById: user.id } // For cashier specifically
-        ] 
-    } : {};
-
-    // For simplicity in this complex aggregation, we'll use a more direct sellerId filter for orders
+    // Filter Logic
+    // For orders, if seller/cashier, we only look at orders containing their items
     const orderFilter = isStaff ? { items: { some: { sellerId: effectiveSellerId } } } : {};
     const productFilter = isStaff ? { sellerId: effectiveSellerId } : {};
 
@@ -72,7 +64,22 @@ export const getDashboardAnalytics = async (req, res) => {
         where: orderFilter,
         orderBy: { createdAt: 'desc' },
         take: 10,
-        include: { items: { include: { product: { select: { name: true, image: true } } } }, customer: { select: { name: true, email: true } } }
+        select: {
+          id: true,
+          publicId: true,
+          status: true,
+          grandTotal: true,
+          createdAt: true,
+          customer: { select: { name: true, email: true } },
+          items: { 
+            take: 3,
+            select: { 
+              quantity: true, 
+              productName: true,
+              product: { select: { image: true } }
+            } 
+          }
+        }
       }),
       prisma.order.count({ where: { ...orderFilter, createdAt: { gte: startOfThisWeek } } }),
       prisma.order.count({ where: { ...orderFilter, createdAt: { gte: startOfLastWeek, lt: endOfLastWeek } } }),
@@ -86,38 +93,45 @@ export const getDashboardAnalytics = async (req, res) => {
       prisma.order.count({ where: { ...orderFilter, status: { in: ["pending", "processing"] }, createdAt: { gte: startOfLastWeek, lt: endOfLastWeek } } })
     ]);
 
-    // Revenue metrics
+    // Revenue metrics - Consolidate if possible, but keep simple for now
+    // IMPORTANT: If isStaff, revenue should only include THEIR items' subtotal, not the order's grandTotal
+    // However, the current schema might make that complex for a single aggregate call.
+    // For now, let's fix the filters first.
     const revenueThisMonthAgg = await prisma.order.aggregate({
       _sum: { grandTotal: true },
-      where: { OR: [{ status: "delivered" }, { paymentStatus: "completed" }], createdAt: { gte: startOfThisMonth } }
+      where: { ...orderFilter, OR: [{ status: "delivered" }, { paymentStatus: "completed" }], createdAt: { gte: startOfThisMonth } }
     });
 
     const revenueThisWeekAgg = await prisma.order.aggregate({
       _sum: { grandTotal: true },
-      where: { OR: [{ status: "delivered" }, { paymentStatus: "completed" }], createdAt: { gte: startOfThisWeek } }
+      where: { ...orderFilter, OR: [{ status: "delivered" }, { paymentStatus: "completed" }], createdAt: { gte: startOfThisWeek } }
     });
 
     const revenueLastWeekAgg = await prisma.order.aggregate({
       _sum: { grandTotal: true },
-      where: { OR: [{ status: "delivered" }, { paymentStatus: "completed" }], createdAt: { gte: startOfLastWeek, lt: endOfLastWeek } }
+      where: { ...orderFilter, OR: [{ status: "delivered" }, { paymentStatus: "completed" }], createdAt: { gte: startOfLastWeek, lt: endOfLastWeek } }
     });
 
-    // Customization demand & Item counts
+    // Customization demand & Item counts - Optimized with select
     const itemsThisWeekRaw = await prisma.orderItem.findMany({
       where: { 
+        sellerId: isStaff ? effectiveSellerId : undefined,
         order: { 
           createdAt: { gte: startOfThisWeek },
           status: { not: 'cancelled' }
         } 
-      }
+      },
+      select: { quantity: true, customizations: true }
     });
     const itemsLastWeekRaw = await prisma.orderItem.findMany({
       where: { 
+        sellerId: isStaff ? effectiveSellerId : undefined,
         order: { 
           createdAt: { gte: startOfLastWeek, lt: endOfLastWeek },
           status: { not: 'cancelled' }
         } 
-      }
+      },
+      select: { quantity: true, customizations: true }
     });
 
     const countCustom = (items) => items.filter(item => {
@@ -134,12 +148,12 @@ export const getDashboardAnalytics = async (req, res) => {
     // Active Users
     const activeThisWeek = await prisma.order.groupBy({
         by: ['customerId'],
-        where: { createdAt: { gte: startOfThisWeek } }
+        where: { ...orderFilter, createdAt: { gte: startOfThisWeek } }
     }).then(res => res.length);
 
     const activeLastWeek = await prisma.order.groupBy({
         by: ['customerId'],
-        where: { createdAt: { gte: startOfLastWeek, lt: endOfLastWeek } }
+        where: { ...orderFilter, createdAt: { gte: startOfLastWeek, lt: endOfLastWeek } }
     }).then(res => res.length);
 
     const calcChange = (current, previous) => {
@@ -174,20 +188,25 @@ export const getDashboardAnalytics = async (req, res) => {
         const month = order.createdAt.getMonth() + 1;
         if (!monthlyStats[month]) monthlyStats[month] = { month, revenue: 0, sales: 0 };
         monthlyStats[month].revenue += order.grandTotal;
-        monthlyStats[month].sales += order.items.reduce((s, i) => s + i.quantity, 0);
+        monthlyStats[month].sales += (order.items || []).reduce((s, i) => s + (i.quantity || 0), 0);
     });
     const monthlyRevenue = Object.values(monthlyStats).sort((a, b) => a.month - b.month);
 
     const statusBreakdown = await prisma.order.groupBy({
         by: ['status'],
+        where: orderFilter,
         _count: { _all: true }
     });
     const statusCounts = statusBreakdown.map(s => ({ id: s.status, count: s._count._all }));
 
+    // Top Products - Filtered by seller if applicable
     const topProductsRaw = await prisma.orderItem.groupBy({
         by: ['productId'],
         _sum: { quantity: true },
-        where: { order: { status: 'delivered' } },
+        where: { 
+            sellerId: isStaff ? effectiveSellerId : undefined,
+            order: { status: 'delivered' } 
+        },
         orderBy: { _sum: { quantity: 'desc' } },
         take: 5
     });
@@ -204,12 +223,12 @@ export const getDashboardAnalytics = async (req, res) => {
         count: tp._sum.quantity
     }));
 
-    const [totalSellers, activeSellers, pendingSellers, rejectedSellers] = await Promise.all([
+    const [totalSellers, activeSellers, pendingSellers, rejectedSellers] = !isStaff ? await Promise.all([
       prisma.user.count({ where: { role: 'seller' } }),
       prisma.user.count({ where: { role: 'seller', sellerStatus: 'active' } }),
       prisma.user.count({ where: { role: 'seller', sellerStatus: 'pending' } }),
       prisma.user.count({ where: { role: 'seller', sellerStatus: 'rejected' } })
-    ]);
+    ]) : [0, 0, 0, 0];
 
     res.json({
       totalOrders,
@@ -238,7 +257,10 @@ export const getDashboardAnalytics = async (req, res) => {
     });
   } catch (err) {
     console.error("Dashboard analytics failed:", err);
-    res.status(500).json({ message: "Failed to load dashboard analytics." });
+    res.status(500).json({ 
+        message: "Failed to load dashboard analytics.",
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 };
 
