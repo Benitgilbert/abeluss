@@ -9,6 +9,10 @@ import { getAnomalyAlerts } from "../utils/anomalyUtils.js";
  */
 export const getDashboardAnalytics = async (req, res) => {
   try {
+    const user = req.user;
+    const isStaff = user.role === 'seller' || user.role === 'cashier';
+    const effectiveSellerId = user.role === 'cashier' ? user.managedById : (user.role === 'seller' ? user.id : null);
+
     // Boundaries
     const now = new Date();
     const startOfThisWeek = new Date(now);
@@ -22,6 +26,19 @@ export const getDashboardAnalytics = async (req, res) => {
     const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+
+    // Dynamic Filter
+    const filter = isStaff ? { 
+        OR: [
+            { customerId: effectiveSellerId }, // Not really relevant for seller but keeping for pattern
+            { items: { some: { sellerId: effectiveSellerId } } },
+            { processedById: user.id } // For cashier specifically
+        ] 
+    } : {};
+
+    // For simplicity in this complex aggregation, we'll use a more direct sellerId filter for orders
+    const orderFilter = isStaff ? { items: { some: { sellerId: effectiveSellerId } } } : {};
+    const productFilter = isStaff ? { sellerId: effectiveSellerId } : {};
 
     // Core counts & data
     const [
@@ -44,28 +61,29 @@ export const getDashboardAnalytics = async (req, res) => {
       pendingOrders,
       pendingOrdersLastWeek
     ] = await Promise.all([
-      prisma.order.count(),
-      prisma.order.count({ where: { status: "delivered" } }),
-      prisma.order.count({ where: { status: "in-production" } }),
-      prisma.order.count({ where: { status: "cancelled" } }),
-      prisma.product.count(),
-      prisma.product.aggregate({ _sum: { stock: true }, where: { isDigital: false } }),
-      prisma.user.count(),
+      prisma.order.count({ where: orderFilter }),
+      prisma.order.count({ where: { ...orderFilter, status: "delivered" } }),
+      prisma.order.count({ where: { ...orderFilter, status: "in-production" } }),
+      prisma.order.count({ where: { ...orderFilter, status: "cancelled" } }),
+      prisma.product.count({ where: productFilter }),
+      prisma.product.aggregate({ _sum: { stock: true }, where: { ...productFilter, isDigital: false } }),
+      isStaff ? prisma.order.groupBy({ by: ['customerId'], where: orderFilter }).then(r => r.length) : prisma.user.count(),
       prisma.order.findMany({
+        where: orderFilter,
         orderBy: { createdAt: 'desc' },
         take: 10,
         include: { items: { include: { product: { select: { name: true, image: true } } } }, customer: { select: { name: true, email: true } } }
       }),
-      prisma.order.count({ where: { createdAt: { gte: startOfThisWeek } } }),
-      prisma.order.count({ where: { createdAt: { gte: startOfLastWeek, lt: endOfLastWeek } } }),
-      prisma.order.count({ where: { status: "delivered", createdAt: { gte: startOfThisWeek } } }),
-      prisma.order.count({ where: { status: "delivered", createdAt: { gte: startOfLastWeek, lt: endOfLastWeek } } }),
-      prisma.order.count({ where: { status: "cancelled", createdAt: { gte: startOfThisWeek } } }),
-      prisma.order.count({ where: { status: "cancelled", createdAt: { gte: startOfLastWeek, lt: endOfLastWeek } } }),
-      prisma.user.count({ where: { createdAt: { gte: startOfThisMonth } } }),
-      prisma.user.count({ where: { createdAt: { gte: startOfLastMonth, lt: endOfLastMonth } } }),
-      prisma.order.count({ where: { status: { in: ["pending", "processing"] } } }),
-      prisma.order.count({ where: { status: { in: ["pending", "processing"] }, createdAt: { gte: startOfLastWeek, lt: endOfLastWeek } } })
+      prisma.order.count({ where: { ...orderFilter, createdAt: { gte: startOfThisWeek } } }),
+      prisma.order.count({ where: { ...orderFilter, createdAt: { gte: startOfLastWeek, lt: endOfLastWeek } } }),
+      prisma.order.count({ where: { ...orderFilter, status: "delivered", createdAt: { gte: startOfThisWeek } } }),
+      prisma.order.count({ where: { ...orderFilter, status: "delivered", createdAt: { gte: startOfLastWeek, lt: endOfLastWeek } } }),
+      prisma.order.count({ where: { ...orderFilter, status: "cancelled", createdAt: { gte: startOfThisWeek } } }),
+      prisma.order.count({ where: { ...orderFilter, status: "cancelled", createdAt: { gte: startOfLastWeek, lt: endOfLastWeek } } }),
+      isStaff ? prisma.order.groupBy({ by: ['customerId'], where: { ...orderFilter, createdAt: { gte: startOfThisMonth } } }).then(r => r.length) : prisma.user.count({ where: { createdAt: { gte: startOfThisMonth } } }),
+      isStaff ? prisma.order.groupBy({ by: ['customerId'], where: { ...orderFilter, createdAt: { gte: startOfLastMonth, lt: endOfLastMonth } } }).then(r => r.length) : prisma.user.count({ where: { createdAt: { gte: startOfLastMonth, lt: endOfLastMonth } } }),
+      prisma.order.count({ where: { ...orderFilter, status: { in: ["pending", "processing"] } } }),
+      prisma.order.count({ where: { ...orderFilter, status: { in: ["pending", "processing"] }, createdAt: { gte: startOfLastWeek, lt: endOfLastWeek } } })
     ]);
 
     // Revenue metrics

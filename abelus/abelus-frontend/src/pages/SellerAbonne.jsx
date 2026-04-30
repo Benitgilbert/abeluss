@@ -26,11 +26,24 @@ const SellerAbonne = () => {
     const [newPrice, setNewPrice] = useState({ productId: "", price: "" });
     const [savingPrice, setSavingPrice] = useState(false);
     const [productSearchTerm, setProductSearchTerm] = useState("");
+    const [siteSettings, setSiteSettings] = useState(null);
 
     useEffect(() => {
         fetchClients();
         fetchProducts();
+        fetchSettings();
     }, []);
+
+    const fetchSettings = async () => {
+        try {
+            const res = await axios.get("/site-settings/public");
+            if (res.data.success) {
+                setSiteSettings(res.data.data);
+            }
+        } catch (err) {
+            console.error("Failed to fetch site settings");
+        }
+    };
 
     const fetchProducts = async () => {
         try {
@@ -368,13 +381,27 @@ const SellerAbonne = () => {
                             </style>
 
                             <div className="p-8">
-                                <div className="print-header flex justify-between items-end mb-8 border-b-2 border-black pb-4">
-                                    <div>
-                                        <h1 className="text-3xl font-black uppercase mb-1">FICHE DE CLIENT ABONNÉ</h1>
-                                        <p className="text-lg font-bold">NOM DU CLIENT: <span className="underline decoration-dotted underline-offset-4">{selectedClient.name}</span></p>
+                                <div className="print-header flex justify-between items-center mb-8 border-b-2 border-black pb-6">
+                                    <div className="flex items-center gap-4">
+                                        {siteSettings?.logo && (
+                                            <img 
+                                                src={siteSettings.logo} 
+                                                alt="Logo" 
+                                                className="h-16 w-16 object-contain"
+                                            />
+                                        )}
+                                        <div>
+                                            <h1 className="text-2xl font-black uppercase tracking-tight">{siteSettings?.siteName || "ABELUS"}</h1>
+                                            <p className="text-sm font-bold text-gray-600">FICHE DE CLIENT ABONNÉ</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-left">
+                                        <p className="text-lg font-bold">CLIENT: <span className="underline decoration-dotted underline-offset-4">{selectedClient.name}</span></p>
+                                        <p className="text-xs text-gray-500 mt-1">Generated on: {new Date().toLocaleDateString()}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-sm">Total Debt: <span className="font-black text-lg">RWF {selectedClient.totalDebt.toLocaleString()}</span></p>
+                                        <p className="text-sm text-gray-500 uppercase font-bold mb-1">Solde Dû</p>
+                                        <p className="font-black text-2xl text-red-600">RWF {selectedClient.totalDebt.toLocaleString()}</p>
                                     </div>
                                 </div>
 

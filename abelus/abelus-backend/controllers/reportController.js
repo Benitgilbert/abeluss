@@ -1,11 +1,37 @@
 import path from "path";
 import fs from "fs";
+import axios from "axios";
 import prisma from "../prisma.js";
 import { buildReportData } from "../services/reportBuilders.js";
 import { createabelusPDF } from "../utils/pdfLayout.js";
 import convertToCSV from "../utils/csvExporter.js";
 import generateAISummary from "../utils/aiSummary.js";
 import sendReportEmail from "../utils/sendReportEmail.js";
+
+/**
+ * Helper to get logo as buffer for PDFKit
+ */
+const getLogoBuffer = async (logoUrlOrPath) => {
+    try {
+        if (!logoUrlOrPath) return null;
+
+        // If it's a URL (Cloudinary)
+        if (logoUrlOrPath.startsWith('http')) {
+            const response = await axios.get(logoUrlOrPath, { responseType: 'arraybuffer' });
+            return Buffer.from(response.data);
+        }
+
+        // If it's a local path
+        const fullPath = path.isAbsolute(logoUrlOrPath) ? logoUrlOrPath : path.join(path.resolve(), logoUrlOrPath);
+        if (fs.existsSync(fullPath)) {
+            return fs.readFileSync(fullPath);
+        }
+        return null;
+    } catch (err) {
+        console.warn("Failed to load logo buffer:", err.message);
+        return null;
+    }
+};
 
 /**
  * 📊 Generate and export business reports
@@ -25,6 +51,9 @@ export const generateReport = async (req, res) => {
         if (req.user.role === "seller") {
             filters.sellerId = req.user.id;
         }
+
+        // Fetch site settings for logo
+        const settings = await prisma.siteSettings.findFirst();
 
         // Build report data
         let orders, summary;
@@ -70,11 +99,7 @@ export const generateReport = async (req, res) => {
         }
 
         // Export as PDF
-        const logoPath = path.join(path.resolve(), "assets/logo.png");
-        let finalLogoPath = null;
-        if (fs.existsSync(logoPath)) {
-            finalLogoPath = logoPath;
-        }
+        const logoBuffer = await getLogoBuffer(settings?.logo || "assets/logo.png");
 
         const monthTitle = (filters.month && filters.year) 
             ? `Monthly Business Report – ${new Date(parseInt(filters.year), parseInt(filters.month) - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}` 
@@ -82,76 +107,50 @@ export const generateReport = async (req, res) => {
 
         const doc = createabelusPDF({
             title: monthTitle,
-            logoPath: finalLogoPath,
-            signatory: {
-                name: user.name,
-                title: user.role === 'admin' ? "abelus Administrator" : "Store Manager / Seller",
-                signatureImage: user.signatureImage,
-                stampImage: user.stampImage,
-            },
-            contentBuilder: (doc, helpers) => {
-                // Executive Summary
-                doc.fillColor("#1E40AF").fontSize(10).font("Helvetica-Bold");
-                doc.text("Executive Summary", { underline: true });
-                doc.font("Helvetica").moveDown(0.2);
-                doc.fillColor("#374151").fontSize(9);
-                doc.text(aiSummary);
-                doc.moveDown(0.8);
-
-                // Key Metrics
-                doc.fillColor("#111827").fontSize(11).font("Helvetica-Bold");
-                doc.text("Key Metrics", { underline: true });
-                doc.font("Helvetica").moveDown(0.3);
-
-                const metrics = Object.entries(summary).map(([k, v]) => [k, String(v)]);
-                const startY = doc.y; 
-                const leftX = doc.page.margins.left; 
-                const rightX = doc.page.width / 2 + 10; 
-                const lh = 12;
-
-                metrics.forEach(([k, v], idx) => {
-                    const col = idx % 2 === 0 ? 0 : 1;
-                    const row = Math.floor(idx / 2);
-                    const x = col === 0 ? leftX : rightX;
-                    const y = startY + row * lh;
-                    doc.fillColor('#374151').fontSize(9).text(`${k}: ${v}`, x, y, { width: rightX - leftX - 30, lineBreak: false });
+            contentBuilder: (pdfDoc, helpers) => {
+                // Header Summary section
+                helpers.section("Business Summary");
+                helpers.keyValue({
+                    "Total Orders": orders.length,
+                    "Gross Revenue": `RWF ${summary.totalRevenue?.toLocaleString()}`,
+                    "Average Order Value": `RWF ${summary.averageOrderValue?.toLocaleString()}`,
+                    "Top Product": summary.topSellingProduct?.name || "N/A"
                 });
 
-                const rowsUsed = Math.ceil(metrics.length / 2);
-                doc.y = startY + rowsUsed * lh;
-                doc.moveDown(0.6);
-
-                // Order Details Table
-                doc.fillColor("#111827").fontSize(11).font("Helvetica-Bold");
-                doc.text("Recent Orders in Report", { underline: true });
-                doc.font("Helvetica").moveDown(0.3);
-
-                const tableData = orders.slice(0, 30).map(o => ({
-                    id: o.publicId || o.id.slice(-6).toUpperCase(),
-                    customer: (o.customer?.name || o.customer?.email || "N/A").substring(0, 18),
-                    total: `${o.grandTotal.toLocaleString()} Rwf`,
-                    source: o.orderType === 'pos' ? "POS" : "Online",
-                    status: o.status.charAt(0).toUpperCase() + o.status.slice(1),
-                    date: new Date(o.createdAt).toLocaleDateString("en-US", { month: "short", day: "2-digit" })
-                }));
-
+                pdfDoc.moveDown(1);
+                
+                // Orders Table
+                helpers.section("Orders Breakdown");
                 helpers.table({
                     columns: [
-                        { key: "id", header: "ID", width: 60 },
-                        { key: "customer", header: "Customer", width: 130 },
-                        { key: "total", header: "Total", width: 90 },
-                        { key: "source", header: "Source", width: 60 },
-                        { key: "status", header: "Status", width: 70 },
-                        { key: "date", header: "Date", width: 50 }
+                        { header: "Public ID", key: "publicId", width: 100 },
+                        { header: "Customer", key: "customerName", width: 120 },
+                        { header: "Date", key: "createdAt", width: 100 },
+                        { header: "Status", key: "status", width: 80 },
+                        { header: "Total", key: "grandTotal", width: 100 }
                     ],
-                    rows: tableData
+                    rows: orders.map(o => ({
+                        ...o,
+                        customerName: o.customer?.name || (o.guestInfo ? (typeof o.guestInfo === 'string' ? JSON.parse(o.guestInfo).name : o.guestInfo.name) : "Guest"),
+                        createdAt: new Date(o.createdAt).toLocaleDateString(),
+                        grandTotal: `RWF ${o.grandTotal.toLocaleString()}`
+                    }))
                 });
 
-                if (orders.length > 30) {
-                    doc.moveDown(0.3);
-                    doc.fillColor("#6B7280").fontSize(8).text(`Showing top 30 of ${orders.length} items. Download CSV for complete data.`, { align: "center" });
-                }
-            }
+                pdfDoc.moveDown(1);
+                
+                // AI Insights
+                helpers.section("Strategic AI Insights");
+                pdfDoc.fillColor("#4B5563").fontSize(10).font("Helvetica-Oblique");
+                pdfDoc.text(aiSummary, { lineGap: 4 });
+            },
+            signatory: {
+                name: user.name,
+                title: user.role.toUpperCase(),
+                signatureImage: user.signatureImage,
+                stampImage: user.stampImage
+            },
+            logoPath: logoBuffer
         });
 
         res.setHeader("Content-Type", "application/pdf");
@@ -166,4 +165,3 @@ export const generateReport = async (req, res) => {
         }
     }
 };
-

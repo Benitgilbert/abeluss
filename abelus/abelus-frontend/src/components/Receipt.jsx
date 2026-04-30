@@ -1,7 +1,23 @@
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
+import axios from '../utils/axiosInstance';
 
 export default function Receipt({ order, seller, onClose, onPrint }) {
     const receiptRef = useRef(null);
+    const [logo, setLogo] = useState(null);
+
+    useEffect(() => {
+        const fetchLogo = async () => {
+            try {
+                const res = await axios.get('/site-settings/public');
+                if (res.data.success && res.data.data.logo) {
+                    setLogo(res.data.data.logo);
+                }
+            } catch (err) {
+                console.warn("Failed to fetch site logo for receipt");
+            }
+        };
+        fetchLogo();
+    }, []);
 
     const handlePrint = () => {
         const printContent = receiptRef.current.innerHTML;
@@ -76,6 +92,14 @@ export default function Receipt({ order, seller, onClose, onPrint }) {
                 <div className="p-6 overflow-y-auto" ref={receiptRef}>
                     {/* Header */}
                     <div className="text-center mb-4">
+                        {logo && (
+                            <img 
+                                src={logo} 
+                                alt="Logo" 
+                                className="h-12 mx-auto mb-2 object-contain"
+                                style={{ maxHeight: '50px' }}
+                            />
+                        )}
                         <div className="text-lg font-bold text-gray-900">{seller?.storeName || seller?.name || 'ABELUS STORE'}</div>
                         <div className="text-xs text-gray-500 mt-1">
                             {seller?.storeAddress || 'Kigali, Rwanda'}
