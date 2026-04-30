@@ -8,6 +8,9 @@ export const mongoCompat = (req, res, next) => {
     const transform = (obj) => {
       if (!obj || typeof obj !== 'object') return obj;
       
+      // Do not transform Date objects, Buffers, etc.
+      if (obj instanceof Date) return obj;
+      
       if (Array.isArray(obj)) {
         return obj.map(transform);
       }
