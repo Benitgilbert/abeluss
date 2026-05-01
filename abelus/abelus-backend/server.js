@@ -59,13 +59,7 @@ dotenv.config();
 // ✅ Initialize Express
 const app = express();
 
-// ✅ Security Middleware
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" },
-  contentSecurityPolicy: false, // Temporarily disable CSP to debug SW/Fetch issues
-}));
-
-// ✅ CORS Configuration
+// 1. ✅ CORS (MUST BE FIRST for Preflight)
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   "https://pastorbonus.vercel.app",
@@ -76,21 +70,21 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    
-    const isLocal = origin.includes('localhost') || origin.includes('127.0.0.1');
-    const isVercel = origin.endsWith('.vercel.app');
-    const isAllowed = allowedOrigins.includes(origin);
-
-    if (isLocal || isVercel || isAllowed) {
-      return callback(null, true);
+    if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
     }
-    
-    callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+}));
+
+// 2. ✅ Other Global Middleware
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  contentSecurityPolicy: false,
 }));
 
 app.use(express.json({ limit: "10mb" }));
