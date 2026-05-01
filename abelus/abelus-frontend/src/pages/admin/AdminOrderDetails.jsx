@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { FaArrowLeft, FaPrint, FaCheck, FaBox, FaUser, FaMapMarkerAlt, FaPhone } from "react-icons/fa";
+import { FaArrowLeft, FaPrint, FaBox, FaUser, FaMapMarkerAlt, FaPhone } from "react-icons/fa";
 import api from "../../utils/axiosInstance";
 import assetUrl from "../../utils/assetUrl";
 import toast from "react-hot-toast";

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaPlus, FaSearch, FaTrash, FaTimes, FaQrcode, FaGift, FaCopy, FaCalendarAlt, FaUser } from "react-icons/fa";
+import { FaSearch, FaTrash, FaTimes, FaQrcode, FaGift, FaCopy } from "react-icons/fa";
 import api from "../../utils/axiosInstance";
 import toast from "react-hot-toast";
 

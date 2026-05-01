@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaPlus, FaSearch, FaEdit, FaTrash, FaEye, FaCalendarAlt, FaUser, FaNewspaper } from "react-icons/fa";
+import { FaEdit, FaTrash, FaPlus, FaNewspaper, FaSearch, FaCalendarAlt, FaUser } from "react-icons/fa";
 import api from "../../utils/axiosInstance";
 import assetUrl from "../../utils/assetUrl";
 import toast from "react-hot-toast";
