@@ -68,28 +68,24 @@ app.use(helmet({
 // ✅ CORS Configuration
 const allowedOrigins = [
   process.env.FRONTEND_URL,
+  "https://pastorbonus.vercel.app",
+  "https://abeluss-backend.vercel.app",
   "http://localhost:5000",
   "http://localhost:3000",
 ].filter(Boolean);
 
 app.use(cors({
   origin: function (origin, callback) {
-    // 🔍 Log the origin for debugging
-    console.log(`[CORS] Incoming request from origin: ${origin}`);
-    
-    // Allow requests with no origin (like mobile apps or curl)
     if (!origin) return callback(null, true);
     
     const isLocal = origin.includes('localhost') || origin.includes('127.0.0.1');
-    // More robust check for vercel.app subdomains (includes protocol and possible trailing slash)
-    const isVercel = origin.match(/^https?:\/\/.*\.vercel\.app\/?$/);
+    const isVercel = origin.endsWith('.vercel.app');
     const isAllowed = allowedOrigins.includes(origin);
 
     if (isLocal || isVercel || isAllowed) {
       return callback(null, true);
     }
     
-    console.warn(`[CORS] Blocked request from origin: ${origin}`);
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
