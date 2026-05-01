@@ -165,7 +165,6 @@ function AdminAttributes() {
                         )}
                     </div>
                 </main>
-            </div>
 
             {/* Modal */}
             {showModal && (

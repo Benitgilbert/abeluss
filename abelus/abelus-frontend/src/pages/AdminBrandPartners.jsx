@@ -51,7 +51,7 @@ export default function AdminBrandPartners() {
             if (res.data.success) { setSuccess('Brand partner deleted!'); fetchPartners(); }
         } catch (err) { setError('Failed to delete'); }
     };
-
+    const handleToggle = async (id) => {
         try {
             const res = await api.patch(`/brand-partners/${id}/toggle`);
             if (res.data.success) fetchPartners();
