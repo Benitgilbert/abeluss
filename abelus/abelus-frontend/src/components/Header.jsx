@@ -213,6 +213,8 @@ export default function Header() {
             <div className="relative w-full group">
               <form onSubmit={handleSearchSubmit}>
                 <input
+                  id="search-input-desktop"
+                  name="q"
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -385,6 +387,8 @@ export default function Header() {
                 setMobileMenuOpen(false);
               }} className="relative">
                 <input
+                  id="search-input-mobile"
+                  name="q"
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}

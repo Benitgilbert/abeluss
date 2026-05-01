@@ -152,6 +152,8 @@ function AdminChatbot({ storageKey = "adminChatMessages", title = "AI Assistant"
             className="flex items-end gap-2 bg-cream-100 dark:bg-charcoal-900 rounded-3xl p-1.5 border border-transparent focus-within:border-terracotta-300 transition-colors"
           >
             <textarea
+              id="chatbot-input"
+              name="question"
               rows={1}
               value={question}
               onChange={(e) => setQuestion(e.target.value)}

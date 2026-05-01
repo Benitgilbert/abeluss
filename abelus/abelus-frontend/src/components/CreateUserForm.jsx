@@ -41,49 +41,65 @@ function CreateUserForm() {
         </div>
       )}
 
-      <input
-        type="text"
-        name="name"
-        placeholder="Name"
-        value={form.name}
-        onChange={handleChange}
-        className="w-full mb-3 px-4 py-2 border rounded"
-        required
-      />
+      <div className="mb-3">
+        <label htmlFor="create-user-name" className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+        <input
+          id="create-user-name"
+          type="text"
+          name="name"
+          placeholder="Name"
+          value={form.name}
+          onChange={handleChange}
+          className="w-full px-4 py-2 border rounded"
+          required
+        />
+      </div>
 
-      <input
-        type="email"
-        name="email"
-        placeholder="Email"
-        value={form.email}
-        onChange={handleChange}
-        className="w-full mb-3 px-4 py-2 border rounded"
-        required
-      />
+      <div className="mb-3">
+        <label htmlFor="create-user-email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+        <input
+          id="create-user-email"
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={form.email}
+          onChange={handleChange}
+          className="w-full px-4 py-2 border rounded"
+          required
+        />
+      </div>
 
-      <input
-        type="password"
-        name="password"
-        placeholder="Password"
-        value={form.password}
-        onChange={handleChange}
-        className="w-full mb-3 px-4 py-2 border rounded"
-        required
-      />
+      <div className="mb-3">
+        <label htmlFor="create-user-password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+        <input
+          id="create-user-password"
+          type="password"
+          name="password"
+          placeholder="Password"
+          value={form.password}
+          onChange={handleChange}
+          className="w-full px-4 py-2 border rounded"
+          required
+        />
+      </div>
 
-      <select
-        name="role"
-        value={form.role}
-        onChange={handleChange}
-        className="w-full mb-3 px-4 py-2 border rounded"
-      >
-        <option value="cashier">Cashier</option>
-        <option value="manager">Manager</option>
-        <option value="inventory">Inventory</option>
-        <option value="delivery">Delivery</option>
-        <option value="user">User</option>
-        <option value="guest">Guest</option>
-      </select>
+      <div className="mb-3">
+        <label htmlFor="create-user-role" className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+        <select
+          id="create-user-role"
+          name="role"
+          value={form.role}
+          onChange={handleChange}
+          className="w-full px-4 py-2 border rounded"
+        >
+          <option value="cashier">Cashier</option>
+          <option value="manager">Manager</option>
+          <option value="inventory">Inventory</option>
+          <option value="delivery">Delivery</option>
+          <option value="user">User</option>
+          <option value="guest">Guest</option>
+        </select>
+      </div>
 
       <button
         type="submit"

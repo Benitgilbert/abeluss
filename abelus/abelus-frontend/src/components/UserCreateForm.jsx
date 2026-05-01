@@ -35,8 +35,9 @@ function UserCreateForm({ onSuccess, onCancel }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-charcoal-700 dark:text-charcoal-300 mb-1.5">Full Name</label>
+        <label htmlFor="user-name" className="block text-sm font-medium text-charcoal-700 dark:text-charcoal-300 mb-1.5">Full Name</label>
         <input
+          id="user-name"
           name="name"
           value={formData.name}
           onChange={handleChange}
@@ -47,8 +48,9 @@ function UserCreateForm({ onSuccess, onCancel }) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-charcoal-700 dark:text-charcoal-300 mb-1.5">Email Address</label>
+        <label htmlFor="user-email" className="block text-sm font-medium text-charcoal-700 dark:text-charcoal-300 mb-1.5">Email Address</label>
         <input
+          id="user-email"
           name="email"
           value={formData.email}
           onChange={handleChange}
@@ -60,8 +62,9 @@ function UserCreateForm({ onSuccess, onCancel }) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-charcoal-700 dark:text-charcoal-300 mb-1.5">Password</label>
+        <label htmlFor="user-password" className="block text-sm font-medium text-charcoal-700 dark:text-charcoal-300 mb-1.5">Password</label>
         <input
+          id="user-password"
           name="password"
           value={formData.password}
           onChange={handleChange}
@@ -73,8 +76,9 @@ function UserCreateForm({ onSuccess, onCancel }) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-charcoal-700 dark:text-charcoal-300 mb-1.5">User Role</label>
+        <label htmlFor="user-role" className="block text-sm font-medium text-charcoal-700 dark:text-charcoal-300 mb-1.5">User Role</label>
         <select
+          id="user-role"
           name="role"
           value={formData.role}
           onChange={handleChange}
