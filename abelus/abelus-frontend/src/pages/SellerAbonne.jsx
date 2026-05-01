@@ -2,9 +2,6 @@ import { useState, useEffect } from "react";
 import axios from "../utils/axiosInstance";
 import { FaUserPlus, FaFileInvoiceDollar, FaTimes, FaMoneyBillWave, FaPrint, FaTag, FaPlus, FaTrash, FaSearch } from "react-icons/fa";
 
-import SellerSidebar from "../components/SellerSidebar";
-import Topbar from "../components/Topbar";
-
 
 const SellerAbonne = () => {
     const [clients, setClients] = useState([]);
@@ -169,7 +166,8 @@ const SellerAbonne = () => {
     };
 
     return (
-        <div className="flex-1 overflow-y-auto p-6">
+        <>
+            <div className="flex-1 overflow-y-auto p-6">
                     <div className="flex justify-between items-center mb-8">
                         <div>
                             <h1 className="text-3xl font-black text-charcoal-900 dark:text-white">Clients Abonnés</h1>
@@ -264,7 +262,7 @@ const SellerAbonne = () => {
                         </div>
                     )}
                 </div>
-            </div>
+            
 
             {/* Add Modal */}
             {showAddModal && (
@@ -551,7 +549,7 @@ const SellerAbonne = () => {
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 };
 

@@ -2,9 +2,6 @@ import { useState, useEffect } from "react";
 import axios from "../../utils/axiosInstance";
 import { FaUserPlus, FaTimes, FaMoneyBillWave, FaPrint, FaEdit, FaTrash, FaTags, FaSearch, FaSpinner } from "react-icons/fa";
 
-import Sidebar from "../../components/Sidebar";
-import Topbar from "../../components/Topbar";
-
 const AdminAbonne = () => {
     const [clients, setClients] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -192,7 +189,8 @@ const AdminAbonne = () => {
     };
 
     return (
-        <div className="flex-1 overflow-y-auto p-6">
+        <>
+            <div className="flex-1 overflow-y-auto p-8">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                         <div>
                             <h1 className="text-3xl font-black text-charcoal-900 dark:text-white">Clients Abonnés</h1>
@@ -304,7 +302,7 @@ const AdminAbonne = () => {
                         </div>
                     )}
                 </div>
-            </div>
+            
 
             {/* Add Modal */}
             {showAddModal && (
@@ -630,7 +628,7 @@ const AdminAbonne = () => {
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 };
 

@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { FaPlus, FaTrash, FaUserShield, FaUserFriends, FaEnvelope, FaLock, FaTimes } from "react-icons/fa";
 import api from "../utils/axiosInstance";
-import SellerSidebar from "../components/SellerSidebar";
-import Header from "../components/Header";
 
 const SellerTeam = () => {
     const [staff, setStaff] = useState([]);

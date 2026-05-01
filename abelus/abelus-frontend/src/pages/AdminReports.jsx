@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import Sidebar from "../components/Sidebar";
-import Topbar from "../components/Topbar";
 import api from "../utils/axiosInstance";
 import { supabase } from "../utils/supabaseClient";
 import { FaDownload, FaFileAlt, FaFilePdf, FaFileCsv, FaHistory, FaSearch } from "react-icons/fa";

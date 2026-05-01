@@ -1,8 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import axios from "../../utils/axiosInstance";
 import { FaSearch, FaShoppingCart, FaTrash, FaPlus, FaMinus, FaMoneyBillWave, FaMobileAlt, FaBoxOpen, FaSpinner } from "react-icons/fa";
-import Sidebar from "../../components/Sidebar";
-import Topbar from "../../components/Topbar";
 
 const POS = () => {
     const [products, setProducts] = useState([]);
@@ -708,6 +706,7 @@ const POS = () => {
                         </div>
                     </div>
                 </div>
+            </div>
         </>
     );
 };

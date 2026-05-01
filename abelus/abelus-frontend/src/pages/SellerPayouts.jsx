@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { FaMoneyBillWave, FaHistory, FaCheckCircle, FaClock, FaExclamationCircle } from "react-icons/fa";
 import api from "../utils/axiosInstance";
-import SellerSidebar from "../components/SellerSidebar";
-import Header from "../components/Header";
 
 const SellerPayouts = () => {
     const [summary, setSummary] = useState(null);

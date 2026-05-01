@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import SellerSidebar from "../components/SellerSidebar";
-import Topbar from "../components/Topbar";
 import api from "../utils/axiosInstance";
 import { supabase } from "../utils/supabaseClient";
 import { FaDownload, FaFilePdf, FaFileCsv, FaHistory, FaCheckCircle, FaExclamationTriangle, FaMoneyBillWave, FaTimes } from "react-icons/fa";
@@ -123,7 +121,8 @@ function SellerReports() {
   };
 
     return (
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+    <>
+      <main className="flex-1 p-4 lg:p-6 max-w-[1600px] w-full mx-auto">
           <div className="max-w-4xl mx-auto">
             {/* Header section */}
             <div className="mb-8">
@@ -277,7 +276,6 @@ function SellerReports() {
             </div>
           </div>
         </main>
-      </div>
 
       {/* Shift Verification Modal */}
       {showShiftPrompt && (
@@ -330,8 +328,8 @@ function SellerReports() {
           </div>
         </div>
       )}
-        </main>
-    );
+    </>
+);
 }
 
 export default SellerReports;

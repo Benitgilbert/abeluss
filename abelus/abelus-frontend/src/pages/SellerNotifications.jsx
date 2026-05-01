@@ -1,6 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import SellerSidebar from "../components/SellerSidebar";
-import Topbar from "../components/Topbar";
 import api from "../utils/axiosInstance";
 import { FaCheck, FaCheckDouble, FaTrash, FaBell, FaInfoCircle, FaBox, FaMoneyBillWave, FaUserCheck, FaExclamationTriangle } from "react-icons/fa";
 

@@ -4,8 +4,6 @@ import {
     FaCalculator, FaChevronRight 
 } from "react-icons/fa";
 import api from "../utils/axiosInstance";
-import SellerSidebar from "../components/SellerSidebar";
-import Header from "../components/Header";
 import assetUrl from "../utils/assetUrl";
 import { toast } from "react-hot-toast";
 
