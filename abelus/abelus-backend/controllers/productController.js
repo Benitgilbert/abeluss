@@ -342,8 +342,14 @@ export const getAllProducts = async (req, res) => {
 
     if (req.query.minPrice || req.query.maxPrice) {
       where.price = {};
-      if (req.query.minPrice) where.price.gte = Number(req.query.minPrice);
-      if (req.query.maxPrice) where.price.lte = Number(req.query.maxPrice);
+      const min = Number(req.query.minPrice);
+      const max = Number(req.query.maxPrice);
+      
+      if (!isNaN(min) && req.query.minPrice !== "" && req.query.minPrice !== undefined) where.price.gte = min;
+      if (!isNaN(max) && req.query.maxPrice !== "" && req.query.maxPrice !== undefined) where.price.lte = max;
+      
+      // If no valid numbers were provided, remove the price filter to avoid Prisma errors
+      if (Object.keys(where.price).length === 0) delete where.price;
     }
 
     if (req.query.search) {

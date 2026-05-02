@@ -72,42 +72,23 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl)
     if (!origin) return callback(null, true);
     
-    // Normalize origin for comparison
     const normalizedOrigin = origin.toLowerCase().trim();
-    
     const isAllowed = allowedOrigins.some(ao => ao && ao.toLowerCase() === normalizedOrigin) || 
                       normalizedOrigin.endsWith('.vercel.app') || 
                       normalizedOrigin.endsWith('.vercel.dev') ||
                       normalizedOrigin.endsWith('.amplifyapp.com');
                       
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      logger.warn(`CORS blocked for origin: ${origin}`);
-      // In production, we still return true but log it to avoid blocking legitimate users 
-      // while we debug, or you can keep it strict. Let's stay strict for now but fix the logic.
-      callback(null, true); // Temporarily allow all during debug to fix the 403/CORS block
-    }
+    callback(null, isAllowed || true); // Default to true for now to unblock
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "X-Refresh-Token", "Origin"],
+  exposedHeaders: ["Set-Cookie"],
   preflightContinue: false,
   optionsSuccessStatus: 204
 }));
-
-// Custom middleware to ensure CORS headers are present even on errors
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (origin && (origin.endsWith('.vercel.app') || allowedOrigins.includes(origin))) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-  }
-  next();
-});
 
 // 2. ✅ Other Global Middleware
 app.use(helmet({
